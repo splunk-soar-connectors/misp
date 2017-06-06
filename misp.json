@@ -1,0 +1,316 @@
+{
+    "appid"       : "54c18439-fd16-49bf-a73f-873e162083e7",
+    "name"      : "MISP",
+    "description" : "Take action with Malware Information Sharing Platform",
+    "publisher": "Phantom",
+    "package_name": "phantom_misp",
+    "type": "Threat Intelligence Platform",
+    "license": "Copyright (c) Phantom Cyber Corporation 2017",
+    "main_module" : "misp_connector.pyc",
+    "app_version": "1.0",
+    "pip_dependencies": {
+        "pypi": [
+          {"module": "pymisp"}
+        ]
+    },
+    "utctime_updated": "2017-05-27T00:32:59.000000Z",
+    "product_vendor": "MISP",
+    "product_name": "MISP",
+    "product_version_regex": ".*",
+    "min_phantom_version": "1.0.240",
+    "logo": "misp.png",
+    "configuration": {
+          "base_url": {
+            "description": "MISP instance URL (http://misp_instance.company.com/)",
+            "data_type": "string",
+            "required": true,
+            "order": 0
+          },
+          "verify_server_cert": {
+            "data_type": "boolean",
+            "description": "Verify server certificate",
+            "required": true,
+            "order": 1,
+            "default": false
+          },
+          "api_key": {
+            "description": "API Key found under Event Actions: Automation",
+            "data_type": "string",
+            "required": true
+          }
+    },
+    "actions": [
+      {
+        "action": "test connectivity",
+        "description": "Validate the asset configuration for connectivity.",
+        "type": "test",
+        "identifier": "test_asset_connectivity",
+        "read_only": true,
+        "parameters": {
+        },
+        "output": [],
+        "versions":"EQ(*)"
+      },
+      {
+      "action": "create event",
+      "description": "Create a new event in MISP for threat intel tracking",
+      "type": "generic",
+      "identifier": "create_event",
+      "read_only": false,
+      "parameters": {
+        "distribution": {
+          "description": "Distribution level for sharing",
+          "verbose": "0 = Your Org Only, 1 = This community only, 2 = Connected communities, 3 = All Communities, 4 = Sharing Group",
+          "data_type": "numeric",
+          "value_list": [0, 1, 2, 3, 4],
+          "default": 0,
+          "contains": [],
+          "required": true,
+          "order": 1
+        },
+        "threat_level_id": {
+          "description": "Threat level id",
+          "verbose": "1 = High, 2 = Medium, 3 = Low, 4 = Undefined",
+          "data_type": "numeric",
+          "value_list": [1, 2, 3, 4],
+          "default": 4,
+          "contains": [],
+          "order": 2,
+          "required": true
+        },
+        "analysis": {
+          "description": "Current stage of analysis for event",
+          "verbose": "0 = Initial, 1 = Ongoing, 2 = Completed",
+          "data_type": "numeric",
+          "value_list": [0, 1, 2],
+          "default": 0,
+          "order": 3,
+          "required": true
+        },
+        "info": {
+          "description": "Information / Description for Event",
+          "verbose": "Becomes the title of the event in MISP",
+          "data_type": "string",
+          "default": "Event created by Phantom",
+          "order": 0,
+          "required": true
+        },
+        "addAttributes": {
+          "description": "Add attributes upon event creation?",
+          "data_type": "boolean",
+          "default": true,
+          "order": 4,
+          "required": true
+        },
+        "to_IDS": {
+          "description": "Set 'to_IDS' flag=True in MISP?",
+          "data_type": "boolean",
+          "default": true,
+          "order": 5,
+          "required": true
+        },
+        "source_IPs": {
+          "description": "Source IPs to be added as attributes",
+          "data_type": "string",
+          "contains": ["ip"],
+          "order": 6,
+          "required": false
+        },
+        "dest_IPs": {
+          "description": "Destination IPs to be added as attributes",
+          "data_type": "string",
+          "contains": ["ip"],
+          "order": 7,
+          "required": false
+        },
+        "domains": {
+          "description": "Domains to be added as attributes",
+          "data_type": "string",
+          "contains": ["domain"],
+          "order": 8,
+          "required": false
+        },
+        "source_emails": {
+          "description": "Source email addresses to be added as attributes",
+          "data_type": "string",
+          "contains": ["email"],
+          "order": 9,
+          "required": false
+        },
+        "dest_emails": {
+          "description": "Destination email addresses to be added as attributes",
+          "data_type": "string",
+          "contains": ["email"],
+          "order": 10,
+          "required": false
+        }
+      },
+      "render": {
+        "width": 12,
+        "title": "Create Event info",
+        "type": "table",
+        "height": 5
+      },
+      "output": [
+        {
+            "data_path": "action_result.status",
+            "data_type": "string"
+        },
+        {
+            "data_path": "action_result.message",
+            "data_type": "string"
+        },
+        {
+            "data_path": "action_result.summary.message",
+            "data_type": "string"
+        },
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "contains": ["MISP Event ID"],
+          "column_name": "MISP Event ID",
+          "column_order": 0
+        },
+        {
+          "data_path": "action_result.data.*.threat_level_id",
+          "data_type": "numeric",
+          "contains": [ ],
+          "column_name": "Threat Level ID",
+          "column_order": 2
+        },
+        {
+          "data_path": "action_result.data.*.info",
+          "data_type": "string",
+          "contains": [ ],
+          "column_name": "Event Info / Description",
+          "column_order": 1
+        },
+        {
+          "data_path": "action_result.data.*.distribution",
+          "data_type": "string",
+          "contains": [ ],
+          "column_name": "Distribution",
+          "column_order": 3
+        },
+        {
+          "data_path": "action_result.data.*.attribute_count",
+          "data_type": "numeric",
+          "contains": [],
+          "column_name": "Attribute Count",
+          "column_order": 4
+        }
+      ],
+      "versions": "EQ(*)"
+      },
+      {
+      "action": "add attributes",
+      "description": "Add attributes / IOCs to an event in MISP",
+      "type": "generic",
+      "identifier": "add_attributes",
+      "read_only": false,
+      "parameters": {
+        "event_id": {
+          "description": "MISP event ID for adding attributes",
+          "data_type": "string",
+          "required": true,
+          "primary": true,
+          "order": 0,
+          "contains": ["MISP Event ID"]
+        },
+        "to_IDS": {
+          "description": "Set 'to_IDS' flag=True in MISP?",
+          "data_type": "boolean",
+          "default": true,
+          "order": 1,
+          "required": true
+        },
+        "source_IPs": {
+          "description": "Source IPs to be added as attributes",
+          "data_type": "string",
+          "order": 2,
+          "required": false
+        },
+        "dest_IPs": {
+          "description": "Destination IPs to be added as attributes",
+          "data_type": "string",
+          "order": 3,
+          "required": false
+        },
+        "domains": {
+          "description": "Domains to be added as attributes",
+          "data_type": "string",
+          "order": 4,
+          "required": false
+        },
+        "source_emails": {
+          "description": "Source email addresses to be added as attributes",
+          "data_type": "string",
+          "order": 5,
+          "required": false
+        },
+        "dest_emails": {
+          "description": "Destination email addresses to be added as attributes",
+          "data_type": "string",
+          "order": 6,
+          "required": false
+        }
+      },
+      "render": {
+        "width": 18,
+        "title": "Attributes Added",
+        "type": "table",
+        "height": 5
+      },
+      "output": [
+        {
+            "data_path": "action_result.status",
+            "data_type": "string"
+        },
+        {
+            "data_path": "action_result.message",
+            "data_type": "string"
+        },
+        {
+            "data_path": "action_result.summary.message",
+            "data_type": "string"
+        },
+        {
+          "data_path": "action_result.data.*.id",
+          "data_type": "string",
+          "contains": ["MISP Attribute ID"],
+          "column_name": "MISP Attribute ID",
+          "column_order": 0
+        },
+        {
+          "data_path": "action_result.data.*.event_id",
+          "data_type": "string",
+          "contains": ["MISP Event ID"],
+          "column_name": "MISP Event ID",
+          "column_order": 2
+        },
+        {
+          "data_path": "action_result.data.*.value",
+          "data_type": "string",
+          "contains": [ ],
+          "column_name": "Attribute Value",
+          "column_order": 1
+        },
+        {
+          "data_path": "action_result.data.*.distribution",
+          "data_type": "string",
+          "contains": [ ],
+          "column_name": "Distribution",
+          "column_order": 4
+        },
+        {
+          "data_path": "action_result.data.*.category",
+          "data_type": "string",
+          "contains": [],
+          "column_name": "Attribute Category",
+          "column_order": 3
+        }
+        ],
+      "versions": "EQ(*)"
+      }
+    ]
+}
