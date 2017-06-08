@@ -20,7 +20,7 @@ from phantom.action_result import ActionResult
 # Imports local to this App
 import requests
 import json
-import BeautifulSoup
+from bs4 import BeautifulSoup
 from pymisp import PyMISP
 
 
@@ -77,7 +77,7 @@ class MispConnector(BaseConnector):
         action_result.add_data(self._event["Event"])
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event["Event"]["id"])})
 
-        addAttributes = param.get("addAttributes")
+        addAttributes = param.get("add_attributes")
         if addAttributes is True:
             try:
                 self._perform_adds(param, action_result)
@@ -88,20 +88,20 @@ class MispConnector(BaseConnector):
 
     def _perform_adds(self, param, result):
 
-        source_ips = param.get("source_IPs")
+        source_ips = param.get("source_ips")
         if source_ips is not None:
             try:
-                source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=param["source_IPs"],
-                                                           to_ids=param["to_IDS"])
+                source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=param["source_ips"],
+                                                           to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source IP attribute:", e)
             result.add_data(source_ip_attribute["Attribute"])
 
-        dest_ips = param.get("dest_IPs")
+        dest_ips = param.get("dest_ips")
         if dest_ips is not None:
             try:
-                dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=param["dest_IPs"],
-                                                         to_ids=param["to_IDS"])
+                dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=param["dest_ips"],
+                                                         to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest IP attribute:", e)
             result.add_data(dest_ip_attribute["Attribute"])
@@ -110,7 +110,7 @@ class MispConnector(BaseConnector):
         if source_emails is not None:
             try:
                 source_email_attribute = self._misp.add_email_src(event=self._event, email=param["source_emails"],
-                                                                  to_ids=param["to_IDS"])
+                                                                  to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source email attribute:", e)
             result.add_data(source_email_attribute["Attribute"])
@@ -119,7 +119,7 @@ class MispConnector(BaseConnector):
         if dest_emails is not None:
             try:
                 dest_email_attribute = self._misp.add_email_dst(event=self._event, email=param["dest_emails"],
-                                                                to_ids=param["to_IDS"])
+                                                                to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest email attribute:", e)
             result.add_data(dest_email_attribute["Attribute"])
@@ -128,7 +128,7 @@ class MispConnector(BaseConnector):
         if domains is not None:
             try:
                 domain_attribute = self._misp.add_domain(event=self._event, domain=param["domains"],
-                                                         to_ids=param["to_IDS"])
+                                                         to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add domain attribute:", e)
             result.add_data(domain_attribute["Attribute"])

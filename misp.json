@@ -7,7 +7,7 @@
     "type": "Threat Intelligence Platform",
     "license": "Copyright (c) Phantom Cyber Corporation 2017",
     "main_module" : "misp_connector.pyc",
-    "app_version": "1.0",
+    "app_version": "1.0.0",
     "pip_dependencies": {
         "pypi": [
           {"module": "pymisp"}
@@ -36,7 +36,8 @@
           "api_key": {
             "description": "API Key found under Event Actions: Automation",
             "data_type": "string",
-            "required": true
+            "required": true,
+            "order": 2
           }
     },
     "actions": [
@@ -95,28 +96,28 @@
           "order": 0,
           "required": true
         },
-        "addAttributes": {
+        "add_attributes": {
           "description": "Add attributes upon event creation?",
           "data_type": "boolean",
           "default": true,
           "order": 4,
           "required": true
         },
-        "to_IDS": {
+        "to_ids": {
           "description": "Set 'to_IDS' flag=True in MISP?",
           "data_type": "boolean",
           "default": true,
           "order": 5,
           "required": true
         },
-        "source_IPs": {
+        "source_ips": {
           "description": "Source IPs to be added as attributes",
           "data_type": "string",
           "contains": ["ip"],
           "order": 6,
           "required": false
         },
-        "dest_IPs": {
+        "dest_ips": {
           "description": "Destination IPs to be added as attributes",
           "data_type": "string",
           "contains": ["ip"],
