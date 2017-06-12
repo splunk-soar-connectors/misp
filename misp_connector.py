@@ -140,60 +140,57 @@ class MispConnector(BaseConnector):
             try:
                 src_ip_list = phantom.get_list_from_string(source_ips)
                 for ip in src_ip_list:
-                        source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=ip,
-                                                           to_ids=param["to_ids"])
+                    source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=ip, to_ids=param["to_ids"])
+                    if add_data is True:
+                        result.add_data(source_ip_attribute["Attribute"])
+
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source IP attribute:", e)
-            if add_data is True:
-                result.add_data(source_ip_attribute["Attribute"])
 
         dest_ips = param.get("dest_ips")
         if dest_ips is not None:
             try:
                 dst_ip_list = phantom.get_list_from_string(dest_ips)
                 for ip in dst_ip_list:
-                        dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=ip,
-                                                           to_ids=param["to_ids"])
+                    dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=ip, to_ids=param["to_ids"])
+                    if add_data is True:
+                        result.add_data(dest_ip_attribute["Attribute"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest IP attribute:", e)
-            if add_data is True:
-                result.add_data(dest_ip_attribute["Attribute"])
 
         source_emails = param.get("source_emails")
         if source_emails is not None:
             try:
                 source_email_list = phantom.get_list_from_string(source_emails)
                 for email in source_email_list:
-                        source_email_attribute = self._misp.add_email_src(event=self._event, email=email,
-                                                           to_ids=param["to_ids"])
+                    source_email_attribute = self._misp.add_email_src(event=self._event, email=email, to_ids=param["to_ids"])
+                    if add_data is True:
+                        result.add_data(source_email_attribute["Attribute"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source email attribute:", e)
-            if add_data is True:
-                result.add_data(source_email_attribute["Attribute"])
 
         dest_emails = param.get("dest_emails")
         if dest_emails is not None:
             try:
                 dest_email_list = phantom.get_list_from_string(dest_emails)
                 for email in dest_email_list:
-                        dest_email_attribute = self._misp.add_email_dst(event=self._event, email=email,
-                                                           to_ids=param["to_ids"])
+                    dest_email_attribute = self._misp.add_email_dst(event=self._event, email=email, to_ids=param["to_ids"])
+                    if add_data is True:
+                        result.add_data(dest_email_attribute["Attribute"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest email attribute:", e)
-            if add_data is True:
-                result.add_data(dest_email_attribute["Attribute"])
 
         domains = param.get("domains")
         if domains is not None:
             try:
                 domain_list = phantom.get_list_from_string(domains)
                 for domain in domain_list:
-                        domain_attribute = self._misp.add_domain(event=self._event, domain=domain,
+                    domain_attribute = self._misp.add_domain(event=self._event, domain=domain,
                                                            to_ids=param["to_ids"])
+                    if add_data is True:
+                        result.add_data(domain_attribute["Attribute"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add domain attribute:", e)
-            if add_data is True:
-                result.add_data(domain_attribute["Attribute"])
 
     def _add_attributes(self, param):
 
