@@ -115,35 +115,40 @@
           "data_type": "string",
           "contains": ["ip"],
           "order": 6,
-          "required": false
+          "required": false,
+          "allow_list": true
         },
         "dest_ips": {
           "description": "Destination IPs to be added as attributes",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": ["ip"], 
           "order": 7,
-          "required": false
+          "required": false,
+          "allow_list": true
         },
         "domains": {
           "description": "Domains to be added as attributes",
           "data_type": "string",
           "contains": ["domain"],
           "order": 8,
-          "required": false
+          "required": false,
+          "allow_list": true
         },
         "source_emails": {
           "description": "Source email addresses to be added as attributes",
           "data_type": "string",
           "contains": ["email"],
           "order": 9,
-          "required": false
+          "required": false,
+          "allow_list": true
         },
         "dest_emails": {
           "description": "Destination email addresses to be added as attributes",
           "data_type": "string",
           "contains": ["email"],
           "order": 10,
-          "required": false
+          "required": false,
+          "allow_list": true
         }
       },
       "render": {
@@ -218,42 +223,52 @@
           "order": 0,
           "contains": ["MISP Event ID"]
         },
-        "to_IDS": {
+        "to_ids": {
           "description": "Set 'to_IDS' flag=True in MISP?",
           "data_type": "boolean",
           "default": true,
           "order": 1,
           "required": true
         },
-        "source_IPs": {
+        "source_ips": {
           "description": "Source IPs to be added as attributes",
           "data_type": "string",
           "order": 2,
-          "required": false
+          "required": false,
+          "contains": ["ip"],
+          "allow_list": true
         },
-        "dest_IPs": {
+        "dest_ips": {
           "description": "Destination IPs to be added as attributes",
           "data_type": "string",
           "order": 3,
-          "required": false
+          "required": false,
+          "contains": ["ip"],
+          "allow_list": true
         },
         "domains": {
           "description": "Domains to be added as attributes",
           "data_type": "string",
           "order": 4,
-          "required": false
+          "contains": ["domain"],
+          "required": false,
+          "allow_list": true
         },
         "source_emails": {
           "description": "Source email addresses to be added as attributes",
           "data_type": "string",
           "order": 5,
-          "required": false
+          "contains": ["email"],
+          "required": false,
+          "allow_list": true
         },
         "dest_emails": {
           "description": "Destination email addresses to be added as attributes",
           "data_type": "string",
           "order": 6,
-          "required": false
+          "contains": ["email"],
+          "required": false,
+          "allow_list": true
         }
       },
       "render": {

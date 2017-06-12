@@ -16,6 +16,7 @@
 import phantom.app as phantom
 from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
+import phantom.utils as ph_utils
 
 # Imports local to this App
 import requests
@@ -37,6 +38,48 @@ class MispConnector(BaseConnector):
         self._verify = None
         self._event = None
 
+    def _validate_ip(self, input_data):
+
+        ips = []
+        # First work on the comma as the seperator
+        if (',' in input_data):
+            ips = input_data.split(',')
+        elif(';' in input_data):
+            ips = input_data.split(';')
+
+        for ip in ips:
+            if (not ph_utils.is_ip(ip.strip())):
+                return False
+        return True
+
+    def _validate_domain(self, input_data):
+
+        domains = []
+        # First work on the comma as the seperator
+        if (',' in input_data):
+            domains = input_data.split(',')
+        elif(';' in input_data):
+            domains = input_data.split(';')
+
+        for domain in domains:
+            if (not ph_utils.is_domain(domain.strip())):
+                return False
+        return True
+
+    def _validate_email(self, input_data):
+
+        emails = []
+        # First work on the comma as the seperator
+        if (',' in input_data):
+            emails = input_data.split(',')
+        elif(';' in input_data):
+            emails = input_data.split(';')
+
+        for email in emails:
+            if (not ph_utils.is_email(email.strip())):
+                return False
+        return True
+
     def initialize(self):
 
         config = self.get_config()
@@ -49,6 +92,10 @@ class MispConnector(BaseConnector):
             self._misp = PyMISP(self._misp_url, api_key, self._verify, 'json')
         except Exception as e:
             return self.set_status(phantom.APP_ERROR, "Failed to create API session:", e)
+
+        self.set_validator('ip', self._validate_ip)
+        self.set_validator('domain', self._validate_domain)
+        self.set_validator('email', self._validate_email)
 
         return phantom.APP_SUCCESS
 
@@ -86,52 +133,67 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _perform_adds(self, param, result):
+    def _perform_adds(self, param, result, add_data=False):
 
         source_ips = param.get("source_ips")
         if source_ips is not None:
             try:
-                source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=param["source_ips"],
+                src_ip_list = phantom.get_list_from_string(source_ips)
+                for ip in src_ip_list:
+                        source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=ip,
                                                            to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source IP attribute:", e)
-            result.add_data(source_ip_attribute["Attribute"])
+            if add_data is True:
+                result.add_data(source_ip_attribute["Attribute"])
 
         dest_ips = param.get("dest_ips")
         if dest_ips is not None:
             try:
-                dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=param["dest_ips"],
-                                                         to_ids=param["to_ids"])
+                dst_ip_list = phantom.get_list_from_string(dest_ips)
+                for ip in dst_ip_list:
+                        dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=ip,
+                                                           to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest IP attribute:", e)
-            result.add_data(dest_ip_attribute["Attribute"])
+            if add_data is True:
+                result.add_data(dest_ip_attribute["Attribute"])
 
         source_emails = param.get("source_emails")
         if source_emails is not None:
             try:
-                source_email_attribute = self._misp.add_email_src(event=self._event, email=param["source_emails"],
-                                                                  to_ids=param["to_ids"])
+                source_email_list = phantom.get_list_from_string(source_emails)
+                for email in source_email_list:
+                        source_email_attribute = self._misp.add_email_src(event=self._event, email=email,
+                                                           to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add source email attribute:", e)
-            result.add_data(source_email_attribute["Attribute"])
+            if add_data is True:
+                result.add_data(source_email_attribute["Attribute"])
 
         dest_emails = param.get("dest_emails")
         if dest_emails is not None:
             try:
-                dest_email_attribute = self._misp.add_email_dst(event=self._event, email=param["dest_emails"],
-                                                                to_ids=param["to_ids"])
+                dest_email_list = phantom.get_list_from_string(dest_emails)
+                for email in dest_email_list:
+                        dest_email_attribute = self._misp.add_email_dst(event=self._event, email=email,
+                                                           to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add dest email attribute:", e)
-            result.add_data(dest_email_attribute["Attribute"])
+            if add_data is True:
+                result.add_data(dest_email_attribute["Attribute"])
 
         domains = param.get("domains")
         if domains is not None:
             try:
-                domain_attribute = self._misp.add_domain(event=self._event, domain=param["domains"],
-                                                         to_ids=param["to_ids"])
+                domain_list = phantom.get_list_from_string(domains)
+                for domain in domain_list:
+                        domain_attribute = self._misp.add_domain(event=self._event, domain=domain,
+                                                           to_ids=param["to_ids"])
             except Exception as e:
                 return self.set_status(phantom.APP_ERROR, "Failed to add domain attribute:", e)
-            result.add_data(domain_attribute["Attribute"])
+            if add_data is True:
+                result.add_data(domain_attribute["Attribute"])
 
     def _add_attributes(self, param):
 
@@ -144,10 +206,9 @@ class MispConnector(BaseConnector):
                 return action_result.set_status(phantom.APP_ERROR, "Failed to get event for adding attributes:", e)
 
         try:
-            self._perform_adds(param, action_result)
+            self._perform_adds(param, action_result, add_data=True)
         except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Failed to add attributes to newly created MISP event:",
-                                            e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to add attributes to newly created MISP event:", e)
         action_result.set_summary({"message": "Attributes added to event: {0}".format(self._event["Event"]["id"])})
 
         return action_result.set_status(phantom.APP_SUCCESS)
