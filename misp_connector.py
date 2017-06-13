@@ -133,64 +133,43 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _add_indicator(self, param, result, indicator_type, add_data=False):
+        indicators = param.get(indicator_type)
+
+        if indicators is not None:
+            try:
+                indicator_list = phantom.get_list_from_string(indicators)
+            except Exception as e:
+                return self.set_status(phantom.APP_ERROR, "Failed to get list from indicators", e)
+
+            for indicator in indicator_list:
+                try:
+                    if indicator_type == "source_ips":
+                        indicator_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=indicator, to_ids=param["to_ids"])
+                    elif indicator_type == "dest_ips":
+                        indicator_attribute = self._misp.add_ipdst(event=self._event, ipdst=indicator, to_ids=param["to_ids"])
+                    elif indicator_type == "domains":
+                        indicator_attribute = self._misp.add_domain(event=self._event, domain=indicator, to_ids=param["to_ids"])
+                    elif indicator_type == "source_emails":
+                        indicator_attribute = self._misp.add_email_src(event=self._event, email=indicator, to_ids=param["to_ids"])
+                    elif indicator_type == "dest_emails":
+                        indicator_attribute = self._misp.add_email_dst(event=self._event, email=indicator, to_ids=param["to_ids"])
+                except Exception as e:
+                        return self.set_status(phantom.APP_ERROR, "Failed to add indicator of type: {0}".format(indicator_type), e)
+                if add_data is True:
+                    try:
+                        result.add_data(indicator_attribute["Attribute"])
+                    except Exception as e:
+                        error_data = {"Error message": indicator_attribute["message"], "attribute": indicator, "errors": indicator_attribute["errors"]}
+                        result.add_data(error_data)
+
     def _perform_adds(self, param, result, add_data=False):
 
-        source_ips = param.get("source_ips")
-        if source_ips is not None:
-            try:
-                src_ip_list = phantom.get_list_from_string(source_ips)
-                for ip in src_ip_list:
-                    source_ip_attribute = self._misp.add_ipsrc(event=self._event, ipsrc=ip, to_ids=param["to_ids"])
-                    if add_data is True:
-                        result.add_data(source_ip_attribute["Attribute"])
-
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to add source IP attribute:", e)
-
-        dest_ips = param.get("dest_ips")
-        if dest_ips is not None:
-            try:
-                dst_ip_list = phantom.get_list_from_string(dest_ips)
-                for ip in dst_ip_list:
-                    dest_ip_attribute = self._misp.add_ipdst(event=self._event, ipdst=ip, to_ids=param["to_ids"])
-                    if add_data is True:
-                        result.add_data(dest_ip_attribute["Attribute"])
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to add dest IP attribute:", e)
-
-        source_emails = param.get("source_emails")
-        if source_emails is not None:
-            try:
-                source_email_list = phantom.get_list_from_string(source_emails)
-                for email in source_email_list:
-                    source_email_attribute = self._misp.add_email_src(event=self._event, email=email, to_ids=param["to_ids"])
-                    if add_data is True:
-                        result.add_data(source_email_attribute["Attribute"])
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to add source email attribute:", e)
-
-        dest_emails = param.get("dest_emails")
-        if dest_emails is not None:
-            try:
-                dest_email_list = phantom.get_list_from_string(dest_emails)
-                for email in dest_email_list:
-                    dest_email_attribute = self._misp.add_email_dst(event=self._event, email=email, to_ids=param["to_ids"])
-                    if add_data is True:
-                        result.add_data(dest_email_attribute["Attribute"])
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to add dest email attribute:", e)
-
-        domains = param.get("domains")
-        if domains is not None:
-            try:
-                domain_list = phantom.get_list_from_string(domains)
-                for domain in domain_list:
-                    domain_attribute = self._misp.add_domain(event=self._event, domain=domain,
-                                                           to_ids=param["to_ids"])
-                    if add_data is True:
-                        result.add_data(domain_attribute["Attribute"])
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to add domain attribute:", e)
+        self._add_indicator(param, result, "source_ips", add_data=add_data)
+        self._add_indicator(param, result, "dest_ips", add_data=add_data)
+        self._add_indicator(param, result, "domains", add_data=add_data)
+        self._add_indicator(param, result, "source_emails", add_data=add_data)
+        self._add_indicator(param, result, "dest_emails", add_data=add_data)
 
     def _add_attributes(self, param):
 
