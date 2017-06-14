@@ -42,7 +42,9 @@ class MispConnector(BaseConnector):
 
         ips = []
         # First work on the comma as the seperator
-        if (',' in input_data):
+        if type(input_data) is list:
+            ips = input_data
+        elif (',' in input_data):
             ips = input_data.split(',')
         elif(';' in input_data):
             ips = input_data.split(';')
@@ -80,6 +82,45 @@ class MispConnector(BaseConnector):
                 return False
         return True
 
+    def _validate_url(self, input_data):
+
+        urls = []
+        # First work on the comma as the seperator
+        if (',' in input_data):
+            urls = input_data.split(',')
+        elif(';' in input_data):
+            urls = input_data.split(';')
+
+        for url in urls:
+            if (not ph_utils.is_url(url.strip())):
+                return False
+        return True
+
+    def _validate_indicator(self, input_data, inc_type):
+
+        incs = []
+        if type(input_data) is list:
+            incs = input_data
+        elif (',' in input_data):
+            incs = input_data.split(',')
+        elif(';' in input_data):
+            incs = input_data.split(';')
+
+        for inc in incs:
+            if inc_type == "ip":
+                if (not ph_utils.is_ip(inc.strip())):
+                    return False
+            elif inc_type == "email":
+                if (not ph_utils.is_email(inc.strip())):
+                    return False
+            elif inc_type == "domain":
+                if (not ph_utils.is_domain(inc.strip())):
+                    return False
+            elif inc_type == "url":
+                if (not ph_utils.is_url(inc.strip())):
+                    return False
+        return True
+
     def initialize(self):
 
         config = self.get_config()
@@ -96,6 +137,7 @@ class MispConnector(BaseConnector):
         self.set_validator('ip', self._validate_ip)
         self.set_validator('domain', self._validate_domain)
         self.set_validator('email', self._validate_email)
+        self.set_validator('url', self._validate_url)
 
         return phantom.APP_SUCCESS
 
@@ -137,10 +179,13 @@ class MispConnector(BaseConnector):
         indicators = param.get(indicator_type)
 
         if indicators is not None:
-            try:
-                indicator_list = phantom.get_list_from_string(indicators)
-            except Exception as e:
-                return self.set_status(phantom.APP_ERROR, "Failed to get list from indicators", e)
+            if type(indicators) is list:
+                indicator_list = indicators
+            else:
+                try:
+                    indicator_list = phantom.get_list_from_string(indicators)
+                except Exception as e:
+                    return self.set_status(phantom.APP_ERROR, "Failed to get list from indicators", e)
 
             for indicator in indicator_list:
                 try:
@@ -154,6 +199,8 @@ class MispConnector(BaseConnector):
                         indicator_attribute = self._misp.add_email_src(event=self._event, email=indicator, to_ids=param["to_ids"])
                     elif indicator_type == "dest_emails":
                         indicator_attribute = self._misp.add_email_dst(event=self._event, email=indicator, to_ids=param["to_ids"])
+                    elif indicator_type == "urls":
+                        indicator_attribute = self._misp.add_url(event=self._event, url=indicator, to_ids=param["to_ids"])
                 except Exception as e:
                         return self.set_status(phantom.APP_ERROR, "Failed to add indicator of type: {0}".format(indicator_type), e)
                 if add_data is True:
@@ -170,6 +217,7 @@ class MispConnector(BaseConnector):
         self._add_indicator(param, result, "domains", add_data=add_data)
         self._add_indicator(param, result, "source_emails", add_data=add_data)
         self._add_indicator(param, result, "dest_emails", add_data=add_data)
+        self._add_indicator(param, result, "urls", add_data=add_data)
 
     def _add_attributes(self, param):
 

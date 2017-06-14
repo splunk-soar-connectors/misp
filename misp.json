@@ -17,7 +17,7 @@
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "1.0.240",
+    "min_phantom_version": "2.1.467",
     "logo": "misp.png",
     "configuration": {
           "base_url": {
@@ -149,6 +149,14 @@
           "order": 10,
           "required": false,
           "allow_list": true
+        },
+        "urls": {
+          "description": "URLs to be added as attributes",
+          "data_type": "string",
+          "contains": ["url"],
+          "order": 11,
+          "required": false,
+          "allow_list": true
         }
       },
       "render": {
@@ -269,7 +277,16 @@
           "contains": ["email"],
           "required": false,
           "allow_list": true
+        },
+        "urls": {
+          "description": "URLs to be added as attributes",
+          "data_type": "string",
+          "contains": ["url"],
+          "order": 7,
+          "required": false,
+          "allow_list": true
         }
+
       },
       "render": {
         "width": 18,
