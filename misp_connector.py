@@ -19,10 +19,28 @@ from phantom.action_result import ActionResult
 import phantom.utils as ph_utils
 
 # Imports local to this App
+import traceback
 import requests
 import json
 from bs4 import BeautifulSoup
 from pymisp import PyMISP
+
+__orig_session_get = requests.Session.get
+__orig_session_post = requests.Session.post
+
+
+def get(self, *args, **kwargs):
+    kwargs.pop('verify', None)
+    return __orig_session_get(self, verify=self.verify, *args, **kwargs)
+
+
+def post(self, *args, **kwargs):
+    kwargs.pop('verify', None)
+    return __orig_session_post(self, verify=self.verify, *args, **kwargs)
+
+
+requests.Session.get = get
+requests.Session.post = post
 
 
 class MispConnector(BaseConnector):
@@ -124,14 +142,17 @@ class MispConnector(BaseConnector):
     def initialize(self):
 
         config = self.get_config()
-        self._verify = config.get("verify_server_cert")
+        self._verify = config.get("verify_server_cert", False)
         self._misp_url = config.get("base_url")
         api_key = config.get("api_key")
 
+        self.debug_print(self._verify)
         self.save_progress("Creating MISP API session...")
         try:
-            self._misp = PyMISP(self._misp_url, api_key, self._verify, 'json')
+            self._misp = PyMISP(self._misp_url, api_key, ssl=self._verify)
         except Exception as e:
+            tb = traceback.format_exc()
+            self.debug_print(tb)
             return self.set_status(phantom.APP_ERROR, "Failed to create API session:", e)
 
         self.set_validator('ip', self._validate_ip)
