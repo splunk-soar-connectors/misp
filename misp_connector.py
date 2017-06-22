@@ -16,6 +16,7 @@
 import phantom.app as phantom
 from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
+from phantom.vault import Vault
 import phantom.utils as ph_utils
 
 # Imports local to this App
@@ -30,12 +31,18 @@ __orig_session_post = requests.Session.post
 
 
 def get(self, *args, **kwargs):
-    kwargs.pop('verify', None)
+    if self.verify is not None:
+        kwargs.pop('verify', None)
+    else:
+        self.verify = True
     return __orig_session_get(self, verify=self.verify, *args, **kwargs)
 
 
 def post(self, *args, **kwargs):
-    kwargs.pop('verify', None)
+    if self.verify is not None:
+        kwargs.pop('verify', None)
+    else:
+        self.verify = True
     return __orig_session_post(self, verify=self.verify, *args, **kwargs)
 
 
@@ -43,11 +50,18 @@ requests.Session.get = get
 requests.Session.post = post
 
 
+class RetVal(tuple):
+    def __new__(cls, val1, val2):
+        return tuple.__new__(RetVal, (val1, val2))
+
+
 class MispConnector(BaseConnector):
 
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
     ACTION_ID_ADD_ATTRIBUTES = "add_attributes"
+    ACTION_ID_RUN_QUERY = "run_query"
+    ACTION_ID_GET_EVENT = "get_event"
 
     def __init__(self):
 
@@ -258,6 +272,86 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _do_search_index(self, action_result, **kwargs):
+        try:
+            resp = self._misp.search_index(**kwargs)
+        except Exception as e:
+            return RetVal(action_result.set_status(phantom.APP_ERROR, e), None)
+
+        return RetVal(phantom.APP_SUCCESS, resp)
+
+    def _do_search(self, action_result, **kwargs):
+        try:
+            resp = self._misp.search(**kwargs)
+        except Exception as e:
+            return RetVal(action_result.set_status(phantom.APP_ERROR, e), None)
+
+        return RetVal(phantom.APP_SUCCESS, resp)
+
+    def _run_query(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        query_dict = {}
+        if 'event_id' in param:
+            query_dict['eventid'] = param['event_id'].split(',')
+        if 'event_info' in param:
+            query_dict['eventinfo'] = param['event_info'].split(',')
+        if 'tags' in param:
+            query_dict['tags'] = param['tags'].split(',')
+        if 'other' in param:
+            try:
+                query_dict.update(json.loads(param['other']))
+            except Exception as e:
+                return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object", e)
+
+        self.debug_print(query_dict)
+
+        ret_val, events = self._do_search_index(action_result, **query_dict)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        action_result.add_data(events)
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _download_malware_samples(self, action_result, event_id):
+        """ Download malware samples for an event """
+        try:
+            resp = self._misp.download_samples(event_id=event_id)
+        except Exception as e:
+            return action_result.set_status("Error getting attachments from event", e)
+
+        # 'resp' is a tuple that looks like this:
+        # (Success_bool, [[event_id, file_name, bytes], [...],...])
+
+        if not resp[0]:
+            return phantom.APP_SUCCESS  # No Attachments
+
+        for sample in resp[1]:
+            file_path = '/vault/tmp/' + sample[1]
+            with open(file_path, 'wb') as fp:
+                fp.write(sample[2].read())
+                fp.close()
+                Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
+
+        return phantom.APP_SUCCESS
+
+    def _get_attachments(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        event_id = param['event_id']
+        query_dict = {}
+        query_dict['eventid'] = event_id
+        query_dict['controller'] = 'attributes'
+
+        ret_val, attachments = self._do_search(action_result, **query_dict)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
+
+        if param.get('download_files'):
+            # Don't forget about this
+            self._download_malware_samples(action_result, event_id)
+
+        action_result.add_data(attachments)
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def _process_html_response(self, response, action_result):
 
         # An html response, is bound to be an error
@@ -355,8 +449,12 @@ class MispConnector(BaseConnector):
 
         if (action_id == self.ACTION_ID_CREATE_EVENT):
             ret_val = self._create_event(param)
-        if (action_id == self.ACTION_ID_ADD_ATTRIBUTES):
+        elif (action_id == self.ACTION_ID_ADD_ATTRIBUTES):
             ret_val = self._add_attributes(param)
+        elif (action_id == self.ACTION_ID_RUN_QUERY):
+            ret_val = self._run_query(param)
+        elif (action_id == self.ACTION_ID_GET_EVENT):
+            ret_val = self._get_attachments(param)
         elif (action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY):
             ret_val = self._test_connectivity()
 
