@@ -1,0 +1,4 @@
+[submodule "pymisp"]
+	path = pymisp
+	url = ssh://git@prod-bb-1.phantom.local:7999/per/pymisp.git
+    ignore = dirty
