@@ -26,6 +26,12 @@ import json
 from bs4 import BeautifulSoup
 from pymisp import PyMISP
 
+
+# This patching is required because the PyMISP API sets the verify flag as a 
+#  member of the Session object (Session.verify)
+# Whether its a bug or just because it's an older version, the requests module
+#  on phantom doesn't do anything if that member is set, and will only ignore
+#  server verification if its passed as part of the function
 __orig_session_get = requests.Session.get
 __orig_session_post = requests.Session.post
 

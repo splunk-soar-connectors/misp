@@ -295,7 +295,7 @@
     {
       "action": "update event",
       "description": "Add attributes / IOCs to an event in MISP",
-      "type": "correct",
+      "type": "generic",
       "identifier": "add_attributes",
       "read_only": false,
       "parameters": {
