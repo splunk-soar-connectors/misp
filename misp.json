@@ -491,7 +491,7 @@
     },
     {
       "action": "run query",
-      "description": "Run a query to find events",
+      "description": "Run a query to find events or attributes",
       "type": "investigate",
       "identifier": "run_query",
       "read_only": true,
