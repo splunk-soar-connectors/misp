@@ -27,7 +27,7 @@ from bs4 import BeautifulSoup
 from pymisp import PyMISP
 
 
-# This patching is required because the PyMISP API sets the verify flag as a 
+# This patching is required because the PyMISP API sets the verify flag as a
 #  member of the Session object (Session.verify)
 # Whether its a bug or just because it's an older version, the requests module
 #  on phantom doesn't do anything if that member is set, and will only ignore
@@ -278,14 +278,6 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _do_search_index(self, action_result, **kwargs):
-        try:
-            resp = self._misp.search_index(**kwargs)
-        except Exception as e:
-            return RetVal(action_result.set_status(phantom.APP_ERROR, e), None)
-
-        return RetVal(phantom.APP_SUCCESS, resp)
-
     def _do_search(self, action_result, **kwargs):
         try:
             resp = self._misp.search(**kwargs)
@@ -295,27 +287,31 @@ class MispConnector(BaseConnector):
         return RetVal(phantom.APP_SUCCESS, resp)
 
     def _run_query(self, param):
-        action_result = self.add_action_result(ActionResult(dict(param)))
+        action_result = self.add_action_result(ActionResult(param))
         query_dict = {}
+        query_dict['controller'] = param['controller']
         if 'event_id' in param:
-            query_dict['eventid'] = param['event_id'].split(',')
-        if 'event_info' in param:
-            query_dict['eventinfo'] = param['event_info'].split(',')
+            if ',' in param['event_id']:
+                query_dict['eventid'] = param['event_id'].split(',')
+            else:
+                query_dict['eventid'] = param['event_id']
         if 'tags' in param:
-            query_dict['tags'] = param['tags'].split(',')
+            if ',' in param['tags']:
+                query_dict['tags'] = param['tags'].split(',')
+            else:
+                query_dict['tags'] = param['tags']
         if 'other' in param:
             try:
                 query_dict.update(json.loads(param['other']))
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object", e)
 
-        self.debug_print(query_dict)
+        ret_val, response = self._do_search(action_result, **query_dict)
 
-        ret_val, events = self._do_search_index(action_result, **query_dict)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        action_result.add_data(events)
+        action_result.add_data(response)
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _download_malware_samples(self, action_result, event_id):
