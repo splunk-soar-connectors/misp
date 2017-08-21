@@ -32,28 +32,26 @@ from pymisp import PyMISP
 # Whether its a bug or just because it's an older version, the requests module
 #  on phantom doesn't do anything if that member is set, and will only ignore
 #  server verification if its passed as part of the function
-__orig_session_get = requests.Session.get
-__orig_session_post = requests.Session.post
+def patch_requests():
+    __orig_session_get = requests.Session.get
+    __orig_session_post = requests.Session.post
 
+    def get(self, *args, **kwargs):
+        if self.verify is not None:
+            kwargs.pop('verify', None)
+        else:
+            self.verify = True
+        return __orig_session_get(self, verify=self.verify, *args, **kwargs)
 
-def get(self, *args, **kwargs):
-    if self.verify is not None:
-        kwargs.pop('verify', None)
-    else:
-        self.verify = True
-    return __orig_session_get(self, verify=self.verify, *args, **kwargs)
+    def post(self, *args, **kwargs):
+        if self.verify is not None:
+            kwargs.pop('verify', None)
+        else:
+            self.verify = True
+        return __orig_session_post(self, verify=self.verify, *args, **kwargs)
 
-
-def post(self, *args, **kwargs):
-    if self.verify is not None:
-        kwargs.pop('verify', None)
-    else:
-        self.verify = True
-    return __orig_session_post(self, verify=self.verify, *args, **kwargs)
-
-
-requests.Session.get = get
-requests.Session.post = post
+    requests.Session.get = get
+    requests.Session.post = post
 
 
 class RetVal(tuple):
@@ -444,8 +442,11 @@ class MispConnector(BaseConnector):
 
         ret_val = phantom.APP_SUCCESS
 
+        patch_requests()
+
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
+
 
         self.debug_print("action_id", self.get_action_identifier())
 
