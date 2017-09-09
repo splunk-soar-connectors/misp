@@ -159,6 +159,7 @@ class MispConnector(BaseConnector):
 
     def initialize(self):
 
+        patch_requests()
         config = self.get_config()
         self._verify = config.get("verify_server_cert", False)
         self._misp_url = config.get("base_url")
@@ -387,8 +388,8 @@ class MispConnector(BaseConnector):
         action_result.add_data(resp_json)
         message = r.text.replace('{', '{{').replace('}', '}}')
         return action_result.set_status(phantom.APP_ERROR,
-                                               "Error from server, Status Code: {0} data returned: {1}".format(
-                                                   r.status_code, message)), resp_json
+                                        "Error from server, Status Code: {0} data returned: {1}".format(
+                                         r.status_code, message)), resp_json
 
     def _process_response(self, r, action_result):
 
@@ -442,11 +443,8 @@ class MispConnector(BaseConnector):
 
         ret_val = phantom.APP_SUCCESS
 
-        patch_requests()
-
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
-
 
         self.debug_print("action_id", self.get_action_identifier())
 
