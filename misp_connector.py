@@ -32,28 +32,26 @@ from pymisp import PyMISP
 # Whether its a bug or just because it's an older version, the requests module
 #  on phantom doesn't do anything if that member is set, and will only ignore
 #  server verification if its passed as part of the function
-__orig_session_get = requests.Session.get
-__orig_session_post = requests.Session.post
+def patch_requests():
+    __orig_session_get = requests.Session.get
+    __orig_session_post = requests.Session.post
 
+    def get(self, *args, **kwargs):
+        if self.verify is not None:
+            kwargs.pop('verify', None)
+        else:
+            self.verify = True
+        return __orig_session_get(self, verify=self.verify, *args, **kwargs)
 
-def get(self, *args, **kwargs):
-    if self.verify is not None:
-        kwargs.pop('verify', None)
-    else:
-        self.verify = True
-    return __orig_session_get(self, verify=self.verify, *args, **kwargs)
+    def post(self, *args, **kwargs):
+        if self.verify is not None:
+            kwargs.pop('verify', None)
+        else:
+            self.verify = True
+        return __orig_session_post(self, verify=self.verify, *args, **kwargs)
 
-
-def post(self, *args, **kwargs):
-    if self.verify is not None:
-        kwargs.pop('verify', None)
-    else:
-        self.verify = True
-    return __orig_session_post(self, verify=self.verify, *args, **kwargs)
-
-
-requests.Session.get = get
-requests.Session.post = post
+    requests.Session.get = get
+    requests.Session.post = post
 
 
 class RetVal(tuple):
@@ -161,6 +159,7 @@ class MispConnector(BaseConnector):
 
     def initialize(self):
 
+        patch_requests()
         config = self.get_config()
         self._verify = config.get("verify_server_cert", False)
         self._misp_url = config.get("base_url")
@@ -389,8 +388,8 @@ class MispConnector(BaseConnector):
         action_result.add_data(resp_json)
         message = r.text.replace('{', '{{').replace('}', '}}')
         return action_result.set_status(phantom.APP_ERROR,
-                                               "Error from server, Status Code: {0} data returned: {1}".format(
-                                                   r.status_code, message)), resp_json
+                                        "Error from server, Status Code: {0} data returned: {1}".format(
+                                         r.status_code, message)), resp_json
 
     def _process_response(self, r, action_result):
 
