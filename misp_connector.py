@@ -54,6 +54,13 @@ def patch_requests():
     requests.Session.post = post
 
 
+def slice_list(l, max_results):
+    if max_results > 0:
+        return l[:max_results]
+    else:
+        return l[max_results:]
+
+
 class RetVal(tuple):
     def __new__(cls, val1, val2):
         return tuple.__new__(RetVal, (val1, val2))
@@ -288,7 +295,8 @@ class MispConnector(BaseConnector):
     def _run_query(self, param):
         action_result = self.add_action_result(ActionResult(param))
         query_dict = {}
-        query_dict['controller'] = param['controller']
+        controller = param['controller']
+        query_dict['controller'] = controller
         if 'event_id' in param:
             if ',' in param['event_id']:
                 query_dict['eventid'] = param['event_id'].split(',')
@@ -305,10 +313,21 @@ class MispConnector(BaseConnector):
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object", e)
 
+        try:
+            max_results = int(param.get('max_results', 100))
+        except ValueError:
+            return action_result.set_status(phantom.APP_ERROR, "The value of max results must be an integer")
+
         ret_val, response = self._do_search(action_result, **query_dict)
 
         if phantom.is_fail(ret_val):
             return action_result.get_status()
+
+        if max_results:
+            if controller == 'events':
+                response['response'] = slice_list(response['response'], max_results)
+            else:
+                response['response']['Attribute'] = slice_list(response['response']['Attribute'], max_results)
 
         action_result.add_data(response)
         return action_result.set_status(phantom.APP_SUCCESS)
