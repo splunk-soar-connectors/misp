@@ -7,8 +7,8 @@
   "type": "Threat Intelligence Platform",
   "license": "Copyright (c) Phantom Cyber Corporation 2017",
   "main_module": "misp_connector.pyc",
-  "app_version": "1.0.1",
-  "utctime_updated": "2017-09-11T22:45:48.000000Z",
+  "app_version": "1.0.2",
+  "utctime_updated": "2017-09-12T01:41:28.000000Z",
   "product_vendor": "MISP",
   "product_name": "MISP",
   "product_version_regex": ".*",
@@ -594,7 +594,6 @@
         "event_id": {
           "description": "Comma seperated list of Event IDs",
           "data_type": "string",
-          "contains": ["misp event id"],
           "contains": [
             "misp event id"
           ],
@@ -616,9 +615,8 @@
         }
       },
       "render": {
-        "width": 5,
         "title": "Run Query",
-        "type": "json"
+        "type": "table"
       },
       "output": [
         {
@@ -731,12 +729,11 @@
           "example_values": [
             "686"
           ],
-          "contains": ["misp event id"],
-          "column_name": "Event ID",
-          "column_order": 0,
           "contains": [
             "misp event id"
-          ]
+          ],
+          "column_name": "Event ID",
+          "column_order": 0
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Org.id",
@@ -1228,10 +1225,6 @@
           ]
         }
       ],
-      "render": {
-        "title": "Run Query",
-        "type": "table"
-      },
       "versions": "EQ(*)"
     },
     {
