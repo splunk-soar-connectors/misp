@@ -492,6 +492,7 @@
     {
       "action": "run query",
       "description": "Run a query to find events or attributes",
+      "verbose": "By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 100, and this will be the 100 most recent results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>The MISP API doesn't support paging, but it is possible to work around this. By giving max results as a negative number, <i>n</i>, it will take the last <i>n<i> results from the query. From there, you can take the timetsamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {\"timestamp\": &lt;timestamp + 1&gt;}. All the results will now be after that specified timestamp.<br><br>Also note that search for events, events with no attributes will not be returned.",
       "type": "investigate",
       "identifier": "run_query",
       "read_only": true,
@@ -503,32 +504,33 @@
           "required": true,
           "value_list": ["events", "attributes"]
         },
+        "max_results": {
+          "description": "Max results to return",
+          "data_type": "numeric",
+          "order": 1,
+          "required": false,
+          "default": 100
+        },
         "event_id": {
           "description": "Comma seperated list of Event IDs",
           "data_type": "string",
           "contains": ["misp event id"],
-          "order": 1,
+          "order": 2,
           "required": false,
           "allow_list": true
         },
         "tags": {
           "description": "Comma seperated list of tags",
           "data_type": "string",
-          "order": 2,
+          "order": 3,
           "required": false
         },
         "other": {
           "description": "Other search parameters, as a JSON object",
           "data_type": "string",
-          "order": 3,
+          "order": 4,
           "required": false
         }
-      },
-      "render": {
-        "width": 12,
-        "title": "Run Query",
-        "type": "json",
-        "width": 5
       },
       "output": [
         {
@@ -637,7 +639,9 @@
           "example_values": [
             "686"
           ],
-          "contains": ["misp event id"]
+          "contains": ["misp event id"],
+          "column_name": "Event ID",
+          "column_order": 0
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Org.id",
@@ -723,14 +727,18 @@
           "data_type": "string",
           "example_values": [
             "2016-03-16"
-          ]
+          ],
+          "column_name": "Date",
+          "column_order": 1
         },
         {
           "data_path": "action_result.data.*.response.*.Event.info",
           "data_type": "string",
           "example_values": [
             "Dridex of the day (2016-03-16) - botnet 120"
-          ]
+          ],
+          "column_name": "Info",
+          "column_order": 2
         },
         {
           "data_path": "action_result.data.*.response.*.Event.uuid",
@@ -1085,6 +1093,25 @@
           ]
         },
         {
+          "data_path": "action_result.parameter.max_results",
+          "data_type": "numeric",
+          "example_values": [
+            1000
+          ]
+        },
+        {
+          "data_path": "action_result.parameter.tags",
+          "data_type": "string"
+        },
+        {
+          "data_path": "action_result.parameter.other",
+          "data_type": "string"
+        },
+        {
+          "data_path": "action_result.summary",
+          "data_type": "string"
+        },
+        {
           "data_path": "summary.total_objects",
           "data_type": "numeric",
           "example_values": [
@@ -1099,6 +1126,10 @@
           ]
         }
       ],
+      "render": {
+        "title": "Run Query",
+        "type": "table"
+      },
       "versions": "EQ(*)"
     },
     {
