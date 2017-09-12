@@ -733,7 +733,7 @@
           ],
           "contains": ["misp event id"],
           "column_name": "Event ID",
-          "column_order": 0
+          "column_order": 0,
           "contains": [
             "misp event id"
           ]
