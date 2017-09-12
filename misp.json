@@ -1,14 +1,14 @@
 {
-  "appid"       : "54c18439-fd16-49bf-a73f-873e162083e7",
-  "name"      : "MISP",
-  "description" : "Take action with Malware Information Sharing Platform",
+  "appid": "54c18439-fd16-49bf-a73f-873e162083e7",
+  "name": "MISP",
+  "description": "Take action with Malware Information Sharing Platform",
   "publisher": "Phantom",
   "package_name": "phantom_misp",
   "type": "Threat Intelligence Platform",
   "license": "Copyright (c) Phantom Cyber Corporation 2017",
-  "main_module" : "misp_connector.pyc",
-  "app_version": "1.0.0",
-  "utctime_updated": "2017-05-27T00:32:59.000000Z",
+  "main_module": "misp_connector.pyc",
+  "app_version": "1.0.1",
+  "utctime_updated": "2017-09-11T22:45:48.000000Z",
   "product_vendor": "MISP",
   "product_name": "MISP",
   "product_version_regex": ".*",
@@ -16,7 +16,10 @@
   "logo": "misp.png",
   "pip_dependencies": {
     "wheel": [
-      {"module": "pymisp", "input_file": "pymisp/pymisp-2.4.71-py2-none-any.whl"}
+      {
+        "module": "pymisp",
+        "input_file": "pymisp/pymisp-2.4.71-py2-none-any.whl"
+      }
     ]
   },
   "configuration": {
@@ -47,10 +50,9 @@
       "type": "test",
       "identifier": "test_asset_connectivity",
       "read_only": true,
-      "parameters": {
-      },
+      "parameters": {},
       "output": [],
-      "versions":"EQ(*)"
+      "versions": "EQ(*)"
     },
     {
       "action": "create event",
@@ -63,7 +65,13 @@
           "description": "Distribution level for sharing",
           "verbose": "0 = Your Org Only, 1 = This community only, 2 = Connected communities, 3 = All Communities, 4 = Sharing Group",
           "data_type": "numeric",
-          "value_list": [0, 1, 2, 3, 4],
+          "value_list": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
           "default": 0,
           "required": true,
           "order": 1
@@ -72,7 +80,12 @@
           "description": "Threat level id",
           "verbose": "1 = High, 2 = Medium, 3 = Low, 4 = Undefined",
           "data_type": "numeric",
-          "value_list": [1, 2, 3, 4],
+          "value_list": [
+            1,
+            2,
+            3,
+            4
+          ],
           "default": 4,
           "order": 2,
           "required": true
@@ -81,7 +94,11 @@
           "description": "Current stage of analysis for event",
           "verbose": "0 = Initial, 1 = Ongoing, 2 = Completed",
           "data_type": "numeric",
-          "value_list": [0, 1, 2],
+          "value_list": [
+            0,
+            1,
+            2
+          ],
           "default": 0,
           "order": 3,
           "required": true
@@ -111,7 +128,9 @@
         "source_ips": {
           "description": "Source IPs to be added as attributes",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "order": 6,
           "required": false,
           "allow_list": true
@@ -119,7 +138,9 @@
         "dest_ips": {
           "description": "Destination IPs to be added as attributes",
           "data_type": "string",
-          "contains": ["ip"], 
+          "contains": [
+            "ip"
+          ],
           "order": 7,
           "required": false,
           "allow_list": true
@@ -127,7 +148,9 @@
         "domains": {
           "description": "Domains to be added as attributes",
           "data_type": "string",
-          "contains": ["domain"],
+          "contains": [
+            "domain"
+          ],
           "order": 8,
           "required": false,
           "allow_list": true
@@ -135,7 +158,9 @@
         "source_emails": {
           "description": "Source email addresses to be added as attributes",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "order": 9,
           "required": false,
           "allow_list": true
@@ -143,7 +168,9 @@
         "dest_emails": {
           "description": "Destination email addresses to be added as attributes",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "order": 10,
           "required": false,
           "allow_list": true
@@ -151,7 +178,9 @@
         "urls": {
           "description": "URLs to be added as attributes",
           "data_type": "string",
-          "contains": ["url"],
+          "contains": [
+            "url"
+          ],
           "order": 11,
           "required": false,
           "allow_list": true
@@ -179,28 +208,30 @@
         {
           "data_path": "action_result.data.*.id",
           "data_type": "string",
-          "contains": ["misp event id"],
+          "contains": [
+            "misp event id"
+          ],
           "column_name": "MISP Event ID",
           "column_order": 0
         },
         {
           "data_path": "action_result.data.*.threat_level_id",
           "data_type": "numeric",
-          "contains": [ ],
+          "contains": [],
           "column_name": "Threat Level ID",
           "column_order": 2
         },
         {
           "data_path": "action_result.data.*.info",
           "data_type": "string",
-          "contains": [ ],
+          "contains": [],
           "column_name": "Event Info / Description",
           "column_order": 1
         },
         {
           "data_path": "action_result.data.*.distribution",
           "data_type": "string",
-          "contains": [ ],
+          "contains": [],
           "column_name": "Distribution",
           "column_order": 3
         },
@@ -214,7 +245,9 @@
         {
           "data_path": "action_result.parameter.source_ips",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "example_values": [
             "8.8.8.8"
           ]
@@ -222,7 +255,9 @@
         {
           "data_path": "action_result.parameter.dest_ips",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "example_values": [
             "8.8.8.8"
           ]
@@ -230,7 +265,9 @@
         {
           "data_path": "action_result.parameter.source_emails",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "example_values": [
             "swozniak@apple.com"
           ]
@@ -238,7 +275,9 @@
         {
           "data_path": "action_result.parameter.dest_emails",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "example_values": [
             "swozniak@apple.com"
           ]
@@ -246,7 +285,9 @@
         {
           "data_path": "action_result.parameter.urls",
           "data_type": "string",
-          "contains": ["url"],
+          "contains": [
+            "url"
+          ],
           "example_values": [
             "http://phantom.us"
           ]
@@ -255,13 +296,16 @@
           "data_path": "action_result.parameter.to_ids",
           "data_type": "string",
           "example_values": [
-            true, false
+            true,
+            false
           ]
         },
         {
           "data_path": "action_result.parameter.domains",
           "data_type": "string",
-          "contains": ["domain"]
+          "contains": [
+            "domain"
+          ]
         },
         {
           "data_path": "action_result.parameter.threat_level_id",
@@ -282,7 +326,8 @@
           "data_path": "action_result.parameter.add_attributes",
           "data_type": "boolean",
           "example_values": [
-            true, false
+            true,
+            false
           ]
         },
         {
@@ -305,7 +350,9 @@
           "required": true,
           "primary": true,
           "order": 0,
-          "contains": ["misp event id"]
+          "contains": [
+            "misp event id"
+          ]
         },
         "to_ids": {
           "description": "Set 'to_IDS' flag=True in MISP?",
@@ -319,7 +366,9 @@
           "data_type": "string",
           "order": 2,
           "required": false,
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "allow_list": true
         },
         "dest_ips": {
@@ -327,14 +376,18 @@
           "data_type": "string",
           "order": 3,
           "required": false,
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "allow_list": true
         },
         "domains": {
           "description": "Domains to be added as attributes",
           "data_type": "string",
           "order": 4,
-          "contains": ["domain"],
+          "contains": [
+            "domain"
+          ],
           "required": false,
           "allow_list": true
         },
@@ -342,7 +395,9 @@
           "description": "Source email addresses to be added as attributes",
           "data_type": "string",
           "order": 5,
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "required": false,
           "allow_list": true
         },
@@ -350,19 +405,22 @@
           "description": "Destination email addresses to be added as attributes",
           "data_type": "string",
           "order": 6,
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "required": false,
           "allow_list": true
         },
         "urls": {
           "description": "URLs to be added as attributes",
           "data_type": "string",
-          "contains": ["url"],
+          "contains": [
+            "url"
+          ],
           "order": 7,
           "required": false,
           "allow_list": true
         }
-
       },
       "render": {
         "width": 18,
@@ -394,28 +452,32 @@
         {
           "data_path": "action_result.data.*.id",
           "data_type": "string",
-          "contains": ["misp attribute id"],
+          "contains": [
+            "misp attribute id"
+          ],
           "column_name": "MISP Attribute ID",
           "column_order": 0
         },
         {
           "data_path": "action_result.data.*.event_id",
           "data_type": "string",
-          "contains": ["misp event id"],
+          "contains": [
+            "misp event id"
+          ],
           "column_name": "MISP Event ID",
           "column_order": 2
         },
         {
           "data_path": "action_result.data.*.value",
           "data_type": "string",
-          "contains": [ ],
+          "contains": [],
           "column_name": "Attribute Value",
           "column_order": 1
         },
         {
           "data_path": "action_result.data.*.distribution",
           "data_type": "string",
-          "contains": [ ],
+          "contains": [],
           "column_name": "Distribution",
           "column_order": 4
         },
@@ -429,7 +491,9 @@
         {
           "data_path": "action_result.parameter.source_ips",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "example_values": [
             "8.8.8.8"
           ]
@@ -437,7 +501,9 @@
         {
           "data_path": "action_result.parameter.dest_ips",
           "data_type": "string",
-          "contains": ["ip"],
+          "contains": [
+            "ip"
+          ],
           "example_values": [
             "8.8.8.8"
           ]
@@ -445,7 +511,9 @@
         {
           "data_path": "action_result.parameter.source_emails",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "example_values": [
             "swozniak@apple.com"
           ]
@@ -453,7 +521,9 @@
         {
           "data_path": "action_result.parameter.dest_emails",
           "data_type": "string",
-          "contains": ["email"],
+          "contains": [
+            "email"
+          ],
           "example_values": [
             "swozniak@apple.com"
           ]
@@ -461,7 +531,9 @@
         {
           "data_path": "action_result.parameter.urls",
           "data_type": "string",
-          "contains": ["url"],
+          "contains": [
+            "url"
+          ],
           "example_values": [
             "http://phantom.us"
           ]
@@ -470,18 +542,23 @@
           "data_path": "action_result.parameter.to_ids",
           "data_type": "string",
           "example_values": [
-            true, false
+            true,
+            false
           ]
         },
         {
           "data_path": "action_result.parameter.domains",
           "data_type": "string",
-          "contains": ["domain"]
+          "contains": [
+            "domain"
+          ]
         },
         {
           "data_path": "action_result.parameter.event_id",
           "data_type": "string",
-          "contains": ["misp event id"],
+          "contains": [
+            "misp event id"
+          ],
           "example_values": [
             "686"
           ]
@@ -502,7 +579,10 @@
           "data_type": "string",
           "order": 0,
           "required": true,
-          "value_list": ["events", "attributes"]
+          "value_list": [
+            "events",
+            "attributes"
+          ]
         },
         "max_results": {
           "description": "Max results to return",
@@ -515,6 +595,9 @@
           "description": "Comma seperated list of Event IDs",
           "data_type": "string",
           "contains": ["misp event id"],
+          "contains": [
+            "misp event id"
+          ],
           "order": 2,
           "required": false,
           "allow_list": true
@@ -532,6 +615,11 @@
           "required": false
         }
       },
+      "render": {
+        "width": 5,
+        "title": "Run Query",
+        "type": "json"
+      },
       "output": [
         {
           "data_path": "action_result.data.*.response.Attribute.*.id",
@@ -539,7 +627,9 @@
           "example_values": [
             "164201"
           ],
-          "contains": ["misp attribute id"]
+          "contains": [
+            "misp attribute id"
+          ]
         },
         {
           "data_path": "action_result.data.*.response.Attribute.*.type",
@@ -602,7 +692,9 @@
           "example_values": [
             "687"
           ],
-          "contains": ["misp event id"]
+          "contains": [
+            "misp event id"
+          ]
         },
         {
           "data_path": "action_result.data.*.response.Attribute.*.timestamp",
@@ -642,6 +734,9 @@
           "contains": ["misp event id"],
           "column_name": "Event ID",
           "column_order": 0
+          "contains": [
+            "misp event id"
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Org.id",
@@ -782,7 +877,9 @@
           "example_values": [
             "1"
           ],
-          "contains": ["misp attribute id"]
+          "contains": [
+            "misp attribute id"
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Attribute.*.type",
@@ -845,7 +942,9 @@
           "example_values": [
             "1"
           ],
-          "contains": ["misp event id"]
+          "contains": [
+            "misp event id"
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Attribute.*.timestamp",
@@ -1083,13 +1182,16 @@
           "example_values": [
             "1"
           ],
-          "contains": ["misp event id"]
+          "contains": [
+            "misp event id"
+          ]
         },
         {
           "data_path": "action_result.parameter.controller",
           "data_type": "string",
           "example_values": [
-            "events", "attributes"
+            "events",
+            "attributes"
           ]
         },
         {
@@ -1142,7 +1244,9 @@
         "event_id": {
           "description": "An Event ID",
           "data_type": "string",
-          "contains": ["misp event id"],
+          "contains": [
+            "misp event id"
+          ],
           "required": true,
           "primary": true,
           "order": 0
@@ -1198,7 +1302,8 @@
           "data_path": "action_result.data.*.response.Attribute.*.to_ids",
           "data_type": "boolean",
           "example_values": [
-            true, false
+            true,
+            false
           ]
         },
         {
@@ -1214,7 +1319,8 @@
           "data_path": "action_result.data.*.response.Attribute.*.deleted",
           "data_type": "boolean",
           "example_values": [
-            false, true
+            false,
+            true
           ]
         },
         {
@@ -1253,18 +1359,21 @@
           "example_values": [
             "0"
           ]
-        }, {
-        "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
-        "data_type": "boolean",
-        "example_values": [
-          false, true
-        ]
+        },
+        {
+          "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
+          "data_type": "boolean",
+          "example_values": [
+            false,
+            true
+          ]
         },
         {
           "data_path": "action_result.status",
           "data_type": "string",
           "example_values": [
-            "success", "failed"
+            "success",
+            "failed"
           ]
         },
         {
@@ -1284,13 +1393,16 @@
           "example_values": [
             "686"
           ],
-          "contains": ["misp event id"]
+          "contains": [
+            "misp event id"
+          ]
         },
         {
           "data_path": "action_result.parameter.download_files",
           "data_type": "boolean",
           "example_values": [
-            true, false
+            true,
+            false
           ]
         },
         {
