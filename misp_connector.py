@@ -208,7 +208,7 @@ class MispConnector(BaseConnector):
             self._event = self._misp.new_event(distribution=param["distribution"], threat_level_id=param["threat_level_id"],
                                          analysis=param["analysis"], info=param["info"])
         except Exception as e:
-            return self.set_status(phantom.APP_ERROR, "Failed to create MISP event:", e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:", e)
 
         action_result.add_data(self._event["Event"])
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event["Event"]["id"])})
@@ -219,7 +219,6 @@ class MispConnector(BaseConnector):
                 self._perform_adds(param, action_result)
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Failed to add attributes to newly created MISP event:", e)
-
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _add_indicator(self, param, result, indicator_type, add_data=False):

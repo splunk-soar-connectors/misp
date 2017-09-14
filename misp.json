@@ -19,6 +19,14 @@
       {
         "module": "pymisp",
         "input_file": "pymisp/pymisp-2.4.71-py2-none-any.whl"
+      },
+      {
+        "module": "jsonschema",
+        "input_file": "jsonschema/jsonschema-2.6.0-py2.py3-none-any.whl"
+      },
+      {
+        "module": "functools32",
+        "input_file": "jsonschema/functools32-3.2.3.post2-cp27-none-any.whl"
       }
     ]
   },
