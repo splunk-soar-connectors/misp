@@ -120,14 +120,14 @@
           "required": true
         },
         "add_attributes": {
-          "description": "Add attributes upon event creation?",
+          "description": "Add attributes upon event creation",
           "data_type": "boolean",
           "default": true,
           "order": 4,
           "required": true
         },
         "to_ids": {
-          "description": "Set 'to_IDS' flag=True in MISP?",
+          "description": "Set 'to_IDS' flag=True in MISP",
           "data_type": "boolean",
           "default": true,
           "order": 5,
@@ -363,7 +363,7 @@
           ]
         },
         "to_ids": {
-          "description": "Set 'to_IDS' flag=True in MISP?",
+          "description": "Set 'to_IDS' flag=True in MISP",
           "data_type": "boolean",
           "default": true,
           "order": 1,
