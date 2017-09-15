@@ -1238,6 +1238,7 @@
     {
       "action": "get attributes",
       "description": "Get attributes for a specified event",
+      "verbose": "Download Files will only download files which are marked as a 'malware-sample'.",
       "type": "investigate",
       "identifier": "get_event",
       "read_only": true,
@@ -1253,7 +1254,7 @@
           "order": 0
         },
         "download_files": {
-          "description": "Download malware sampless to vault",
+          "description": "Download malware samples to vault",
           "data_type": "boolean",
           "required": false,
           "default": false,
