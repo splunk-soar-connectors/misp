@@ -12,7 +12,7 @@
   "product_vendor": "MISP",
   "product_name": "MISP",
   "product_version_regex": ".*",
-  "min_phantom_version": "2.1.478",
+  "min_phantom_version": "3.0.247",
   "logo": "misp.png",
   "pip_dependencies": {
     "wheel": [
@@ -54,7 +54,7 @@
   "actions": [
     {
       "action": "test connectivity",
-      "description": "Validate the asset configuration for connectivity.",
+      "description": "Validate the asset configuration for connectivity",
       "type": "test",
       "identifier": "test_asset_connectivity",
       "read_only": true,
@@ -64,7 +64,7 @@
     },
     {
       "action": "create event",
-      "description": "Create a new event in MISP for threat intel tracking",
+      "description": "Create a new event in MISP",
       "type": "generic",
       "identifier": "create_event",
       "read_only": false,
@@ -1237,7 +1237,7 @@
     },
     {
       "action": "get attributes",
-      "description": "Get attributes for a specified event",
+      "description": "Get attributes for a specific event",
       "verbose": "Download Files will only download files which are marked as a 'malware-sample'.",
       "type": "investigate",
       "identifier": "get_event",
@@ -1253,7 +1253,7 @@
           "primary": true,
           "order": 0
         },
-        "download_files": {
+        "download_samples": {
           "description": "Download malware samples to vault",
           "data_type": "boolean",
           "required": false,
@@ -1400,7 +1400,7 @@
           ]
         },
         {
-          "data_path": "action_result.parameter.download_files",
+          "data_path": "action_result.parameter.download_samples",
           "data_type": "boolean",
           "example_values": [
             true,
