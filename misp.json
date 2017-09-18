@@ -1238,7 +1238,7 @@
     {
       "action": "get attributes",
       "description": "Get attributes for a specific event",
-      "verbose": "Download Files will only download files which are marked as a 'malware-sample'.",
+      "verbose": "<b>download_samples</b> will only download files which are marked as a 'malware-sample'.",
       "type": "investigate",
       "identifier": "get_event",
       "read_only": true,
