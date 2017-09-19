@@ -199,7 +199,7 @@ class MispConnector(BaseConnector):
             return self.get_status()
         else:
             self.debug_print("In test connectivity, just before returning")
-            return self.set_status_save_progress(phantom.APP_SUCCESS, "Connectivity to MISP was successful.")
+            return self.set_status_save_progress(phantom.APP_SUCCESS, "Connectivity to MISP was successful")
 
     def _create_event(self, param):
 
@@ -364,7 +364,7 @@ class MispConnector(BaseConnector):
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if param.get('download_files'):
+        if param.get('download_samples'):
             # Don't forget about this
             self._download_malware_samples(action_result, event_id)
 
