@@ -313,7 +313,7 @@ class MispConnector(BaseConnector):
                 return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object", e)
 
         try:
-            max_results = int(param.get('max_results', 100))
+            max_results = int(param.get('max_results', 10))
         except ValueError:
             return action_result.set_status(phantom.APP_ERROR, "The value of max results must be an integer")
 
