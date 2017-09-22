@@ -329,7 +329,7 @@ class MispConnector(BaseConnector):
                 response['response']['Attribute'] = slice_list(response['response']['Attribute'], max_results)
 
         action_result.add_data(response)
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
     def _download_malware_samples(self, action_result, event_id):
         """ Download malware samples for an event """
@@ -369,7 +369,7 @@ class MispConnector(BaseConnector):
             self._download_malware_samples(action_result, event_id)
 
         action_result.add_data(attachments)
-        return action_result.set_status(phantom.APP_SUCCESS)
+        return action_result.set_status(phantom.APP_SUCCESS, "Successfully retrieved attributes")
 
     def _process_html_response(self, response, action_result):
 
