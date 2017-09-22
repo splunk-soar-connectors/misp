@@ -65,13 +65,13 @@
     {
       "action": "create event",
       "description": "Create a new event in MISP",
+      "verbose": "For distribution:<br><ul><li>0: Your Org Only</li><li>1: This Community Only</li><li>2: Connected Communities</li><li>3: All Communities</li><li>4: Sharing Group</li></ul><br><br>For threat_level_id:<br><ul><li>1: High</li><li>2: Medium</li><li>3: Low</li><li>4: Undefined</li></ul><br><br>For analysis:<br><ul><li>0: Initial</li><li>1: Ongoing</li><li>2: Completed</li></ul>",
       "type": "generic",
       "identifier": "create_event",
       "read_only": false,
       "parameters": {
         "distribution": {
           "description": "Distribution level for sharing",
-          "verbose": "0 = Your Org Only, 1 = This community only, 2 = Connected communities, 3 = All Communities, 4 = Sharing Group",
           "data_type": "numeric",
           "value_list": [
             0,
@@ -86,7 +86,6 @@
         },
         "threat_level_id": {
           "description": "Threat level id",
-          "verbose": "1 = High, 2 = Medium, 3 = Low, 4 = Undefined",
           "data_type": "numeric",
           "value_list": [
             1,
@@ -100,7 +99,6 @@
         },
         "analysis": {
           "description": "Current stage of analysis for event",
-          "verbose": "0 = Initial, 1 = Ongoing, 2 = Completed",
           "data_type": "numeric",
           "value_list": [
             0,
@@ -577,7 +575,7 @@
     {
       "action": "run query",
       "description": "Run a query to find events or attributes",
-      "verbose": "By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 100, and this will be the 100 most recent results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>The MISP API doesn't support paging, but it is possible to work around this. By giving max results as a negative number, <i>n</i>, it will take the last <i>n<i> results from the query. From there, you can take the timetsamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {\"timestamp\": &lt;timestamp + 1&gt;}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.",
+      "verbose": "By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 100, and this will be the 100 most recent results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>The MISP API doesn't support paging, but it is possible to work around this. By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query. From there, you can take the timetsamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {\"timestamp\": &lt;timestamp + 1&gt;}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.",
       "type": "investigate",
       "identifier": "run_query",
       "read_only": true,
