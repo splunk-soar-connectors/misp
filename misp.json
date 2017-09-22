@@ -622,7 +622,7 @@
       },
       "render": {
         "title": "Run Query",
-        "type": "table"
+        "type": "json"
       },
       "output": [
         {
@@ -737,9 +737,7 @@
           ],
           "contains": [
             "misp event id"
-          ],
-          "column_name": "Event ID",
-          "column_order": 0
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Org.id",
@@ -825,18 +823,14 @@
           "data_type": "string",
           "example_values": [
             "2016-03-16"
-          ],
-          "column_name": "Date",
-          "column_order": 1
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.info",
           "data_type": "string",
           "example_values": [
             "Dridex of the day (2016-03-16) - botnet 120"
-          ],
-          "column_name": "Info",
-          "column_order": 2
+          ]
         },
         {
           "data_path": "action_result.data.*.response.*.Event.uuid",
@@ -879,9 +873,6 @@
           "data_type": "string",
           "example_values": [
             "1"
-          ],
-          "contains": [
-            "misp attribute id"
           ]
         },
         {
