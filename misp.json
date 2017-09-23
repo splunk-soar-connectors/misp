@@ -7,8 +7,8 @@
   "type": "Threat Intelligence Platform",
   "license": "Copyright (c) Phantom Cyber Corporation 2017",
   "main_module": "misp_connector.pyc",
-  "app_version": "1.0.6",
-  "utctime_updated": "2017-09-22T22:29:32.000000Z",
+  "app_version": "1.0.7",
+  "utctime_updated": "2017-09-22T23:25:00.000000Z",
   "product_vendor": "MISP",
   "product_name": "MISP",
   "product_version_regex": ".*",
@@ -85,7 +85,7 @@
         },
         "threat_level_id": {
           "description": "Threat level id",
-          "data_type": "numeric",
+          "data_type": "string",
           "value_list": [
             "High",
             "Medium",
@@ -98,7 +98,7 @@
         },
         "analysis": {
           "description": "Current stage of analysis for event",
-          "data_type": "numeric",
+          "data_type": "string",
           "value_list": [
             "Initial",
             "Ongoing",

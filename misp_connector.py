@@ -210,18 +210,30 @@ class MispConnector(BaseConnector):
             'this community only': 1,
             'connected communities': 2,
             'all communities': 3,
-            'sharing group': 4
+            'sharing group': 4,
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4
         }
         tli_map = {
             'high': 1,
             'medium': 2,
             'low': 3,
-            'undefined': 4
+            'undefined': 4,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4
         }
         analysis_map = {
             'initial': 0,
             'ongoing': 1,
-            'completed': 2
+            'completed': 2,
+            '0': 0,
+            '1': 1,
+            '2': 2
         }
 
         try:
