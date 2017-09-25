@@ -337,7 +337,7 @@
         },
         {
           "data_path": "action_result.parameter.analysis",
-          "data_type": "numeric"
+          "data_type": "string"
         }
       ],
       "versions": "EQ(*)"
