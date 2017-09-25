@@ -65,47 +65,46 @@
     {
       "action": "create event",
       "description": "Create a new event in MISP",
-      "verbose": "For distribution:<br><ul><li>0: Your Org Only</li><li>1: This Community Only</li><li>2: Connected Communities</li><li>3: All Communities</li><li>4: Sharing Group</li></ul><br><br>For threat_level_id:<br><ul><li>1: High</li><li>2: Medium</li><li>3: Low</li><li>4: Undefined</li></ul><br><br>For analysis:<br><ul><li>0: Initial</li><li>1: Ongoing</li><li>2: Completed</li></ul>",
       "type": "generic",
       "identifier": "create_event",
       "read_only": false,
       "parameters": {
         "distribution": {
           "description": "Distribution level for sharing",
-          "data_type": "numeric",
+          "data_type": "string",
           "value_list": [
-            0,
-            1,
-            2,
-            3,
-            4
+            "Your Org Only",
+            "This Community Only",
+            "Connected Communities",
+            "All Communities",
+            "Sharing Group"
           ],
-          "default": 0,
+          "default": "Your Org Only",
           "required": true,
           "order": 1
         },
         "threat_level_id": {
           "description": "Threat level id",
-          "data_type": "numeric",
+          "data_type": "string",
           "value_list": [
-            1,
-            2,
-            3,
-            4
+            "High",
+            "Medium",
+            "Low",
+            "Undefined"
           ],
-          "default": 4,
+          "default": "Undefined",
           "order": 2,
           "required": true
         },
         "analysis": {
           "description": "Current stage of analysis for event",
-          "data_type": "numeric",
+          "data_type": "string",
           "value_list": [
-            0,
-            1,
-            2
+            "Initial",
+            "Ongoing",
+            "Completed"
           ],
-          "default": 0,
+          "default": "Initial",
           "order": 3,
           "required": true
         },

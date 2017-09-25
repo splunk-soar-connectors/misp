@@ -204,9 +204,48 @@ class MispConnector(BaseConnector):
     def _create_event(self, param):
 
         action_result = self.add_action_result(ActionResult(dict(param)))
+
+        distrib_map = {
+            'your org only': 0,
+            'this community only': 1,
+            'connected communities': 2,
+            'all communities': 3,
+            'sharing group': 4,
+            '0': 0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4
+        }
+        tli_map = {
+            'high': 1,
+            'medium': 2,
+            'low': 3,
+            'undefined': 4,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4
+        }
+        analysis_map = {
+            'initial': 0,
+            'ongoing': 1,
+            'completed': 2,
+            '0': 0,
+            '1': 1,
+            '2': 2
+        }
+
         try:
-            self._event = self._misp.new_event(distribution=param["distribution"], threat_level_id=param["threat_level_id"],
-                                         analysis=param["analysis"], info=param["info"])
+            distribution = distrib_map[param['distribution'].lower()]
+            threat_level_id = tli_map[param['threat_level_id'].lower()]
+            analysis = analysis_map[param['analysis'].lower()]
+        except KeyError as e:
+            action_result.set_status(phantom.APP_ERROR, "Invalid string in parameter: {}".format(str(e)))
+
+        try:
+            self._event = self._misp.new_event(distribution=distribution, threat_level_id=threat_level_id,
+                                         analysis=analysis, info=param["info"])
         except Exception as e:
             return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:", e)
 
