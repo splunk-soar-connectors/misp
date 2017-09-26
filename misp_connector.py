@@ -172,13 +172,11 @@ class MispConnector(BaseConnector):
         self._misp_url = config.get("base_url")
         api_key = config.get("api_key")
 
-        self.debug_print(self._verify)
         self.save_progress("Creating MISP API session...")
         try:
             self._misp = PyMISP(self._misp_url, api_key, ssl=self._verify)
         except Exception as e:
             tb = traceback.format_exc()
-            self.debug_print(tb)
             return self.set_status(phantom.APP_ERROR, "Failed to create API session:", e)
 
         self.set_validator('ip', self._validate_ip)
@@ -198,7 +196,6 @@ class MispConnector(BaseConnector):
             self.append_to_message('Test connectivity failed')
             return self.get_status()
         else:
-            self.debug_print("In test connectivity, just before returning")
             return self.set_status_save_progress(phantom.APP_SUCCESS, "Connectivity to MISP was successful")
 
     def _create_event(self, param):
@@ -314,6 +311,7 @@ class MispConnector(BaseConnector):
                 else:
                     indicator_list = phantom.get_list_from_string(v)
                 self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
+        return phantom.APP_SUCCESS
 
     def _add_attributes(self, param):
 
