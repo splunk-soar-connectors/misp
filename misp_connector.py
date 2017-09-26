@@ -287,9 +287,7 @@ class MispConnector(BaseConnector):
         for i in default_indicator_list:
             val = param.get(i)
             if val:
-                if not val:
-                    continue
-                elif type(val) is list:
+                if type(val) is list:
                     indicator_list = val
                 else:
                     indicator_list = phantom.get_list_from_string(val)
