@@ -254,10 +254,9 @@ class MispConnector(BaseConnector):
 
         addAttributes = param.get("add_attributes")
         if addAttributes is True:
-            try:
-                self._perform_adds(param, action_result)
-            except Exception as e:
-                return action_result.set_status(phantom.APP_ERROR, "Failed to add attributes to newly created MISP event:", e)
+            ret_val = self._perform_adds(param, action_result, add_data=True)
+            if phantom.is_fail(ret_val):
+                return ret_val
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -298,13 +297,17 @@ class MispConnector(BaseConnector):
                 else:
                     indicator_list = phantom.get_list_from_string(val)
 
-                ret_val = self._add_indicator(indicator_list, action_result, i, param.get('to_ids', False), add_data=add_data)
-                if phantom.is_fail(ret_val):
-                    return ret_val
+                try:
+                    self._add_indicator(indicator_list, action_result, i, param.get('to_ids', False), add_data=add_data)
+                except Exception as e:
+                    return action_result.set_status("Error adding attribute to MISP event: {}".format(str(e)))
 
         json_str = param.get('json')
         if json_str:
-            d = json.loads(json_str)
+            try:
+                d = json.loads(json_str)
+            except Exception as e:
+                return action_result.set_status("Invalid JSON parameter. Error: {}".format(str(e)))
             for k, v in d.iteritems():
                 if type(v) is list:
                     indicator_list = v
@@ -322,10 +325,9 @@ class MispConnector(BaseConnector):
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Failed to get event for adding attributes:", e)
 
-        try:
-            self._perform_adds(param, action_result, add_data=True)
-        except Exception as e:
-            return action_result.set_status(phantom.APP_ERROR, "Failed to add attributes to MISP event:", e)
+        ret_val = self._perform_adds(param, action_result, add_data=True)
+        if phantom.is_fail(ret_val):
+            return ret_val
         action_result.set_summary({"message": "Attributes added to event: {0}".format(self._event["Event"]["id"])})
 
         return action_result.set_status(phantom.APP_SUCCESS)
