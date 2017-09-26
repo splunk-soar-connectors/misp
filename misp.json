@@ -76,10 +76,9 @@
             "Your Org Only",
             "This Community Only",
             "Connected Communities",
-            "All Communities",
-            "Sharing Group"
+            "All Communities"
           ],
-          "default": "Your Org Only",
+          "default": "This Community Only",
           "required": true,
           "order": 1
         },
@@ -189,6 +188,12 @@
           "order": 11,
           "required": false,
           "allow_list": true
+        },
+        "json": {
+            "description": "JSON key value list of attributes",
+            "data_type": "string",
+            "order": 12,
+            "required": false
         }
       },
       "render": {
@@ -328,6 +333,10 @@
           "data_type": "string"
         },
         {
+          "data_path": "action_result.parameter.json",
+          "data_type": "string"
+        },
+        {
           "data_path": "action_result.parameter.add_attributes",
           "data_type": "boolean",
           "example_values": [
@@ -425,6 +434,12 @@
           "order": 7,
           "required": false,
           "allow_list": true
+        },
+        "json": {
+            "description": "JSON key value list of attributes",
+            "data_type": "string",
+            "order": 8,
+            "required": false
         }
       },
       "render": {
@@ -512,6 +527,10 @@
           "example_values": [
             "8.8.8.8"
           ]
+        },
+        {
+          "data_path": "action_result.parameter.json",
+          "data_type": "string"
         },
         {
           "data_path": "action_result.parameter.source_emails",
