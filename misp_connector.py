@@ -20,9 +20,8 @@ from phantom.vault import Vault
 import phantom.utils as ph_utils
 
 # Imports local to this App
-import traceback
-import requests
 import json
+import requests
 from bs4 import BeautifulSoup
 from pymisp import PyMISP
 
@@ -176,7 +175,6 @@ class MispConnector(BaseConnector):
         try:
             self._misp = PyMISP(self._misp_url, api_key, ssl=self._verify)
         except Exception as e:
-            tb = traceback.format_exc()
             return self.set_status(phantom.APP_ERROR, "Failed to create API session:", e)
 
         self.set_validator('ip', self._validate_ip)
@@ -273,7 +271,7 @@ class MispConnector(BaseConnector):
                 indicator_attribute = self._misp.add_url(event=self._event, url=indicator, to_ids=to_ids)
             else:
                 indicator_attribute = self._misp.add_named_attribute(
-                    event=self._event, type_value=indicator_type, value=indicator, to_ids=to_ids, category="Targeting data"
+                    event=self._event, type_value=indicator_type, value=indicator, to_ids=to_ids
                 )
             if add_data is True:
                 action_result.add_data(indicator_attribute["Attribute"])
@@ -287,7 +285,7 @@ class MispConnector(BaseConnector):
         ]
 
         for i in default_indicator_list:
-            val = param.get('i')
+            val = param.get(i)
             if val:
                 if type(val) is list:
                     indicator_list = val
@@ -297,14 +295,14 @@ class MispConnector(BaseConnector):
                 try:
                     self._add_indicator(indicator_list, action_result, i, param.get('to_ids', False), add_data=add_data)
                 except Exception as e:
-                    return action_result.set_status("Error adding attribute to MISP event: {}".format(str(e)))
+                    return action_result.set_status(phantom.APP_ERROR, "Error adding attribute to MISP event: {}".format(str(e)))
 
         json_str = param.get('json')
         if json_str:
             try:
                 d = json.loads(json_str)
             except Exception as e:
-                return action_result.set_status("Invalid JSON parameter. Error: {}".format(str(e)))
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. Error: {}".format(str(e)))
             for k, v in d.iteritems():
                 if type(v) is list:
                     indicator_list = v
