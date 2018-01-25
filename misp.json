@@ -5,7 +5,7 @@
     "publisher": "Phantom",
     "package_name": "phantom_misp",
     "type": "Threat Intelligence Platform",
-    "license": "Copyright (c) Phantom Cyber Corporation 2017",
+    "license": "Copyright (c) Phantom Cyber Corporation, 2017-2018",
     "main_module": "misp_connector.pyc",
     "app_version": "1.0.12",
     "utctime_updated": "2017-09-27T01:17:56.000000Z",
