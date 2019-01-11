@@ -389,7 +389,7 @@ class MispConnector(BaseConnector):
             if hasattr(Vault, 'get_vault_tmp_dir'):
                 file_path = Vault.get_vault_tmp_dir() + '/' + sample[1]
                 Vault.create_attachment(file_path, self.get_container_id(), file_name=sample[1])
-            else:    
+            else:
                 file_path = '/vault/tmp/' + sample[1]
                 with open(file_path, 'wb') as fp:
                     fp.write(sample[2].read())
