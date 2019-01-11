@@ -1,14 +1,10 @@
 # --
 # File: misp_connector.py
 #
-# Copyright (c) Phantom Cyber Corporation, 2017
+# Copyright (c) 2017-2019 Splunk Inc.
 #
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 #
 # --
 
@@ -390,11 +386,15 @@ class MispConnector(BaseConnector):
             return phantom.APP_SUCCESS  # No Attachments
 
         for sample in resp[1]:
-            file_path = '/vault/tmp/' + sample[1]
-            with open(file_path, 'wb') as fp:
-                fp.write(sample[2].read())
-                fp.close()
-                Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
+            if hasattr(Vault, 'get_vault_tmp_dir'):
+                file_path = Vault.get_vault_tmp_dir() + '/' + sample[1]
+                Vault.create_attachment(file_path, self.get_container_id(), file_name=sample[1])
+            else:    
+                file_path = '/vault/tmp/' + sample[1]
+                with open(file_path, 'wb') as fp:
+                    fp.write(sample[2].read())
+                    fp.close()
+                    Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
 
         return phantom.APP_SUCCESS
 
