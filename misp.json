@@ -119,15 +119,13 @@
           "description": "Add attributes upon event creation",
           "data_type": "boolean",
           "default": true,
-          "order": 4,
-          "required": true
+          "order": 4
         },
         "to_ids": {
           "description": "Set 'to_IDS' flag=True in MISP",
           "data_type": "boolean",
           "default": true,
-          "order": 5,
-          "required": true
+          "order": 5
         },
         "source_ips": {
           "description": "Source IPs to be added as attributes",
@@ -372,8 +370,7 @@
           "description": "Set 'to_IDS' flag=True in MISP",
           "data_type": "boolean",
           "default": true,
-          "order": 1,
-          "required": true
+          "order": 1
         },
         "source_ips": {
           "description": "Source IPs to be added as attributes",
@@ -593,7 +590,7 @@
     {
       "action": "run query",
       "description": "Run a query to find events or attributes",
-      "verbose": "By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 10, and this will be the 10 most recent results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>The MISP API doesn't support paging, but it is possible to work around this. By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query. From there, you can take the timetsamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {\"timestamp\": &lt;timestamp + 1&gt;}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.",
+      "verbose": "By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 10, and this will be the 10 most recent results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>The MISP API doesn't support paging, but it is possible to work around this. By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query. From there, you can take the timestamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {\"timestamp\": &lt;timestamp + 1&gt;}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.",
       "type": "investigate",
       "identifier": "run_query",
       "read_only": true,
