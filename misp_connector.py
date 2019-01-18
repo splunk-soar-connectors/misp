@@ -308,7 +308,7 @@ class MispConnector(BaseConnector):
                     indicator_list = v
                 else:
                     if "," in str(v):
-                        indicator_list = phantom.get_list_from_string(v)
+                        indicator_list = phantom.get_list_from_string(str(v))
                     else:
                         indicator_list = list(str(v))
                 self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
