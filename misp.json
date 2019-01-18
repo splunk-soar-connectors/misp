@@ -13,7 +13,8 @@
   "product_name": "MISP",
   "product_version_regex": ".*",
   "min_phantom_version": "4.0.1068",
-  "logo": "misp.png",
+  "logo": "logo_misp.svg",
+  "logo_dark": "logo_misp_dark.svg",
   "pip_dependencies": {
     "wheel": [
       {
@@ -345,6 +346,20 @@
         {
           "data_path": "action_result.parameter.analysis",
           "data_type": "string"
+        },
+        {
+          "data_path": "summary.total_objects",
+          "data_type": "numeric",
+          "example_values": [
+            "1"
+          ]
+        },
+        {
+          "data_path": "summary.total_objects_successful",
+          "data_type": "numeric",
+          "example_values": [
+            "1"
+          ]
         }
       ],
       "versions": "EQ(*)"
@@ -582,6 +597,20 @@
           ],
           "example_values": [
             "686"
+          ]
+        },
+        {
+          "data_path": "summary.total_objects",
+          "data_type": "numeric",
+          "example_values": [
+            "1"
+          ]
+        },
+        {
+          "data_path": "summary.total_objects_successful",
+          "data_type": "numeric",
+          "example_values": [
+            "1"
           ]
         }
       ],
