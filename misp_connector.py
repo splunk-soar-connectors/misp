@@ -1,14 +1,10 @@
 # --
 # File: misp_connector.py
 #
-# Copyright (c) Phantom Cyber Corporation, 2017-2018
+# Copyright (c) 2017-2019 Splunk Inc.
 #
-# This unpublished material is proprietary to Phantom Cyber.
-# All rights reserved. The methods and
-# techniques described herein are considered trade secrets
-# and/or confidential. Reproduction or distribution, in whole
-# or in part, is forbidden except by express written permission
-# of Phantom Cyber.
+# SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
+# without a valid written license from Splunk Inc. is PROHIBITED.
 #
 # --
 
@@ -270,9 +266,13 @@ class MispConnector(BaseConnector):
             elif indicator_type == "urls":
                 indicator_attribute = self._misp.add_url(event=self._event, url=indicator, to_ids=to_ids)
             else:
-                indicator_attribute = self._misp.add_named_attribute(
-                    event=self._event, type_value=indicator_type, value=indicator, to_ids=to_ids
-                )
+                try:
+                    indicator_attribute = self._misp.add_named_attribute(
+                        event=self._event, type_value=indicator_type, value=indicator, to_ids=to_ids
+                    )
+                except Exception as e:
+                    return action_result.set_status(phantom.APP_ERROR, "Failed to update MISP event:", e)
+
             if add_data is True:
                 action_result.add_data(indicator_attribute["Attribute"])
 
@@ -307,7 +307,10 @@ class MispConnector(BaseConnector):
                 if type(v) is list:
                     indicator_list = v
                 else:
-                    indicator_list = phantom.get_list_from_string(v)
+                    if "," in str(v):
+                        indicator_list = phantom.get_list_from_string(str(v))
+                    else:
+                        indicator_list = list(str(v))
                 self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
         return phantom.APP_SUCCESS
 
@@ -324,7 +327,10 @@ class MispConnector(BaseConnector):
         ret_val = self._perform_adds(param, action_result, add_data=True)
         if phantom.is_fail(ret_val):
             return ret_val
-        action_result.set_summary({"message": "Attributes added to event: {0}".format(self._event["Event"]["id"])})
+        if self._event.get('Event', {}).get('id', ""):
+            action_result.set_summary({"message": "Attributes added to event: {0}".format(self._event["Event"]["id"])})
+        else:
+            return action_result.set_status(phantom.APP_ERROR, "Failed to get event '{0}' for adding attributes".format(param["event_id"]))
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -369,9 +375,11 @@ class MispConnector(BaseConnector):
 
         if max_results:
             if controller == 'events':
-                response['response'] = slice_list(response['response'], max_results)
+                if response['response']:
+                    response['response'] = slice_list(response['response'], max_results)
             else:
-                response['response']['Attribute'] = slice_list(response['response']['Attribute'], max_results)
+                if response['response']:
+                    response['response']['Attribute'] = slice_list(response['response']['Attribute'], max_results)
 
         action_result.add_data(response)
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
@@ -390,11 +398,15 @@ class MispConnector(BaseConnector):
             return phantom.APP_SUCCESS  # No Attachments
 
         for sample in resp[1]:
-            file_path = '/vault/tmp/' + sample[1]
-            with open(file_path, 'wb') as fp:
-                fp.write(sample[2].read())
-                fp.close()
-                Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
+            if hasattr(Vault, 'get_vault_tmp_dir'):
+                file_path = Vault.get_vault_tmp_dir() + '/' + sample[1]
+                Vault.create_attachment(file_path, self.get_container_id(), file_name=sample[1])
+            else:
+                file_path = '/vault/tmp/' + sample[1]
+                with open(file_path, 'wb') as fp:
+                    fp.write(sample[2].read())
+                    fp.close()
+                    Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
 
         return phantom.APP_SUCCESS
 
