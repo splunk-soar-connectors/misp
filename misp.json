@@ -19,15 +19,23 @@
     "wheel": [
       {
         "module": "pymisp",
-        "input_file": "pymisp/pymisp-2.4.71-py2-none-any.whl"
+        "input_file": "wheels/pymisp-2.4.119.1-py2-none-any.whl"
+      },
+      {
+        "module": "deprecated",
+        "input_file": "wheels/Deprecated-1.2.10-py2.py3-none-any.whl"
+      },
+      {
+        "module": "cachetools",
+        "input_file": "wheels/cachetools-3.1.1-py2.py3-none-any.whl"
       },
       {
         "module": "jsonschema",
-        "input_file": "jsonschema/jsonschema-2.6.0-py2.py3-none-any.whl"
+        "input_file": "wheels/jsonschema-3.2.0-py2.py3-none-any.whl"
       },
       {
         "module": "functools32",
-        "input_file": "jsonschema/functools32-3.2.3.post2-cp27-none-any.whl"
+        "input_file": "wheels/functools32-3.2.3.post2-cp27-none-any.whl"
       }
     ]
   },
