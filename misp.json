@@ -6,13 +6,17 @@
   "package_name": "phantom_misp",
   "type": "threat intel",
   "license": "Copyright (c) 2017-2019 Splunk Inc.",
-  "main_module": "misp_connector.pyc",
-  "app_version": "1.0.19",
+  "main_module": "misp_connector.py",
+  "app_version": "2.0.0",
   "utctime_updated": "2019-01-19T00:14:49.000000Z",
   "product_vendor": "MISP",
   "product_name": "MISP",
   "product_version_regex": ".*",
-  "min_phantom_version": "4.0.1068",
+  "min_phantom_version": "4.9.39220",
+  "python_version": "3",
+  "latest_tested_versions": [
+      "On-prem, Version 2.4.74"
+  ],
   "logo": "logo_misp.svg",
   "logo_dark": "logo_misp_dark.svg",
   "pip_dependencies": {
@@ -204,7 +208,11 @@
       "output": [
         {
           "data_path": "action_result.status",
-          "data_type": "string"
+          "data_type": "string",
+          "example_values": [
+            "success",
+            "failed"
+        ]
         },
         {
           "data_path": "action_result.message",
@@ -226,28 +234,24 @@
         {
           "data_path": "action_result.data.*.threat_level_id",
           "data_type": "numeric",
-          "contains": [],
           "column_name": "Threat Level ID",
           "column_order": 2
         },
         {
           "data_path": "action_result.data.*.info",
           "data_type": "string",
-          "contains": [],
           "column_name": "Event Info / Description",
           "column_order": 1
         },
         {
           "data_path": "action_result.data.*.distribution",
           "data_type": "string",
-          "contains": [],
           "column_name": "Distribution",
           "column_order": 3
         },
         {
           "data_path": "action_result.data.*.attribute_count",
           "data_type": "numeric",
-          "contains": [],
           "column_name": "Attribute Count",
           "column_order": 4
         },
@@ -391,7 +395,6 @@
           "description": "Source IPs to be added as attributes",
           "data_type": "string",
           "order": 2,
-          "required": false,
           "contains": [
             "ip"
           ],
@@ -401,7 +404,6 @@
           "description": "Destination IPs to be added as attributes",
           "data_type": "string",
           "order": 3,
-          "required": false,
           "contains": [
             "ip"
           ],
@@ -414,7 +416,6 @@
           "contains": [
             "domain"
           ],
-          "required": false,
           "allow_list": true
         },
         "source_emails": {
@@ -424,7 +425,6 @@
           "contains": [
             "email"
           ],
-          "required": false,
           "allow_list": true
         },
         "dest_emails": {
@@ -434,7 +434,6 @@
           "contains": [
             "email"
           ],
-          "required": false,
           "allow_list": true
         },
         "urls": {
@@ -444,14 +443,12 @@
             "url"
           ],
           "order": 7,
-          "required": false,
           "allow_list": true
         },
         "json": {
           "description": "JSON key value list of attributes",
           "data_type": "string",
           "order": 8,
-          "required": false
         }
       },
       "render": {
@@ -463,7 +460,11 @@
       "output": [
         {
           "data_path": "action_result.status",
-          "data_type": "string"
+          "data_type": "string",
+          "example_values": [
+            "success",
+            "failed"
+        ]
         },
         {
           "data_path": "action_result.message",
@@ -502,21 +503,18 @@
         {
           "data_path": "action_result.data.*.value",
           "data_type": "string",
-          "contains": [],
           "column_name": "Attribute Value",
           "column_order": 1
         },
         {
           "data_path": "action_result.data.*.distribution",
           "data_type": "string",
-          "contains": [],
           "column_name": "Distribution",
           "column_order": 4
         },
         {
           "data_path": "action_result.data.*.category",
           "data_type": "string",
-          "contains": [],
           "column_name": "Attribute Category",
           "column_order": 3
         },
@@ -638,7 +636,6 @@
           "description": "Max results to return",
           "data_type": "numeric",
           "order": 1,
-          "required": false,
           "default": 10
         },
         "event_id": {
@@ -648,20 +645,17 @@
             "misp event id"
           ],
           "order": 2,
-          "required": false,
           "allow_list": true
         },
         "tags": {
           "description": "Comma seperated list of tags",
           "data_type": "string",
-          "order": 3,
-          "required": false
+          "order": 3
         },
         "other": {
           "description": "Other search parameters, as a JSON object",
           "data_type": "string",
-          "order": 4,
-          "required": false
+          "order": 4
         }
       },
       "render": {
@@ -714,10 +708,7 @@
         },
         {
           "data_path": "action_result.data.*.response.Attribute.*.comment",
-          "data_type": "string",
-          "example_values": [
-            ""
-          ]
+          "data_type": "string"
         },
         {
           "data_path": "action_result.data.*.response.Attribute.*.deleted",
@@ -954,10 +945,7 @@
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Attribute.*.comment",
-          "data_type": "string",
-          "example_values": [
-            ""
-          ]
+          "data_type": "string"
         },
         {
           "data_path": "action_result.data.*.response.*.Event.Attribute.*.deleted",
@@ -1209,10 +1197,7 @@
         },
         {
           "data_path": "action_result.message",
-          "data_type": "string",
-          "example_values": [
-            ""
-          ]
+          "data_type": "string"
         },
         {
           "data_path": "action_result.parameter.event_id",
@@ -1289,7 +1274,6 @@
         "download_samples": {
           "description": "Download malware samples to vault",
           "data_type": "boolean",
-          "required": false,
           "default": false,
           "order": 1
         }
@@ -1344,9 +1328,6 @@
         {
           "data_path": "action_result.data.*.response.Attribute.*.comment",
           "data_type": "string",
-          "example_values": [
-            ""
-          ],
           "column_order": 3,
           "column_name": "Comment"
         },
@@ -1413,10 +1394,7 @@
         },
         {
           "data_path": "action_result.message",
-          "data_type": "string",
-          "example_values": [
-            ""
-          ]
+          "data_type": "string"
         },
         {
           "data_path": "action_result.summary",
