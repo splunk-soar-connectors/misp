@@ -49,11 +49,11 @@ def patch_requests():
     requests.Session.post = post
 
 
-def slice_list(l, max_results):
+def slice_list(lst, max_results):
     if max_results > 0:
-        return l[:max_results]
+        return lst[:max_results]
     else:
-        return l[max_results:]
+        return lst[max_results:]
 
 
 class RetVal(tuple):
@@ -303,7 +303,7 @@ class MispConnector(BaseConnector):
                 d = json.loads(json_str)
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. Error: {}".format(str(e)))
-            for k, v in d.iteritems():
+            for k, v in d.items():
                 if type(v) is list:
                     indicator_list = v
                 else:
