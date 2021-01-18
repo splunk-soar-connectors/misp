@@ -274,6 +274,7 @@ class MispConnector(BaseConnector):
                     return action_result.set_status(phantom.APP_ERROR, "Failed to update MISP event:", e)
 
             if add_data is True:
+                indicator_attribute["Attribute"]["attribute_id"] = indicator_attribute["Attribute"]["id"]
                 action_result.add_data(indicator_attribute["Attribute"])
 
     def _perform_adds(self, param, action_result, add_data=False):
