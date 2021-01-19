@@ -2,7 +2,7 @@
     "appid": "54c18439-fd16-49bf-a73f-873e162083e7",
     "name": "MISP",
     "description": "Take action with Malware Information Sharing Platform",
-    "publisher": "Phantom",
+    "publisher": "Splunk",
     "package_name": "phantom_misp",
     "type": "threat intel",
     "license": "Copyright (c) 2017-2021 Splunk Inc.",
@@ -139,7 +139,6 @@
                         "ip"
                     ],
                     "order": 6,
-                    "required": false,
                     "allow_list": true
                 },
                 "dest_ips": {
@@ -149,7 +148,6 @@
                         "ip"
                     ],
                     "order": 7,
-                    "required": false,
                     "allow_list": true
                 },
                 "domains": {
@@ -159,7 +157,6 @@
                         "domain"
                     ],
                     "order": 8,
-                    "required": false,
                     "allow_list": true
                 },
                 "source_emails": {
@@ -169,7 +166,6 @@
                         "email"
                     ],
                     "order": 9,
-                    "required": false,
                     "allow_list": true
                 },
                 "dest_emails": {
@@ -179,7 +175,6 @@
                         "email"
                     ],
                     "order": 10,
-                    "required": false,
                     "allow_list": true
                 },
                 "urls": {
@@ -189,14 +184,12 @@
                         "url"
                     ],
                     "order": 11,
-                    "required": false,
                     "allow_list": true
                 },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 12,
-                    "required": false
+                    "order": 12
                 }
             },
             "render": {
@@ -233,7 +226,7 @@
                         "email"
                     ],
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ]
                 },
                 {
@@ -243,7 +236,7 @@
                         "ip"
                     ],
                     "example_values": [
-                        "8.8.8.8"
+                        "122.122.122.122"
                     ]
                 },
                 {
@@ -275,7 +268,7 @@
                         "email"
                     ],
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ]
                 },
                 {
@@ -285,7 +278,7 @@
                         "ip"
                     ],
                     "example_values": [
-                        "8.8.8.8"
+                        "122.122.122.122"
                     ]
                 },
                 {
@@ -307,7 +300,7 @@
                         "url"
                     ],
                     "example_values": [
-                        "http://phantom.us"
+                        "https://test.com"
                     ]
                 },
                 {
@@ -361,14 +354,14 @@
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
@@ -479,7 +472,7 @@
                         "email"
                     ],
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ]
                 },
                 {
@@ -489,7 +482,7 @@
                         "ip"
                     ],
                     "example_values": [
-                        "8.8.8.8"
+                        "122.122.122.122"
                     ]
                 },
                 {
@@ -520,7 +513,7 @@
                         "email"
                     ],
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ]
                 },
                 {
@@ -530,7 +523,7 @@
                         "ip"
                     ],
                     "example_values": [
-                        "8.8.8.8"
+                        "122.122.122.122"
                     ]
                 },
                 {
@@ -548,7 +541,7 @@
                         "url"
                     ],
                     "example_values": [
-                        "http://phantom.us"
+                        "http://test.com"
                     ]
                 },
                 {
@@ -607,14 +600,14 @@
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
@@ -1227,7 +1220,7 @@
                     "data_path": "action_result.data.*.response.Attribute.*.value",
                     "data_type": "string",
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ],
                     "contains": [
                         "ip",
@@ -1428,14 +1421,14 @@
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
