@@ -190,7 +190,7 @@ class MispConnector(BaseConnector):
             self.append_to_message('Test connectivity failed')
             return self.get_status()
         else:
-            return self.set_status_save_progress(phantom.APP_SUCCESS, "Connectivity to MISP was successful")
+            return self.set_status_save_progress(phantom.APP_SUCCESS, "Test Connectivity Passed")
 
     def _create_event(self, param):
 
