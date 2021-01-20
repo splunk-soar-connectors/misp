@@ -312,7 +312,10 @@ class MispConnector(BaseConnector):
                         indicator_list = phantom.get_list_from_string(str(v))
                     else:
                         indicator_list = list(str(v))
-                self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
+                try:
+                    self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
+                except Exception as e:
+                    return action_result.set_status(phantom.APP_ERROR, "Error adding attribute to MISP event: {}".format(str(e)))
         return phantom.APP_SUCCESS
 
     def _add_attributes(self, param):

@@ -70,6 +70,7 @@
         {
             "action": "create event",
             "description": "Create a new event in MISP",
+            "verbose": "This action first creates an event, then adds attributes to that event. So even if the event is created but there is an error while adding the attributes, the action would fail.",
             "type": "generic",
             "identifier": "create_event",
             "read_only": false,
