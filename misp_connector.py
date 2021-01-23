@@ -1,7 +1,7 @@
 # --
 # File: misp_connector.py
 #
-# Copyright (c) 2017-2019 Splunk Inc.
+# Copyright (c) 2017-2021 Splunk Inc.
 #
 # SPLUNK CONFIDENTIAL - Use or disclosure of this material in whole or in part
 # without a valid written license from Splunk Inc. is PROHIBITED.
@@ -49,11 +49,11 @@ def patch_requests():
     requests.Session.post = post
 
 
-def slice_list(l, max_results):
+def slice_list(lst, max_results):
     if max_results > 0:
-        return l[:max_results]
+        return lst[:max_results]
     else:
-        return l[max_results:]
+        return lst[max_results:]
 
 
 class RetVal(tuple):
@@ -190,7 +190,7 @@ class MispConnector(BaseConnector):
             self.append_to_message('Test connectivity failed')
             return self.get_status()
         else:
-            return self.set_status_save_progress(phantom.APP_SUCCESS, "Connectivity to MISP was successful")
+            return self.set_status_save_progress(phantom.APP_SUCCESS, "Test Connectivity Passed")
 
     def _create_event(self, param):
 
@@ -274,6 +274,7 @@ class MispConnector(BaseConnector):
                     return action_result.set_status(phantom.APP_ERROR, "Failed to update MISP event:", e)
 
             if add_data is True:
+                indicator_attribute["Attribute"]["attribute_id"] = indicator_attribute["Attribute"]["id"]
                 action_result.add_data(indicator_attribute["Attribute"])
 
     def _perform_adds(self, param, action_result, add_data=False):
@@ -303,7 +304,7 @@ class MispConnector(BaseConnector):
                 d = json.loads(json_str)
             except Exception as e:
                 return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. Error: {}".format(str(e)))
-            for k, v in d.iteritems():
+            for k, v in d.items():
                 if type(v) is list:
                     indicator_list = v
                 else:
@@ -311,7 +312,10 @@ class MispConnector(BaseConnector):
                         indicator_list = phantom.get_list_from_string(str(v))
                     else:
                         indicator_list = list(str(v))
-                self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
+                try:
+                    self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False), add_data=add_data)
+                except Exception as e:
+                    return action_result.set_status(phantom.APP_ERROR, "Error adding attribute to MISP event: {}".format(str(e)))
         return phantom.APP_SUCCESS
 
     def _add_attributes(self, param):
@@ -546,7 +550,7 @@ if __name__ == '__main__':
     pudb.set_trace()
 
     if (len(sys.argv) < 2):
-        print "No test json specified as input"
+        print("No test json specified as input")
         exit(0)
 
     with open(sys.argv[1]) as f:
@@ -556,6 +560,6 @@ if __name__ == '__main__':
         connector = MispConnector()
         connector.print_progress_message = True
         ret_val = connector._handle_action(json.dumps(in_json), None)
-        print (json.dumps(json.loads(ret_val), indent=4))
+        print(json.dumps(json.loads(ret_val), indent=4))
 
     exit(0)
