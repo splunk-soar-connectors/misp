@@ -14,6 +14,7 @@ from phantom.base_connector import BaseConnector
 from phantom.action_result import ActionResult
 from phantom.vault import Vault
 import phantom.utils as ph_utils
+import phantom.rules as ph_rules
 
 # Imports local to this App
 import json
@@ -410,7 +411,7 @@ class MispConnector(BaseConnector):
                 with open(file_path, 'wb') as fp:
                     fp.write(sample[2].read())
                     fp.close()
-                    Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
+                    ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=sample[1])
 
         return phantom.APP_SUCCESS
 
