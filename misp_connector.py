@@ -410,7 +410,7 @@ class MispConnector(BaseConnector):
                 with open(file_path, 'wb') as fp:
                     fp.write(sample[2].read())
                     fp.close()
-                    Vault.add_attachment(file_path, self.get_container_id(), file_name=sample[1])
+                    Vault.vault_add(container=self.get_container_id(), file_location=file_path, file_name=sample[1])
 
         return phantom.APP_SUCCESS
 
