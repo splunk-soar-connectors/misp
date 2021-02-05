@@ -1,0 +1,3 @@
+pymisp==2.4.71
+jsonschema==2.6.0
+functools32

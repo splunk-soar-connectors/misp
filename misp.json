@@ -2,17 +2,21 @@
     "appid": "54c18439-fd16-49bf-a73f-873e162083e7",
     "name": "MISP",
     "description": "Take action with Malware Information Sharing Platform",
-    "publisher": "Phantom",
+    "publisher": "Splunk",
     "package_name": "phantom_misp",
     "type": "threat intel",
-    "license": "Copyright (c) 2017-2019 Splunk Inc.",
-    "main_module": "misp_connector.pyc",
-    "app_version": "1.0.19",
-    "utctime_updated": "2019-01-19T00:14:49.000000Z",
+    "license": "Copyright (c) 2017-2021 Splunk Inc.",
+    "main_module": "misp_connector.py",
+    "app_version": "2.0.3",
+    "utctime_updated": "2021-02-04T08:37:02.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "4.0.1068",
+    "min_phantom_version": "4.9.39220",
+    "python_version": "3",
+    "latest_tested_versions": [
+        "On-prem, Version 2.4.74"
+    ],
     "logo": "logo_misp.svg",
     "logo_dark": "logo_misp_dark.svg",
     "pip_dependencies": {
@@ -66,6 +70,7 @@
         {
             "action": "create event",
             "description": "Create a new event in MISP",
+            "verbose": "This action first creates an event, then adds attributes to that event. So even if the event is created but there is an error while adding the attributes, the action would fail.",
             "type": "generic",
             "identifier": "create_event",
             "read_only": false,
@@ -135,7 +140,6 @@
                         "ip"
                     ],
                     "order": 6,
-                    "required": false,
                     "allow_list": true
                 },
                 "dest_ips": {
@@ -145,7 +149,6 @@
                         "ip"
                     ],
                     "order": 7,
-                    "required": false,
                     "allow_list": true
                 },
                 "domains": {
@@ -155,7 +158,6 @@
                         "domain"
                     ],
                     "order": 8,
-                    "required": false,
                     "allow_list": true
                 },
                 "source_emails": {
@@ -165,7 +167,6 @@
                         "email"
                     ],
                     "order": 9,
-                    "required": false,
                     "allow_list": true
                 },
                 "dest_emails": {
@@ -175,7 +176,6 @@
                         "email"
                     ],
                     "order": 10,
-                    "required": false,
                     "allow_list": true
                 },
                 "urls": {
@@ -185,14 +185,12 @@
                         "url"
                     ],
                     "order": 11,
-                    "required": false,
                     "allow_list": true
                 },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 12,
-                    "required": false
+                    "order": 12
                 }
             },
             "render": {
@@ -204,136 +202,11 @@
             "output": [
                 {
                     "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "contains": [
-                        "misp event id"
-                    ],
-                    "column_name": "MISP Event ID",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.threat_level_id",
-                    "data_type": "numeric",
-                    "contains": [],
-                    "column_name": "Threat Level ID",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.info",
-                    "data_type": "string",
-                    "contains": [],
-                    "column_name": "Event Info / Description",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.distribution",
-                    "data_type": "string",
-                    "contains": [],
-                    "column_name": "Distribution",
-                    "column_order": 3
-                },
-                {
-                    "data_path": "action_result.data.*.attribute_count",
-                    "data_type": "numeric",
-                    "contains": [],
-                    "column_name": "Attribute Count",
-                    "column_order": 4
-                },
-                {
-                    "data_path": "action_result.parameter.source_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "8.8.8.8"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "8.8.8.8"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "herman@phantom.us"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "herman@phantom.us"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.urls",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "example_values": [
-                        "http://phantom.us"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.to_ids",
                     "data_type": "string",
                     "example_values": [
-                        true,
-                        false
+                        "success",
+                        "failed"
                     ]
-                },
-                {
-                    "data_path": "action_result.parameter.domains",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.threat_level_id",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.info",
-                    "data_type": "string",
-                    "example_values": [
-                        "Event Info Goes Here"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.distribution",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.json",
-                    "data_type": "string"
                 },
                 {
                     "data_path": "action_result.parameter.add_attributes",
@@ -348,17 +221,148 @@
                     "data_type": "string"
                 },
                 {
+                    "data_path": "action_result.parameter.dest_emails",
+                    "data_type": "string",
+                    "contains": [
+                        "email"
+                    ],
+                    "example_values": [
+                        "test@test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.dest_ips",
+                    "data_type": "string",
+                    "contains": [
+                        "ip"
+                    ],
+                    "example_values": [
+                        "122.122.122.122"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.distribution",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.domains",
+                    "data_type": "string",
+                    "contains": [
+                        "domain"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.info",
+                    "data_type": "string",
+                    "example_values": [
+                        "Event Info Goes Here"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.source_emails",
+                    "data_type": "string",
+                    "contains": [
+                        "email"
+                    ],
+                    "example_values": [
+                        "test@test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.source_ips",
+                    "data_type": "string",
+                    "contains": [
+                        "ip"
+                    ],
+                    "example_values": [
+                        "122.122.122.122"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.threat_level_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.to_ids",
+                    "data_type": "string",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.urls",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ],
+                    "example_values": [
+                        "https://test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.attribute_count",
+                    "data_type": "numeric",
+                    "column_name": "Attribute Count",
+                    "column_order": 5
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.0.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.attribute_id",
+                    "data_type": "string",
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.info",
+                    "data_type": "string",
+                    "column_name": "Event Info / Description",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.threat_level_id",
+                    "data_type": "numeric",
+                    "column_name": "Threat Level ID",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.summary.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
@@ -391,7 +395,6 @@
                     "description": "Source IPs to be added as attributes",
                     "data_type": "string",
                     "order": 2,
-                    "required": false,
                     "contains": [
                         "ip"
                     ],
@@ -401,7 +404,6 @@
                     "description": "Destination IPs to be added as attributes",
                     "data_type": "string",
                     "order": 3,
-                    "required": false,
                     "contains": [
                         "ip"
                     ],
@@ -414,7 +416,6 @@
                     "contains": [
                         "domain"
                     ],
-                    "required": false,
                     "allow_list": true
                 },
                 "source_emails": {
@@ -424,7 +425,6 @@
                     "contains": [
                         "email"
                     ],
-                    "required": false,
                     "allow_list": true
                 },
                 "dest_emails": {
@@ -434,7 +434,6 @@
                     "contains": [
                         "email"
                     ],
-                    "required": false,
                     "allow_list": true
                 },
                 "urls": {
@@ -444,14 +443,12 @@
                         "url"
                     ],
                     "order": 7,
-                    "required": false,
                     "allow_list": true
                 },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 8,
-                    "required": false
+                    "order": 8
                 }
             },
             "render": {
@@ -463,95 +460,10 @@
             "output": [
                 {
                     "data_path": "action_result.status",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary.message",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.id",
                     "data_type": "string",
-                    "contains": [
-                        "misp attribute id"
-                    ],
-                    "column_name": "MISP Attribute ID",
-                    "column_order": 0
-                },
-                {
-                    "data_path": "action_result.data.*.event_id",
-                    "data_type": "string",
-                    "contains": [
-                        "misp event id"
-                    ],
-                    "column_name": "MISP Event ID",
-                    "column_order": 2
-                },
-                {
-                    "data_path": "action_result.data.*.value",
-                    "data_type": "string",
-                    "contains": [],
-                    "column_name": "Attribute Value",
-                    "column_order": 1
-                },
-                {
-                    "data_path": "action_result.data.*.distribution",
-                    "data_type": "string",
-                    "contains": [],
-                    "column_name": "Distribution",
-                    "column_order": 4
-                },
-                {
-                    "data_path": "action_result.data.*.category",
-                    "data_type": "string",
-                    "contains": [],
-                    "column_name": "Attribute Category",
-                    "column_order": 3
-                },
-                {
-                    "data_path": "action_result.parameter.source_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
                     "example_values": [
-                        "8.8.8.8"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "8.8.8.8"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.json",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.parameter.source_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "herman@phantom.us"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
@@ -561,25 +473,17 @@
                         "email"
                     ],
                     "example_values": [
-                        "herman@phantom.us"
+                        "test@test.com"
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.urls",
+                    "data_path": "action_result.parameter.dest_ips",
                     "data_type": "string",
                     "contains": [
-                        "url"
+                        "ip"
                     ],
                     "example_values": [
-                        "http://phantom.us"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.to_ids",
-                    "data_type": "string",
-                    "example_values": [
-                        true,
-                        false
+                        "122.122.122.122"
                     ]
                 },
                 {
@@ -600,17 +504,111 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.source_emails",
+                    "data_type": "string",
+                    "contains": [
+                        "email"
+                    ],
+                    "example_values": [
+                        "test@test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.source_ips",
+                    "data_type": "string",
+                    "contains": [
+                        "ip"
+                    ],
+                    "example_values": [
+                        "122.122.122.122"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.to_ids",
+                    "data_type": "string",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.urls",
+                    "data_type": "string",
+                    "contains": [
+                        "url"
+                    ],
+                    "example_values": [
+                        "http://test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.category",
+                    "data_type": "string",
+                    "column_name": "Attribute Category",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.data.*.event_id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp attribute id"
+                    ],
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Attribute Value",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
@@ -638,7 +636,6 @@
                     "description": "Max results to return",
                     "data_type": "numeric",
                     "order": 1,
-                    "required": false,
                     "default": 10
                 },
                 "event_id": {
@@ -648,20 +645,17 @@
                         "misp event id"
                     ],
                     "order": 2,
-                    "required": false,
                     "allow_list": true
                 },
                 "tags": {
                     "description": "Comma seperated list of tags",
                     "data_type": "string",
-                    "order": 3,
-                    "required": false
+                    "order": 3
                 },
                 "other": {
                     "description": "Other search parameters, as a JSON object",
                     "data_type": "string",
-                    "order": 4,
-                    "required": false
+                    "order": 4
                 }
             },
             "render": {
@@ -670,103 +664,59 @@
             },
             "output": [
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.id",
+                    "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
-                        "164201"
-                    ],
-                    "contains": [
-                        "misp attribute id"
+                        "success",
+                        "failed"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.type",
+                    "data_path": "action_result.parameter.controller",
                     "data_type": "string",
                     "example_values": [
-                        "target-email"
+                        "events",
+                        "attributes"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.uuid",
+                    "data_path": "action_result.parameter.event_id",
                     "data_type": "string",
                     "example_values": [
-                        "59516050-23d4-4b71-b5e4-6b230a10000d"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.value",
-                    "data_type": "string",
-                    "example_values": [
-                        "herman@phantom.us"
-                    ],
-                    "contains": [
-                        "ip",
-                        "email"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.comment",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.deleted",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.category",
-                    "data_type": "string",
-                    "example_values": [
-                        "Targeting data"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.event_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "687"
+                        "1"
                     ],
                     "contains": [
                         "misp event id"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.timestamp",
-                    "data_type": "string",
+                    "data_path": "action_result.parameter.max_results",
+                    "data_type": "numeric",
                     "example_values": [
-                        "1498505296"
+                        1000
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.distribution",
+                    "data_path": "action_result.parameter.other",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.tags",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.category",
                     "data_type": "string",
                     "example_values": [
-                        "3"
+                        "External analysis"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.sharing_group_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
-                    ]
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.comment",
+                    "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.deleted",
                     "data_type": "boolean",
                     "example_values": [
                         true,
@@ -774,142 +724,28 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.id",
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.distribution",
                     "data_type": "string",
                     "example_values": [
-                        "686"
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.event_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "1"
                     ],
                     "contains": [
                         "misp event id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Org.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "1"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Org.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "MISP"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Org.uuid",
-                    "data_type": "string",
-                    "example_values": [
-                        "56ef3277-1ad4-42f6-b90b-04e5c0a83832"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Tag.*.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "1"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Tag.*.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "circl:incident-classification=\"malware\""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Tag.*.colour",
-                    "data_type": "string",
-                    "example_values": [
-                        "#3d7a00"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Tag.*.hide_tag",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Tag.*.exportable",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Orgc.id",
-                    "data_type": "string",
-                    "example_values": [
-                        "2"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Orgc.name",
-                    "data_type": "string",
-                    "example_values": [
-                        "CIRCL"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Orgc.uuid",
-                    "data_type": "string",
-                    "example_values": [
-                        "55f6ea5e-2c60-40e5-964f-47a8950d210f"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.date",
-                    "data_type": "string",
-                    "example_values": [
-                        "2016-03-16"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.info",
-                    "data_type": "string",
-                    "example_values": [
-                        "Dridex of the day (2016-03-16) - botnet 120"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.uuid",
-                    "data_type": "string",
-                    "example_values": [
-                        "56e962e9-ed10-48d8-b885-4bcd950d210f"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.locked",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.org_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "1"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.orgc_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "2"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.analysis",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
                     ]
                 },
                 {
@@ -917,6 +753,28 @@
                     "data_type": "string",
                     "example_values": [
                         "1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1458137369"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
                     ]
                 },
                 {
@@ -945,94 +803,45 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.comment",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.deleted",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.category",
-                    "data_type": "string",
-                    "example_values": [
-                        "External analysis"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.event_id",
+                    "data_path": "action_result.data.*.response.*.Event.Org.id",
                     "data_type": "string",
                     "example_values": [
                         "1"
-                    ],
-                    "contains": [
-                        "misp event id"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.timestamp",
+                    "data_path": "action_result.data.*.response.*.Event.Org.name",
                     "data_type": "string",
                     "example_values": [
-                        "1458137369"
+                        "MISP"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.distribution",
+                    "data_path": "action_result.data.*.response.*.Event.Org.uuid",
                     "data_type": "string",
                     "example_values": [
-                        "5"
+                        "56ef3277-1ad4-42f6-b90b-04e5c0a83832"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.sharing_group_id",
+                    "data_path": "action_result.data.*.response.*.Event.Orgc.id",
                     "data_type": "string",
                     "example_values": [
-                        "0"
+                        "2"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.Attribute.*.disable_correlation",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.published",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.timestamp",
+                    "data_path": "action_result.data.*.response.*.Event.Orgc.name",
                     "data_type": "string",
                     "example_values": [
-                        "1458139531"
+                        "CIRCL"
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.id",
+                    "data_path": "action_result.data.*.response.*.Event.Orgc.uuid",
                     "data_type": "string",
                     "example_values": [
-                        "75"
+                        "55f6ea5e-2c60-40e5-964f-47a8950d210f"
                     ]
                 },
                 {
@@ -1078,6 +887,13 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.analysis",
+                    "data_type": "string",
+                    "example_values": [
+                        "2"
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.date",
                     "data_type": "string",
                     "example_values": [
@@ -1085,17 +901,24 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.distribution",
+                    "data_type": "string",
+                    "example_values": [
+                        "3"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "75"
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.info",
                     "data_type": "string",
                     "example_values": [
                         "OSINT - DRIDEX\u2019s New Tricks Lead to Global Spam Outbreak"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.uuid",
-                    "data_type": "string",
-                    "example_values": [
-                        "574ed4d9-83c0-4422-a492-423e950d210f"
                     ]
                 },
                 {
@@ -1113,32 +936,11 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.analysis",
-                    "data_type": "string",
-                    "example_values": [
-                        "2"
-                    ]
-                },
-                {
                     "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.published",
                     "data_type": "boolean",
                     "example_values": [
                         true,
                         false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.timestamp",
-                    "data_type": "string",
-                    "example_values": [
-                        "1464784644"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.distribution",
-                    "data_type": "string",
-                    "example_values": [
-                        "3"
                     ]
                 },
                 {
@@ -1149,10 +951,61 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.distribution",
+                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.timestamp",
                     "data_type": "string",
                     "example_values": [
-                        "3"
+                        "1464784644"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.RelatedEvent.*.Event.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "574ed4d9-83c0-4422-a492-423e950d210f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Tag.*.colour",
+                    "data_type": "string",
+                    "example_values": [
+                        "#3d7a00"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Tag.*.exportable",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Tag.*.hide_tag",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Tag.*.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.Tag.*.name",
+                    "data_type": "string",
+                    "example_values": [
+                        "circl:incident-classification=\"malware\""
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.analysis",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
                     ]
                 },
                 {
@@ -1163,24 +1016,10 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.data.*.response.*.Event.threat_level_id",
+                    "data_path": "action_result.data.*.response.*.Event.date",
                     "data_type": "string",
                     "example_values": [
-                        "3"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.sharing_group_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.*.Event.publish_timestamp",
-                    "data_type": "string",
-                    "example_values": [
-                        "1458516898"
+                        "2016-03-16"
                     ]
                 },
                 {
@@ -1192,6 +1031,52 @@
                     ]
                 },
                 {
+                    "data_path": "action_result.data.*.response.*.Event.distribution",
+                    "data_type": "string",
+                    "example_values": [
+                        "3"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.id",
+                    "data_type": "string",
+                    "example_values": [
+                        "686"
+                    ],
+                    "contains": [
+                        "misp event id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.info",
+                    "data_type": "string",
+                    "example_values": [
+                        "Dridex of the day (2016-03-16) - botnet 120"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.locked",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.org_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.orgc_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "2"
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.response.*.Event.proposal_email_lock",
                     "data_type": "boolean",
                     "example_values": [
@@ -1200,55 +1085,155 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.status",
+                    "data_path": "action_result.data.*.response.*.Event.publish_timestamp",
                     "data_type": "string",
                     "example_values": [
-                        "success",
-                        "failed"
+                        "1458516898"
                     ]
                 },
                 {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
+                    "data_path": "action_result.data.*.response.*.Event.published",
+                    "data_type": "boolean",
                     "example_values": [
-                        ""
+                        true,
+                        false
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.event_id",
+                    "data_path": "action_result.data.*.response.*.Event.sharing_group_id",
                     "data_type": "string",
                     "example_values": [
-                        "1"
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.threat_level_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "3"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1458139531"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.*.Event.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "56e962e9-ed10-48d8-b885-4bcd950d210f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.category",
+                    "data_type": "string",
+                    "example_values": [
+                        "Targeting data"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.distribution",
+                    "data_type": "string",
+                    "example_values": [
+                        "3"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.event_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "687"
                     ],
                     "contains": [
                         "misp event id"
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.controller",
+                    "data_path": "action_result.data.*.response.Attribute.*.id",
                     "data_type": "string",
                     "example_values": [
-                        "events",
-                        "attributes"
+                        "164201"
+                    ],
+                    "contains": [
+                        "misp attribute id"
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.max_results",
-                    "data_type": "numeric",
+                    "data_path": "action_result.data.*.response.Attribute.*.sharing_group_id",
+                    "data_type": "string",
                     "example_values": [
-                        1000
+                        "0"
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.tags",
-                    "data_type": "string"
+                    "data_path": "action_result.data.*.response.Attribute.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1498505296"
+                    ]
                 },
                 {
-                    "data_path": "action_result.parameter.other",
-                    "data_type": "string"
+                    "data_path": "action_result.data.*.response.Attribute.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.type",
+                    "data_type": "string",
+                    "example_values": [
+                        "target-email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "59516050-23d4-4b71-b5e4-6b230a10000d"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.value",
+                    "data_type": "string",
+                    "example_values": [
+                        "test@test.com"
+                    ],
+                    "contains": [
+                        "ip",
+                        "email"
+                    ]
                 },
                 {
                     "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
                     "data_type": "string"
                 },
                 {
@@ -1289,7 +1274,6 @@
                 "download_samples": {
                     "description": "Download malware samples to vault",
                     "data_type": "boolean",
-                    "required": false,
                     "default": false,
                     "order": 1
                 }
@@ -1302,10 +1286,103 @@
             },
             "output": [
                 {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.download_samples",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.event_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "686"
+                    ],
+                    "contains": [
+                        "misp event id"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.category",
+                    "data_type": "string",
+                    "example_values": [
+                        "Network activity"
+                    ],
+                    "column_order": 0,
+                    "column_name": "Category"
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.comment",
+                    "data_type": "string",
+                    "column_order": 3,
+                    "column_name": "Comment"
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        false,
+                        true
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        false,
+                        true
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.distribution",
+                    "data_type": "string",
+                    "example_values": [
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.event_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "686"
+                    ]
+                },
+                {
                     "data_path": "action_result.data.*.response.Attribute.*.id",
                     "data_type": "string",
                     "example_values": [
                         "164191"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1498002097"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.response.Attribute.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
                     ]
                 },
                 {
@@ -1334,124 +1411,25 @@
                     "column_name": "Value"
                 },
                 {
-                    "data_path": "action_result.data.*.response.Attribute.*.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.comment",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ],
-                    "column_order": 3,
-                    "column_name": "Comment"
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.deleted",
-                    "data_type": "boolean",
-                    "example_values": [
-                        false,
-                        true
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.category",
-                    "data_type": "string",
-                    "example_values": [
-                        "Network activity"
-                    ],
-                    "column_order": 0,
-                    "column_name": "Category"
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.event_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "686"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.timestamp",
-                    "data_type": "string",
-                    "example_values": [
-                        "1498002097"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.distribution",
-                    "data_type": "string",
-                    "example_values": [
-                        "5"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.sharing_group_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.response.Attribute.*.disable_correlation",
-                    "data_type": "boolean",
-                    "example_values": [
-                        false,
-                        true
-                    ]
-                },
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success",
-                        "failed"
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        ""
-                    ]
-                },
-                {
                     "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.event_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "686"
-                    ],
-                    "contains": [
-                        "misp event id"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.download_samples",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
+                    "data_path": "action_result.message",
+                    "data_type": "string"
                 },
                 {
                     "data_path": "summary.total_objects",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 },
                 {
                     "data_path": "summary.total_objects_successful",
                     "data_type": "numeric",
                     "example_values": [
-                        "1"
+                        1
                     ]
                 }
             ],
