@@ -1,8 +1,0 @@
-[submodule "pymisp"]
-	path = pymisp
-	url = git@cd.splunkdev.com:phantom-external/pymisp.git
-    ignore = dirty
-[submodule "jsonschema"]
-	path = jsonschema
-	url = git@cd.splunkdev.com:phantom-external/jsonschema.git
-    ignore = dirty
