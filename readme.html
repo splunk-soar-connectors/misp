@@ -8,6 +8,26 @@ without a valid written license from Splunk Inc. is PROHIBITED.
 
 -->
 
+
+<p>
+    <h2>pymisp-2.4.138</h2>
+    This app uses the pymisp module, which is licensed under an open source license. A simplified 2-BSD License, Copyright (c) 2017 Raphaël Vinot.
+</p>
+<p>
+    <h2>jsonschema-3.2.0</h2>
+    This app uses the jsonschema module, which is licensed under the MIT License, Copyright (c) 2013 Julian Berman.
+</p>
+<p>
+    <h2>Deprecated-1.2.12</h2>
+    This app uses the Deprecated module, which is licensed under the MIT License, Copyright (c) 2017 Laurent LAPORTE.
+</p>
+<p>
+    <h2>cachetools-4.2.2</h2>
+    This app uses the cachetools module, which is licensed under the MIT License, Copyright (c) 2014-2021 Thomas Kemmer.
+</p>
+
+<br>
+
 <p>
 Misp will return integers which correspond to various values. Here is the complete list:<br><br>
 For <b>distribution</b>:<br>
@@ -17,14 +37,15 @@ For <b>distribution</b>:<br>
     <li>2: Connected Communities</li>
     <li>3: All Communities</li>
     <li>4: Sharing Group</li>
-</ul><br><br>
+    <li>5: Inherit</li>
+</ul><br>
 For <b>threat level id</b>:<br>
 <ul>
     <li>1: High</li>
     <li>2: Medium</li>
     <li>3: Low</li>
     <li>4: Undefined</li>
-</ul><br><br>
+</ul><br>
 For <b>analysis</b>:<br>
 <ul>
     <li>0: Initial</li>
@@ -32,3 +53,37 @@ For <b>analysis</b>:<br>
     <li>2: Completed</li>
 </ul>
 </p>
+
+<br>
+
+<b>Note:</b>
+<ul>
+<li>
+<p>
+There is no validation provided in case of incorrect value in 'json' action parameter in <b>'create event'</b> and <b>'update event'</b> action.
+Hence action will pass even if the incorrect attribute value is passed in 'json' action parameter and no attributes will be added.
+</p>
+</li>
+
+<li>
+<p>
+The value of the attribute passed in 'json' action parameter in <b>'create event'</b> and <b>'update event'</b> will be treated as a list if the list is passed and
+if the string is passed as the value of the attribute then a list will be created by splitting the string by comma(,),
+for example:
+<ul>
+    <li>json: {"email_body": ["body 1", "body 2"], "ip-dst": "8.8.8.8, 12.4.6.34"}</li>
+</ul>
+The value of the 'email_body' will be considered list and the value of the 'ip-dst' will be converted to a list having two elements(["8.8.8.8", "12.4.6.34"]).
+</p>
+</li>
+<li>
+<p>
+In <b>'run query'</b> action, tags containing a comma(,) in its value can be passed through the 'other' action parameter,
+for example:
+<ul>
+    <li>other: {"tags": ["tag1, tag11", "tag_2"]}</li>
+</ul>
+"tag1, tag11" will be considered a single tag.
+</p>
+</li>
+</ul>
