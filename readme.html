@@ -60,26 +60,26 @@ For <b>analysis</b>:<br>
 <ul>
 <li>
 <p>
-There is no validation provided in case of incorrect value in 'json' action parameter in <b>'create event'</b> and <b>'update event'</b> action.
-Hence action will pass even if the incorrect attribute value is passed in 'json' action parameter and no attributes will be added.
+There is no validation provided in case of an incorrect value in the 'json' action parameter of the <b>'create event'</b> and <b>'update event'</b> actions.
+Hence, the action will pass even if an incorrect attribute value is passed in the 'json' action parameter and no attributes will be added.
 </p>
 </li>
 
 <li>
 <p>
-The value of the attribute passed in 'json' action parameter in <b>'create event'</b> and <b>'update event'</b> will be treated as a list if the list is passed and
-if the string is passed as the value of the attribute then a list will be created by splitting the string by comma(,),
-for example:
+The value of the attribute passed in the 'json' action parameter of <b>'create event'</b> and <b>'update event'</b> will be treated as a list if a list is specified.
+If a string is specified then a list will be created by splitting the string by comma (,).
+For example:
 <ul>
     <li>json: {"email_body": ["body 1", "body 2"], "ip-dst": "8.8.8.8, 12.4.6.34"}</li>
 </ul>
-The value of the 'email_body' will be considered list and the value of the 'ip-dst' will be converted to a list having two elements(["8.8.8.8", "12.4.6.34"]).
+The value of the 'email_body' will be considered a list and the value of the 'ip-dst' will be converted to a list having two elements(["8.8.8.8", "12.4.6.34"]).
 </p>
 </li>
 <li>
 <p>
-In <b>'run query'</b> action, tags containing a comma(,) in its value can be passed through the 'other' action parameter,
-for example:
+In the <b>'run query'</b> action, tags containing a comma (,) in its value can be passed through the 'other' action parameter.
+For example:
 <ul>
     <li>other: {"tags": ["tag1, tag11", "tag_2"]}</li>
 </ul>

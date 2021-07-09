@@ -559,7 +559,7 @@ class MispConnector(BaseConnector):
         action_result.add_data(response)
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
-    def _download_malware_samples(self):
+    def _download_malware_samples(self, action_result):
         try:
             """ Download malware samples for an event """
             objects = self._event.objects
@@ -567,10 +567,10 @@ class MispConnector(BaseConnector):
                 for attrib in obj.Attribute:
                     if attrib.malware_binary:
                         if hasattr(Vault, 'get_vault_tmp_dir'):
-                            file_path = Vault.get_vault_tmp_dir() + '/' + attrib.malware_filename
+                            file_path = "{}/{}".format(Vault.get_vault_tmp_dir(), attrib.malware_filename)
                             Vault.create_attachment(file_path, self.get_container_id(), file_name=attrib.malware_filename)
                         else:
-                            file_path = '/vault/tmp/' + attrib.malware_filename
+                            file_path = '/vault/tmp/{}'.format(attrib.malware_filename)
                             with open(file_path, 'wb') as fp:
                                 fp.write(attrib.malware_binary.read())
                                 ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=attrib.malware_filename)
@@ -612,7 +612,7 @@ class MispConnector(BaseConnector):
 
         if param.get('download_samples'):
             # Don't forget about this
-            ret_val = self._download_malware_samples()
+            ret_val = self._download_malware_samples(action_result)
 
             if phantom.is_fail(ret_val):
                 return action_result.get_status()
