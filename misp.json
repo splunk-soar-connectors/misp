@@ -74,7 +74,7 @@
         {
             "action": "create event",
             "description": "Create a new event in MISP",
-            "verbose": "This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accepts comma-separated values.",
+            "verbose": "This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
             "type": "generic",
             "identifier": "create_event",
             "read_only": false,
@@ -628,7 +628,7 @@
             "action": "update event",
             "description": "Add attributes / IOCs to an event in MISP",
             "type": "generic",
-            "verbose": "Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accepts comma-separated values.",
+            "verbose": "Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
             "identifier": "add_attributes",
             "read_only": false,
             "parameters": {
