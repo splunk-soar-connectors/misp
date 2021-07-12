@@ -1,3 +1,4 @@
-pymisp==2.4.71
-jsonschema==2.6.0
-functools32
+pymisp==2.4.138
+jsonschema==3.2.0
+Deprecated==1.2.12
+cachetools==4.2.2
