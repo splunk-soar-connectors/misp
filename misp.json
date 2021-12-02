@@ -22,20 +22,84 @@
     "pip_dependencies": {
         "wheel": [
             {
-                "module": "pymisp",
-                "input_file": "wheels/pymisp-2.4.138-py3-none-any.whl"
+                "module": "Deprecated",
+                "input_file": "wheels/Deprecated-1.2.12-py2.py3-none-any.whl"
+            },
+            {
+                "module": "attrs",
+                "input_file": "wheels/attrs-21.2.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "beautifulsoup4",
+                "input_file": "wheels/beautifulsoup4-4.9.1-py3-none-any.whl"
+            },
+            {
+                "module": "cachetools",
+                "input_file": "wheels/cachetools-4.2.2-py3-none-any.whl"
+            },
+            {
+                "module": "certifi",
+                "input_file": "wheels/certifi-2021.10.8-py2.py3-none-any.whl"
+            },
+            {
+                "module": "chardet",
+                "input_file": "wheels/chardet-3.0.4-py2.py3-none-any.whl"
+            },
+            {
+                "module": "idna",
+                "input_file": "wheels/idna-2.10-py2.py3-none-any.whl"
+            },
+            {
+                "module": "importlib_metadata",
+                "input_file": "wheels/importlib_metadata-4.8.2-py3-none-any.whl"
             },
             {
                 "module": "jsonschema",
                 "input_file": "wheels/jsonschema-3.2.0-py2.py3-none-any.whl"
             },
             {
-                "module": "deprecated",
-                "input_file": "wheels/Deprecated-1.2.12-py2.py3-none-any.whl"
+                "module": "pymisp",
+                "input_file": "wheels/pymisp-2.4.138-py3-none-any.whl"
             },
             {
-                "module": "cachetools",
-                "input_file": "wheels/cachetools-4.2.2-py3-none-any.whl"
+                "module": "pyrsistent",
+                "input_file": "wheels/pyrsistent-0.18.0-cp36-cp36m-manylinux1_x86_64.manylinux_2_5_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "python_dateutil",
+                "input_file": "wheels/python_dateutil-2.8.2-py2.py3-none-any.whl"
+            },
+            {
+                "module": "requests",
+                "input_file": "wheels/requests-2.25.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "setuptools",
+                "input_file": "wheels/setuptools-59.4.0-py3-none-any.whl"
+            },
+            {
+                "module": "six",
+                "input_file": "wheels/six-1.16.0-py2.py3-none-any.whl"
+            },
+            {
+                "module": "soupsieve",
+                "input_file": "wheels/soupsieve-2.3.1-py3-none-any.whl"
+            },
+            {
+                "module": "typing_extensions",
+                "input_file": "wheels/typing_extensions-4.0.1-py3-none-any.whl"
+            },
+            {
+                "module": "urllib3",
+                "input_file": "wheels/urllib3-1.26.7-py2.py3-none-any.whl"
+            },
+            {
+                "module": "wrapt",
+                "input_file": "wheels/wrapt-1.13.3-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "zipp",
+                "input_file": "wheels/zipp-3.6.0-py3-none-any.whl"
             }
         ]
     },

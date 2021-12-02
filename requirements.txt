@@ -1,4 +1,6 @@
-pymisp==2.4.138
-jsonschema==3.2.0
 Deprecated==1.2.12
+beautifulsoup4==4.9.1
 cachetools==4.2.2
+jsonschema==3.2.0
+pymisp==2.4.138
+requests==2.25.0
