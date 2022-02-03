@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2022 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.1.5",
+    "app_version": "2.1.6",
     "utctime_updated": "2022-01-07T20:17:11.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",

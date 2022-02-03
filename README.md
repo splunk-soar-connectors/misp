@@ -2,16 +2,16 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2\.1\.4  
+Connector Version: 2\.1\.6  
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): "\.\*"  
-Minimum Product Version: 4\.9\.39220  
+Minimum Product Version: 5\.1\.0  
 
 Take action with Malware Information Sharing Platform
 
-[comment]: # "File: readme.md"
-[comment]: # "Copyright (c) 2017-2021 Splunk Inc."
+[comment]: # "File: README.md"
+[comment]: # "Copyright (c) 2017-2022 Splunk Inc."
 [comment]: # ""
 [comment]: # "Licensed under the Apache License, Version 2.0 (the 'License');"
 [comment]: # "you may not use this file except in compliance with the License."
