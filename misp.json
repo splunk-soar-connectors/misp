@@ -5,14 +5,15 @@
     "publisher": "Splunk",
     "package_name": "phantom_misp",
     "type": "threat intel",
-    "license": "Copyright (c) 2017-2021 Splunk Inc.",
+    "license": "Copyright (c) 2017-2022 Splunk Inc.",
     "main_module": "misp_connector.py",
     "app_version": "2.1.5",
     "utctime_updated": "2022-01-07T20:17:11.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "4.9.39220",
+    "min_phantom_version": "5.1.0",
+    "fips_compliant": true,
     "python_version": "3",
     "latest_tested_versions": [
         "On-prem, Version 2.4.140"
