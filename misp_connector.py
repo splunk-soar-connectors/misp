@@ -540,28 +540,15 @@ class MispConnector(BaseConnector):
 
             query_dict.update(other)
 
-        max_results = param.get('max_results', 10)
+        ret_val, max_results = self._validate_integer(action_result, param.get("max_results", 10), MISP_INVALID_MAX_RESULT)
+        if phantom.is_fail(ret_val):
+            return action_result.get_status()
 
-        try:
-            if not float(max_results).is_integer():
-                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
-
-            max_results = int(max_results)
-        except Exception:
-            return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
-
+        query_dict['limit'] = max_results
         ret_val, response = self._do_search(action_result, **query_dict)
 
         if phantom.is_fail(ret_val):
             return action_result.get_status()
-
-        if max_results:
-            if controller == 'events':
-                if response:
-                    response = slice_list(response, max_results)
-            else:
-                if response:
-                    response['Attribute'] = slice_list(response['Attribute'], max_results)
 
         action_result.add_data(response)
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
