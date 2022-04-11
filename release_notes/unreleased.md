@@ -1,1 +1,2 @@
 **Unreleased**
+* Modified the 'run query' action to fetch limited records [PAPP-25294]

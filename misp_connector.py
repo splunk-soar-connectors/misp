@@ -108,10 +108,11 @@ class MispConnector(BaseConnector):
         :param e: Exception object
         :return: error message
         """
-        error_msg = MISP_ERR_MESSAGE
-        error_code = MISP_ERR_CODE_MESSAGE
+        error_code = None
+        error_msg = MISP_ERR_MSG_UNAVAILABLE
+
         try:
-            if e.args:
+            if hasattr(e, "args"):
                 if len(e.args) > 1:
                     error_code = e.args[0]
                     error_msg = e.args[1]
@@ -120,7 +121,12 @@ class MispConnector(BaseConnector):
         except Exception:
             pass
 
-        return "Error Code: {0}. Error Message: {1}".format(error_code, error_msg)
+        if not error_code:
+            error_text = "Error Message: {}".format(error_msg)
+        else:
+            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_msg)
+
+        return error_text
 
     def _validate_ip(self, input_data):
         ips = []
@@ -206,7 +212,7 @@ class MispConnector(BaseConnector):
         patch_requests()
         config = self.get_config()
         self._verify = config.get("verify_server_cert", False)
-        self._misp_url = config.get("base_url")
+        self._misp_url = config.get("base_url").rstrip("/")
         api_key = config.get("api_key")
 
         self.save_progress("Creating MISP API session...")
@@ -230,11 +236,11 @@ class MispConnector(BaseConnector):
         auth = {"Authorization": config.get("api_key")}
         ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
         if phantom.is_fail(ret_val):
-            self.append_to_message('Test connectivity failed')
-            return self.get_status()
+            action_result.append_to_message('Test connectivity failed')
+            return action_result.get_status()
         else:
             self.save_progress("Test Connectivity Passed")
-            return self.set_status(phantom.APP_SUCCESS)
+            return action_result.set_status(phantom.APP_SUCCESS)
 
     def _create_event(self, param):
 
