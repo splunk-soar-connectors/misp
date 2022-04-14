@@ -585,6 +585,8 @@ class MispConnector(BaseConnector):
         return phantom.APP_SUCCESS
 
     def _get_event(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
         ret_val, event_id = self._validate_integer(action_result, param.get("event_id"), MISP_INVALID_EVENT_ID)
         if phantom.is_fail(ret_val):
@@ -622,6 +624,7 @@ class MispConnector(BaseConnector):
                 return action_result.get_status()
 
         action_result.add_data(attachments)
+        self.debug_print("Successfully retrieved attributes")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully retrieved attributes")
 
     def _process_html_response(self, response, action_result):
