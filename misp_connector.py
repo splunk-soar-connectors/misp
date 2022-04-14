@@ -232,6 +232,7 @@ class MispConnector(BaseConnector):
     def _test_connectivity(self):
         action_result = self.add_action_result(ActionResult())
         self.save_progress("Checking connectivity to your MISP instance...")
+        self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
         ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
@@ -510,6 +511,8 @@ class MispConnector(BaseConnector):
         return RetVal(phantom.APP_SUCCESS, resp)
 
     def _run_query(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         query_dict = {}
         controller = param['controller']
@@ -557,6 +560,7 @@ class MispConnector(BaseConnector):
             return action_result.get_status()
 
         action_result.add_data(response)
+        self.debug_print("Successfully ran query")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
     def _download_malware_samples(self, action_result):
@@ -580,7 +584,7 @@ class MispConnector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
-    def _get_attachments(self, param):
+    def _get_event(self, param):
         action_result = self.add_action_result(ActionResult(dict(param)))
         ret_val, event_id = self._validate_integer(action_result, param.get("event_id"), MISP_INVALID_EVENT_ID)
         if phantom.is_fail(ret_val):
@@ -725,7 +729,7 @@ class MispConnector(BaseConnector):
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:
-            ret_val = self._get_attachments(param)
+            ret_val = self._get_event(param)
         elif action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY:
             ret_val = self._test_connectivity()
 
