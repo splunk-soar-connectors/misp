@@ -584,7 +584,10 @@ class MispConnector(BaseConnector):
         if max_results < 0:
             response_list = response_list[max_results:]
 
-        action_result.add_data(response_list)
+        if controller == 'attributes':
+            action_result.add_data({"Attribute": response_list})
+        else:
+            action_result.add_data(response_list)
         self.debug_print("Successfully ran query")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
