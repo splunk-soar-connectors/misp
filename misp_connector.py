@@ -60,10 +60,7 @@ def patch_requests():
 
 
 def slice_list(lst, max_results):
-    if max_results > 0:
-        return lst[:max_results]
-    else:
-        return lst[max_results:]
+   return lst[max_results:]
 
 
 class RetVal(tuple):
@@ -549,17 +546,44 @@ class MispConnector(BaseConnector):
 
             query_dict.update(other)
 
-        ret_val, max_results = self._validate_integer(action_result, param.get("max_results", 10), MISP_INVALID_MAX_RESULT)
-        if phantom.is_fail(ret_val):
-            return action_result.get_status()
+        max_results = param.get('max_results', 10)
+        try:
+            if not float(max_results).is_integer():
+                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
 
-        query_dict['limit'] = max_results
-        ret_val, response = self._do_search(action_result, **query_dict)
+            max_results = int(max_results)
+        except Exception:
+            return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
 
-        if phantom.is_fail(ret_val):
-            return action_result.get_status()
+        # pagination
+        response_list = []
+        page = 1
+        limit = max_results
+        query_dict['limit'] = 1000
+        while True:
+            query_dict['page'] = page
+            ret_val, response = self._do_search(action_result, **query_dict)
+            if phantom.is_fail(ret_val):
+                return action_result.get_status()
+            page = page + 1
+            if response and controller == 'attributes':
+                response = response.get('Attribute')
+            response_size = len(response)
+            if response_size == 0:
+                break
+            if max_results > 0 and limit < response_size:
+                response = response[:limit]
+            for r in response:
+                response_list.append(r)
+            if max_results > 0:
+                limit = limit - response_size
+                if limit <= 0:
+                    break
 
-        action_result.add_data(response)
+        if max_results < 0:
+            response_list = slice_list(response_list, max_results)
+
+        action_result.add_data(response_list)
         self.debug_print("Successfully ran query")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
