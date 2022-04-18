@@ -59,10 +59,6 @@ def patch_requests():
     requests.Session.post = post
 
 
-def slice_list(lst, max_results):
-   return lst[max_results:]
-
-
 class RetVal(tuple):
     def __new__(cls, val1, val2):
         return tuple.__new__(RetVal, (val1, val2))
@@ -558,8 +554,10 @@ class MispConnector(BaseConnector):
         # pagination
         response_list = []
         page = 1
-        limit = max_results
+        records_remaining = max_results
         query_dict['limit'] = 1000
+        if 0 < max_results < 1000:
+            query_dict['limit'] = max_results
         while True:
             query_dict['page'] = page
             ret_val, response = self._do_search(action_result, **query_dict)
@@ -571,17 +569,20 @@ class MispConnector(BaseConnector):
             response_size = len(response)
             if response_size == 0:
                 break
-            if max_results > 0 and limit < response_size:
-                response = response[:limit]
-            for r in response:
-                response_list.append(r)
+            # slice the response in case response size is larger than remaining records (for positive max_results)
+            if max_results > 0 and records_remaining < response_size:
+                response = response[:records_remaining]
+            response_list.extend(response)
+
+            # update the remaining records (for positive max_results)
             if max_results > 0:
-                limit = limit - response_size
-                if limit <= 0:
+                records_remaining = records_remaining - response_size
+                if records_remaining <= 0:
                     break
 
+        # slice the result in case of negative max_results value
         if max_results < 0:
-            response_list = slice_list(response_list, max_results)
+            response_list = response_list[max_results:]
 
         action_result.add_data(response_list)
         self.debug_print("Successfully ran query")
