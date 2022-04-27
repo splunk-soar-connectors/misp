@@ -2,11 +2,11 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2\.1\.6  
+Connector Version: 2\.2\.0  
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): "\.\*"  
-Minimum Product Version: 5\.1\.0  
+Minimum Product Version: 5\.2\.0  
 
 Take action with Malware Information Sharing Platform
 
@@ -94,6 +94,16 @@ For **analysis** :
 
     "tag1, tag11" will be considered a single tag.
 
+## Port Information
+
+The app uses HTTP/HTTPS protocol for communicating with the Misp Server. Below are the default ports
+used by Splunk SOAR.
+
+| Service Name | Transport Protocol | Port |
+|--------------|--------------------|------|
+| http         | tcp                | 80   |
+| https        | tcp                | 443  |
+
 
 ### Configuration Variables
 The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a MISP asset in SOAR.
@@ -101,7 +111,7 @@ The below configuration variables are required for this Connector to operate.  T
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
 **base\_url** |  required  | string | MISP instance URL \(http\://misp\_instance\.company\.com/\)
-**verify\_server\_cert** |  required  | boolean | Verify server certificate
+**verify\_server\_cert** |  optional  | boolean | Verify server certificate
 **api\_key** |  required  | password | API Key found under Event Actions\: Automation
 
 ### Supported Actions  
@@ -268,7 +278,7 @@ Run a query to find events or attributes
 Type: **investigate**  
 Read only: **True**
 
-By setting max\_results to 0, you can get every result\. It is recommended you do not do this, as MISP can return <b>a lot</b> of data\. The default is 10, and this will be the oldest 10 results\.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports\.<br><br>The MISP API doesn't support paging, but it is possible to work around this\. By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query\. From there, you can take the timestamp from the first object in the resulting list, then pass it in the <b>other</b> field like so\: \{"timestamp"\: &lt;timestamp \+ 1&gt;\}\. All the results will now be after that specified timestamp\.<br><br>Also note that when searching for events, events with no attributes will not be returned\.
+By setting max\_results to 0, you can get every result\. It is recommended you do not do this, as MISP can return <b>a lot</b> of data\. The default is 10, and this will be the oldest 10 results\.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports\.<br><br>By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query\. From there, you can take the timestamp from the first object in the resulting list, then pass it in the <b>other</b> field like so\: \{"timestamp"\: &lt;timestamp \+ 1&gt;\}\. All the results will now be after that specified timestamp\.<br><br>Also note that when searching for events, events with no attributes will not be returned\.
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
@@ -288,6 +298,109 @@ action\_result\.parameter\.event\_id | string |  `misp event id`
 action\_result\.parameter\.max\_results | numeric | 
 action\_result\.parameter\.other | string | 
 action\_result\.parameter\.tags | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.category | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.comment | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.deleted | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.disable\_correlation | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.distribution | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.event\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.first\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.last\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.object\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.object\_relation | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.sharing\_group\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.to\_ids | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.type | string |  `url` 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1` 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.category | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.comment | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.deleted | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.disable\_correlation | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.distribution | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.event\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.first\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.last\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.object\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.object\_relation | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.sharing\_group\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.to\_ids | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.type | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1` 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.comment | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.deleted | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.description | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.distribution | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.event\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.first\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.last\_seen | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.meta\-category | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.sharing\_group\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.template\_uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.template\_version | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.Object\.\*\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Org\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Org\.local | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Org\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.Org\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Orgc\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Orgc\.local | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Orgc\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.Orgc\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.analysis | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.date | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.distribution | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.info | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.org\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.orgc\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.published | numeric | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.threat\_level\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.colour | string | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.exportable | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.hide\_tag | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.is\_custom\_galaxy | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.is\_galaxy | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.local | numeric | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.name | string | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.numerical\_value | string | 
+action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.user\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.analysis | string | 
+action\_result\.data\.\*\.\*\.Event\.attribute\_count | string | 
+action\_result\.data\.\*\.\*\.Event\.date | string | 
+action\_result\.data\.\*\.\*\.Event\.disable\_correlation | numeric | 
+action\_result\.data\.\*\.\*\.Event\.distribution | string | 
+action\_result\.data\.\*\.\*\.Event\.event\_creator\_email | string |  `email` 
+action\_result\.data\.\*\.\*\.Event\.extends\_uuid | string | 
+action\_result\.data\.\*\.\*\.Event\.id | string | 
+action\_result\.data\.\*\.\*\.Event\.info | string | 
+action\_result\.data\.\*\.\*\.Event\.locked | numeric | 
+action\_result\.data\.\*\.\*\.Event\.org\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.orgc\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.proposal\_email\_lock | numeric | 
+action\_result\.data\.\*\.\*\.Event\.publish\_timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.published | numeric | 
+action\_result\.data\.\*\.\*\.Event\.sharing\_group\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.threat\_level\_id | string | 
+action\_result\.data\.\*\.\*\.Event\.timestamp | string | 
+action\_result\.data\.\*\.\*\.Event\.uuid | string | 
 action\_result\.data\.\*\.Attribute\.\*\.Event\.distribution | string | 
 action\_result\.data\.\*\.Attribute\.\*\.Event\.id | string | 
 action\_result\.data\.\*\.Attribute\.\*\.Event\.info | string | 
@@ -314,109 +427,6 @@ action\_result\.data\.\*\.Attribute\.\*\.to\_ids | boolean |
 action\_result\.data\.\*\.Attribute\.\*\.type | string | 
 action\_result\.data\.\*\.Attribute\.\*\.uuid | string | 
 action\_result\.data\.\*\.Attribute\.\*\.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1` 
-action\_result\.data\.\*\.\*\.Event\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Org\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Org\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.Org\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Org\.local | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Orgc\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Orgc\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.Orgc\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Orgc\.local | numeric | 
-action\_result\.data\.\*\.\*\.Event\.date | string | 
-action\_result\.data\.\*\.\*\.Event\.info | string | 
-action\_result\.data\.\*\.\*\.Event\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.locked | numeric | 
-action\_result\.data\.\*\.\*\.Event\.org\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.orgc\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.analysis | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.type | string |  `url` 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1` 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.to\_ids | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.comment | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.deleted | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.category | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.event\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.last\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.object\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.first\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.distribution | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.object\_relation | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.sharing\_group\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Attribute\.\*\.disable\_correlation | numeric | 
-action\_result\.data\.\*\.\*\.Event\.published | numeric | 
-action\_result\.data\.\*\.\*\.Event\.timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Org\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.Orgc\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.date | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.info | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.org\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.orgc\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.analysis | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.published | numeric | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.distribution | string | 
-action\_result\.data\.\*\.\*\.Event\.RelatedEvent\.\*\.Event\.threat\_level\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.distribution | string | 
-action\_result\.data\.\*\.\*\.Event\.extends\_uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.attribute\_count | string | 
-action\_result\.data\.\*\.\*\.Event\.threat\_level\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.sharing\_group\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.publish\_timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.disable\_correlation | numeric | 
-action\_result\.data\.\*\.\*\.Event\.event\_creator\_email | string |  `email` 
-action\_result\.data\.\*\.\*\.Event\.proposal\_email\_lock | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.local | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.colour | string | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.user\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.hide\_tag | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.is\_galaxy | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.exportable | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.numerical\_value | string | 
-action\_result\.data\.\*\.\*\.Event\.Tag\.\*\.is\_custom\_galaxy | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.name | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.comment | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.deleted | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.event\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.type | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1` 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.to\_ids | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.comment | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.deleted | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.category | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.event\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.last\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.object\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.first\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.distribution | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.object\_relation | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.sharing\_group\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.Attribute\.\*\.disable\_correlation | numeric | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.last\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.timestamp | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.first\_seen | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.description | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.distribution | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.meta\-category | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.template\_uuid | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.sharing\_group\_id | string | 
-action\_result\.data\.\*\.\*\.Event\.Object\.\*\.template\_version | string | 
 action\_result\.data\.\*\.attribute\_count | string | 
 action\_result\.summary | string | 
 action\_result\.message | string | 
