@@ -15,5 +15,4 @@
 MISP_INVALID_INT_ERR = "Please provide a valid {msg} integer value in the {param}"
 MISP_INVALID_EVENT_ID = "'event_id' action parameter"
 MISP_INVALID_MAX_RESULT = "'max_result' action parameter"
-MISP_ERR_CODE_MESSAGE = "Error code unavailable"
-MISP_ERR_MESSAGE = "Unknown error occurred. Please check the asset configuration and|or action parameters."
+MISP_ERR_MSG_UNAVAILABLE = "Error message unavailable. Please check the asset configuration and|or action parameters"
