@@ -59,13 +59,6 @@ def patch_requests():
     requests.Session.post = post
 
 
-def slice_list(lst, max_results):
-    if max_results > 0:
-        return lst[:max_results]
-    else:
-        return lst[max_results:]
-
-
 class RetVal(tuple):
     def __new__(cls, val1, val2):
         return tuple.__new__(RetVal, (val1, val2))
@@ -108,10 +101,11 @@ class MispConnector(BaseConnector):
         :param e: Exception object
         :return: error message
         """
-        error_msg = MISP_ERR_MESSAGE
-        error_code = MISP_ERR_CODE_MESSAGE
+        error_code = None
+        error_msg = MISP_ERR_MSG_UNAVAILABLE
+
         try:
-            if e.args:
+            if hasattr(e, "args"):
                 if len(e.args) > 1:
                     error_code = e.args[0]
                     error_msg = e.args[1]
@@ -120,7 +114,12 @@ class MispConnector(BaseConnector):
         except Exception:
             pass
 
-        return "Error Code: {0}. Error Message: {1}".format(error_code, error_msg)
+        if not error_code:
+            error_text = "Error Message: {}".format(error_msg)
+        else:
+            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_msg)
+
+        return error_text
 
     def _validate_ip(self, input_data):
         ips = []
@@ -206,7 +205,7 @@ class MispConnector(BaseConnector):
         patch_requests()
         config = self.get_config()
         self._verify = config.get("verify_server_cert", False)
-        self._misp_url = config.get("base_url")
+        self._misp_url = config.get("base_url").rstrip("/")
         api_key = config.get("api_key")
 
         self.save_progress("Creating MISP API session...")
@@ -226,15 +225,16 @@ class MispConnector(BaseConnector):
     def _test_connectivity(self):
         action_result = self.add_action_result(ActionResult())
         self.save_progress("Checking connectivity to your MISP instance...")
+        self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
         ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
         if phantom.is_fail(ret_val):
-            self.append_to_message('Test connectivity failed')
-            return self.get_status()
+            action_result.append_to_message('Test connectivity failed')
+            return action_result.get_status()
         else:
             self.save_progress("Test Connectivity Passed")
-            return self.set_status(phantom.APP_SUCCESS)
+            return action_result.set_status(phantom.APP_SUCCESS)
 
     def _create_event(self, param):
 
@@ -504,6 +504,8 @@ class MispConnector(BaseConnector):
         return RetVal(phantom.APP_SUCCESS, resp)
 
     def _run_query(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         query_dict = {}
         controller = param['controller']
@@ -541,7 +543,6 @@ class MispConnector(BaseConnector):
             query_dict.update(other)
 
         max_results = param.get('max_results', 10)
-
         try:
             if not float(max_results).is_integer():
                 return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
@@ -550,20 +551,44 @@ class MispConnector(BaseConnector):
         except Exception:
             return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
 
-        ret_val, response = self._do_search(action_result, **query_dict)
+        # pagination
+        response_list = []
+        page = 1
+        records_remaining = max_results
+        query_dict['limit'] = 1000
+        if 0 < max_results < 1000:
+            query_dict['limit'] = max_results
+        while True:
+            query_dict['page'] = page
+            ret_val, response = self._do_search(action_result, **query_dict)
+            if phantom.is_fail(ret_val):
+                return action_result.get_status()
+            page = page + 1
+            if response and controller == 'attributes':
+                response = response.get('Attribute')
+            response_size = len(response)
+            if response_size == 0:
+                break
+            # slice the response in case response size is larger than remaining records (for positive max_results)
+            if max_results > 0 and records_remaining < response_size:
+                response = response[:records_remaining]
+            response_list.extend(response)
 
-        if phantom.is_fail(ret_val):
-            return action_result.get_status()
+            # update the remaining records (for positive max_results)
+            if max_results > 0:
+                records_remaining = records_remaining - response_size
+                if records_remaining <= 0:
+                    break
 
-        if max_results:
-            if controller == 'events':
-                if response:
-                    response = slice_list(response, max_results)
-            else:
-                if response:
-                    response['Attribute'] = slice_list(response['Attribute'], max_results)
+        # slice the result in case of negative max_results value
+        if max_results < 0:
+            response_list = response_list[max_results:]
 
-        action_result.add_data(response)
+        if controller == 'attributes':
+            action_result.add_data({"Attribute": response_list})
+        else:
+            action_result.add_data(response_list)
+        self.debug_print("Successfully ran query")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully ran query")
 
     def _download_malware_samples(self, action_result):
@@ -587,7 +612,9 @@ class MispConnector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
-    def _get_attachments(self, param):
+    def _get_event(self, param):
+
+        self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(dict(param)))
         ret_val, event_id = self._validate_integer(action_result, param.get("event_id"), MISP_INVALID_EVENT_ID)
         if phantom.is_fail(ret_val):
@@ -625,6 +652,7 @@ class MispConnector(BaseConnector):
                 return action_result.get_status()
 
         action_result.add_data(attachments)
+        self.debug_print("Successfully retrieved attributes")
         return action_result.set_status(phantom.APP_SUCCESS, "Successfully retrieved attributes")
 
     def _process_html_response(self, response, action_result):
@@ -732,7 +760,7 @@ class MispConnector(BaseConnector):
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:
-            ret_val = self._get_attachments(param)
+            ret_val = self._get_event(param)
         elif action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY:
             ret_val = self._test_connectivity()
 
