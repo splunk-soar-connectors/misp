@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2022 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.2.0",
+    "app_version": "2.2.1",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -28,7 +28,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/shared/attrs-21.4.0-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-22.2.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -40,15 +40,15 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/shared/certifi-2021.10.8-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2023.11.17-py3-none-any.whl"
             },
             {
-                "module": "chardet",
-                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+                "module": "charset_normalizer",
+                "input_file": "wheels/py3/charset_normalizer-2.0.12-py3-none-any.whl"
             },
             {
                 "module": "idna",
-                "input_file": "wheels/shared/idna-2.10-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/idna-3.6-py3-none-any.whl"
             },
             {
                 "module": "importlib_metadata",
@@ -72,7 +72,7 @@
             },
             {
                 "module": "requests",
-                "input_file": "wheels/shared/requests-2.25.0-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/requests-2.27.1-py2.py3-none-any.whl"
             },
             {
                 "module": "setuptools",
@@ -84,7 +84,7 @@
             },
             {
                 "module": "soupsieve",
-                "input_file": "wheels/py3/soupsieve-2.3.2-py3-none-any.whl"
+                "input_file": "wheels/py3/soupsieve-2.3.2.post1-py3-none-any.whl"
             },
             {
                 "module": "typing_extensions",
@@ -92,11 +92,11 @@
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.9-py2.py3-none-any.whl"
+                "input_file": "wheels/shared/urllib3-1.26.18-py2.py3-none-any.whl"
             },
             {
                 "module": "wrapt",
-                "input_file": "wheels/py36/wrapt-1.14.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+                "input_file": "wheels/py36/wrapt-1.16.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
                 "module": "zipp",
@@ -2390,7 +2390,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/shared/attrs-21.4.0-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-23.1.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -2402,15 +2402,15 @@
             },
             {
                 "module": "certifi",
-                "input_file": "wheels/shared/certifi-2021.10.8-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/certifi-2023.11.17-py3-none-any.whl"
             },
             {
-                "module": "chardet",
-                "input_file": "wheels/shared/chardet-3.0.4-py2.py3-none-any.whl"
+                "module": "charset_normalizer",
+                "input_file": "wheels/py39/charset_normalizer-3.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
                 "module": "idna",
-                "input_file": "wheels/shared/idna-2.10-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/idna-3.6-py3-none-any.whl"
             },
             {
                 "module": "jsonschema",
@@ -2422,7 +2422,7 @@
             },
             {
                 "module": "pyrsistent",
-                "input_file": "wheels/py39/pyrsistent-0.18.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+                "input_file": "wheels/py39/pyrsistent-0.20.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
                 "module": "python_dateutil",
@@ -2430,11 +2430,11 @@
             },
             {
                 "module": "requests",
-                "input_file": "wheels/shared/requests-2.25.0-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/requests-2.31.0-py3-none-any.whl"
             },
             {
                 "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-62.1.0-py3-none-any.whl"
+                "input_file": "wheels/py3/setuptools-69.0.2-py3-none-any.whl"
             },
             {
                 "module": "six",
@@ -2442,15 +2442,15 @@
             },
             {
                 "module": "soupsieve",
-                "input_file": "wheels/py3/soupsieve-2.3.2-py3-none-any.whl"
+                "input_file": "wheels/py3/soupsieve-2.5-py3-none-any.whl"
             },
             {
                 "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.9-py2.py3-none-any.whl"
+                "input_file": "wheels/py3/urllib3-2.1.0-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
-                "input_file": "wheels/py39/wrapt-1.14.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+                "input_file": "wheels/py39/wrapt-1.16.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             }
         ]
     }
