@@ -408,11 +408,11 @@ class MispConnector(BaseConnector):
                 ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False))
 
                 if phantom.is_fail(ret_val):
-                    status_msg = action_result.get_message()
+                    status_message = action_result.get_message()
                     if cust_error_code == 1:
-                        errors["invalid_value"].append(status_msg)
+                        errors["invalid_value"].append(status_message)
                     elif cust_error_code == 2:
-                        errors["invalid_key"].append(status_msg)
+                        errors["invalid_key"].append(status_message)
                     else:
                         return action_result.get_status()
                 else:
