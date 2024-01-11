@@ -60,7 +60,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.71-py2-none-any"
             },
             {
                 "module": "pyrsistent",
@@ -2418,7 +2418,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.71-py2-none-any.whl"
             },
             {
                 "module": "pyrsistent",
