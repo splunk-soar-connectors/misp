@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.2.1",
+    "app_version": "2.2.2",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -60,7 +60,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.71-py2-none-any"
             },
             {
                 "module": "pyrsistent",
@@ -2418,7 +2418,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.71-py2-none-any.whl"
             },
             {
                 "module": "pyrsistent",

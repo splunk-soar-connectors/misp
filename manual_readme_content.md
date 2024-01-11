@@ -12,7 +12,7 @@
 [comment]: # "either express or implied. See the License for the specific language governing permissions"
 [comment]: # "and limitations under the License."
 [comment]: # ""
-## pymisp-2.4.138
+## pymisp-2.4.71
 
 This app uses the pymisp module, which is licensed under an open source license. A simplified 2-BSD
 License, Copyright (c) 2017 Raphaël Vinot.
