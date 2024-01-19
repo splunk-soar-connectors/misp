@@ -39,16 +39,8 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "certifi",
-                "input_file": "wheels/py3/certifi-2023.11.17-py3-none-any.whl"
-            },
-            {
                 "module": "charset_normalizer",
                 "input_file": "wheels/py3/charset_normalizer-2.0.12-py3-none-any.whl"
-            },
-            {
-                "module": "idna",
-                "input_file": "wheels/py3/idna-3.6-py3-none-any.whl"
             },
             {
                 "module": "importlib_metadata",
@@ -71,10 +63,6 @@
                 "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
             },
             {
-                "module": "requests",
-                "input_file": "wheels/shared/requests-2.27.1-py2.py3-none-any.whl"
-            },
-            {
                 "module": "setuptools",
                 "input_file": "wheels/py3/setuptools-59.6.0-py3-none-any.whl"
             },
@@ -89,10 +77,6 @@
             {
                 "module": "typing_extensions",
                 "input_file": "wheels/py3/typing_extensions-4.1.1-py3-none-any.whl"
-            },
-            {
-                "module": "urllib3",
-                "input_file": "wheels/shared/urllib3-1.26.18-py2.py3-none-any.whl"
             },
             {
                 "module": "wrapt",
@@ -2401,16 +2385,8 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "certifi",
-                "input_file": "wheels/py3/certifi-2023.11.17-py3-none-any.whl"
-            },
-            {
                 "module": "charset_normalizer",
                 "input_file": "wheels/py39/charset_normalizer-3.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
-                "module": "idna",
-                "input_file": "wheels/py3/idna-3.6-py3-none-any.whl"
             },
             {
                 "module": "jsonschema",
@@ -2429,10 +2405,6 @@
                 "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
             },
             {
-                "module": "requests",
-                "input_file": "wheels/py3/requests-2.31.0-py3-none-any.whl"
-            },
-            {
                 "module": "setuptools",
                 "input_file": "wheels/py3/setuptools-69.0.2-py3-none-any.whl"
             },
@@ -2443,10 +2415,6 @@
             {
                 "module": "soupsieve",
                 "input_file": "wheels/py3/soupsieve-2.5-py3-none-any.whl"
-            },
-            {
-                "module": "urllib3",
-                "input_file": "wheels/py3/urllib3-2.1.0-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
