@@ -1,6 +1,6 @@
 # File: misp_connector.py
 #
-# Copyright (c) 2017-2022 Splunk Inc.
+# Copyright (c) 2017-2024 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -102,22 +102,22 @@ class MispConnector(BaseConnector):
         :return: error message
         """
         error_code = None
-        error_msg = MISP_ERR_MSG_UNAVAILABLE
+        error_message = MISP_ERR_MSG_UNAVAILABLE
 
         try:
             if hasattr(e, "args"):
                 if len(e.args) > 1:
                     error_code = e.args[0]
-                    error_msg = e.args[1]
+                    error_message = e.args[1]
                 elif len(e.args) == 1:
-                    error_msg = e.args[0]
+                    error_message = e.args[0]
         except Exception:
             pass
 
         if not error_code:
-            error_text = "Error Message: {}".format(error_msg)
+            error_text = "Error Message: {}".format(error_message)
         else:
-            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_msg)
+            error_text = "Error Code: {}. Error Message: {}".format(error_code, error_message)
 
         return error_text
 
@@ -212,8 +212,8 @@ class MispConnector(BaseConnector):
         try:
             self._misp = PyMISP(self._misp_url, api_key, ssl=self._verify)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return self.set_status(phantom.APP_ERROR, "Failed to create API session:{0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return self.set_status(phantom.APP_ERROR, "Failed to create API session:{0}".format(error_message))
 
         self.set_validator('ip', self._validate_ip)
         self.set_validator('domain', self._validate_domain)
@@ -285,14 +285,14 @@ class MispConnector(BaseConnector):
 
             self._event = self._misp.add_event(event, pythonify=True)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:{0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:{0}".format(error_message))
 
         try:
             action_result.add_data(json.loads(self._event.to_json()))
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_message))
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
 
@@ -300,11 +300,11 @@ class MispConnector(BaseConnector):
         if addAttributes:
             ret_val = self._perform_adds(param, action_result, add_data=True)
 
-            error_msg = action_result.get_message()
+            error_message = action_result.get_message()
 
-            if error_msg is not None:
+            if error_message is not None:
                 summary = action_result.get_summary()
-                summary["errors"] = error_msg
+                summary["errors"] = error_message
                 action_result.update_summary(summary)
 
             if phantom.is_fail(ret_val):
@@ -313,8 +313,8 @@ class MispConnector(BaseConnector):
             try:
                 event_dict = json.loads(self._event.to_json())
             except Exception as e:
-                error_msg = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_msg))
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
 
             attributes = event_dict.get('Attribute', [])
             for attribute in attributes:
@@ -394,8 +394,8 @@ class MispConnector(BaseConnector):
             try:
                 d = json.loads(json_str)
             except Exception as e:
-                error_msg = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. {0}".format(error_msg))
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. {0}".format(error_message))
             if not isinstance(d, dict):
                 return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter")
             for k, v in d.items():
@@ -408,44 +408,44 @@ class MispConnector(BaseConnector):
                 ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False))
 
                 if phantom.is_fail(ret_val):
-                    status_msg = action_result.get_message()
+                    status_message = action_result.get_message()
                     if cust_error_code == 1:
-                        errors["invalid_value"].append(status_msg)
+                        errors["invalid_value"].append(status_message)
                     elif cust_error_code == 2:
-                        errors["invalid_key"].append(status_msg)
+                        errors["invalid_key"].append(status_message)
                     else:
                         return action_result.get_status()
                 else:
                     is_added = True
 
-        error_msg = None
+        error_message = None
         if errors["invalid_value"]:
             invalid_values = ', '.join(errors["invalid_value"])
-            error_msg = "{} key/keys has invalid value".format(invalid_values)
+            error_message = "{} key/keys has invalid value".format(invalid_values)
         if errors["invalid_key"]:
             invalid_keys = ', '.join(errors["invalid_key"])
-            if error_msg is not None:
-                error_msg = "{} and ".format(error_msg)
+            if error_message is not None:
+                error_message = "{} and ".format(error_message)
             else:
-                error_msg = ''
-            error_msg = "{} {} is/are invalid attribute name/names".format(error_msg, invalid_keys)
+                error_message = ''
+            error_message = "{} {} is/are invalid attribute name/names".format(error_message, invalid_keys)
 
-        if error_msg is not None:
-            error_msg = "{} in 'json' action parameter".format(error_msg)
+        if error_message is not None:
+            error_message = "{} in 'json' action parameter".format(error_message)
 
         if self.get_action_identifier() == self.ACTION_ID_ADD_ATTRIBUTES:
             status = phantom.APP_SUCCESS
             # if not a single attribute is provided to update event
             if is_empty:
                 status = phantom.APP_ERROR
-                error_msg = "Please provide at least one attribute"
+                error_message = "Please provide at least one attribute"
             # if not a single attribute is attached then "update event" task is completely failed
             if not is_added:
                 status = phantom.APP_ERROR
-            return action_result.set_status(status, error_msg)
+            return action_result.set_status(status, error_message)
         # Event is already created so it should be success regardless of the number of attributes attached
         else:
-            return action_result.set_status(phantom.APP_SUCCESS, error_msg)
+            return action_result.set_status(phantom.APP_SUCCESS, error_message)
 
     def _add_attributes(self, param):
 
@@ -463,12 +463,12 @@ class MispConnector(BaseConnector):
                     else:
                         raise Exception
             except Exception as e:
-                error_msg = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Failed to get event for adding attributes:{0}".format(error_msg))
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Failed to get event for adding attributes:{0}".format(error_message))
 
         ret_val = self._perform_adds(param, action_result, add_data=True)
 
-        error_msg = action_result.get_message()
+        error_message = action_result.get_message()
 
         if phantom.is_fail(ret_val):
             return action_result.get_status()
@@ -476,8 +476,8 @@ class MispConnector(BaseConnector):
         try:
             event_dict = json.loads(self._event.to_json())
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
 
         attributes = event_dict.get('Attribute', [])
         for attribute in attributes:
@@ -486,8 +486,8 @@ class MispConnector(BaseConnector):
         if hasattr(self._event, "id"):
             summary = {}
             summary["message"] = "Attributes added to event: {0}".format(self._event.id)
-            if error_msg is not None:
-                summary["errors"] = error_msg
+            if error_message is not None:
+                summary["errors"] = error_message
             action_result.set_summary(summary)
         else:
             return action_result.set_status(phantom.APP_ERROR, "Failed to get event '{0}' for adding attributes".format(param["event_id"]))
@@ -498,8 +498,8 @@ class MispConnector(BaseConnector):
         try:
             resp = self._misp.search(**kwargs)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return RetVal(action_result.set_status(phantom.APP_ERROR, error_msg), None)
+            error_message = self._get_error_message_from_exception(e)
+            return RetVal(action_result.set_status(phantom.APP_ERROR, error_message), None)
 
         return RetVal(phantom.APP_SUCCESS, resp)
 
@@ -534,8 +534,8 @@ class MispConnector(BaseConnector):
             try:
                 other = json.loads(param['other'])
             except Exception as e:
-                error_msg = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object{0}".format(error_msg))
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object{0}".format(error_message))
 
             if not isinstance(other, dict):
                 return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'other' action parameter")
@@ -607,8 +607,8 @@ class MispConnector(BaseConnector):
                                 fp.write(attrib.malware_binary.read())
                                 ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=attrib.malware_filename)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to download malware samples: {0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to download malware samples: {0}".format(error_message))
 
         return phantom.APP_SUCCESS
 
@@ -633,8 +633,8 @@ class MispConnector(BaseConnector):
                 else:
                     raise Exception
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to get event for getting attachment:{0}".format(error_msg))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Failed to get event for getting attachment:{0}".format(error_message))
 
         query_dict = {}
         query_dict['eventid'] = event_id
@@ -682,8 +682,8 @@ class MispConnector(BaseConnector):
         try:
             resp_json = r.json()
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Unable to parse response as JSON {0}".format(error_msg)), None
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, "Unable to parse response as JSON {0}".format(error_message)), None
 
         if 200 <= r.status_code < 205:
             return phantom.APP_SUCCESS, resp_json
@@ -732,15 +732,15 @@ class MispConnector(BaseConnector):
             # Set the action_result status to error, the handler function will most probably return as is
             return result.set_status(phantom.APP_ERROR, "Unsupported method: {0}".format(method)), None
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
+            error_message = self._get_error_message_from_exception(e)
             # Set the action_result status to error, the handler function will most probably return as is
-            return result.set_status(phantom.APP_ERROR, "Handled exception: {0}".format(error_msg)), None
+            return result.set_status(phantom.APP_ERROR, "Handled exception: {0}".format(error_message)), None
 
         try:
             r = request_func(url, params=params, json=json, headers=headers, verify=self._verify)
         except Exception as e:
-            error_msg = self._get_error_message_from_exception(e)
-            return result.set_status(phantom.APP_ERROR, "REST API to server failed: {0}".format(error_msg)), None
+            error_message = self._get_error_message_from_exception(e)
+            return result.set_status(phantom.APP_ERROR, "REST API to server failed: {0}".format(error_message)), None
 
         return self._process_response(r, result)
 
