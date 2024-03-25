@@ -68,7 +68,6 @@ class MispConnector(BaseConnector):
 
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
-    ACTION_ID_UPDATE_EVENT = "update_event"
     ACTION_ID_ADD_ATTRIBUTE = "add_attribute"
     ACTION_ID_RUN_QUERY = "run_query"
     ACTION_ID_GET_EVENT = "get_event"
@@ -296,14 +295,6 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_message))
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
-
-        return action_result.set_status(phantom.APP_SUCCESS)
-
-    def _update_event(self, param):
-        # TODO: update code to ONLY update the event. No changes to attributes
-        # TODO: maybe delete this, verify if there is a use case
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -591,8 +582,6 @@ class MispConnector(BaseConnector):
 
         if action_id == self.ACTION_ID_CREATE_EVENT:
             ret_val = self._create_event(param)
-        elif action_id == self.ACTION_ID_UPDATE_EVENT:
-            ret_val = self._update_event(param)
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:
