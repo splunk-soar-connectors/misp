@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.2.1",
+    "app_version": "2.3.10",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -52,7 +52,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.182-py3-none-any.whl"
             },
             {
                 "module": "pyrsistent",
@@ -117,6 +117,56 @@
             "read_only": true,
             "parameters": {},
             "output": [],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add attribute",
+            "description": "Add an attribute to an existing MISP event",
+            "type": "generic",
+            "identifier": "add_attribute",
+            "read_only": false,
+            "parameters": {
+                "event_id": {
+                    "order" : 0,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Event ID"
+                },
+                "attribute_category": {
+                    "order" : 1,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Attribute Category"
+                },
+                "attribute_type": {
+                    "order" : 2,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Attribute Type"
+                },
+                "attribute_value": {
+                    "order" : 3,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Attribute Value"
+                },
+                "attribute_comment": {
+                    "order" : 4,
+                    "data_type": "string",
+                    "required": false,
+                    "description": "Attribute Comment"
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                }
+            ],
             "versions": "EQ(*)"
         },
         {
@@ -677,7 +727,7 @@
             "description": "Add attributes / IOCs to an event in MISP",
             "type": "generic",
             "verbose": "Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
-            "identifier": "add_attributes",
+            "identifier": "update_event",
             "read_only": false,
             "parameters": {
                 "event_id": {
@@ -2394,7 +2444,7 @@
             },
             {
                 "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
+                "input_file": "wheels/py3/pymisp-2.4.182-py3-none-any.whl"
             },
             {
                 "module": "pyrsistent",
