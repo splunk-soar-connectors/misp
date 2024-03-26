@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.3.22",
+    "app_version": "2.3.24",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -408,6 +408,14 @@
                         "success",
                         "failed"
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.updated_event",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.response",
+                    "data_type": "string"
                 }
             ],
             "versions": "EQ(*)"
@@ -482,38 +490,10 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.add_attributes",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
                     "data_path": "action_result.parameter.analysis",
                     "data_type": "string",
                     "example_values": [
                         "Initial"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
                     ]
                 },
                 {
@@ -524,16 +504,6 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.domains",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "example_values": [
-                        "www.test.com"
-                    ]
-                },
-                {
                     "data_path": "action_result.parameter.info",
                     "data_type": "string",
                     "example_values": [
@@ -541,55 +511,10 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.json",
-                    "data_type": "string",
-                    "example_values": [
-                        "{\"ip-src|port\":\"1.1.1.1:888\"}"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
-                    ]
-                },
-                {
                     "data_path": "action_result.parameter.threat_level_id",
                     "data_type": "string",
                     "example_values": [
                         "undefined"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.urls",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "example_values": [
-                        "https://test.com"
                     ]
                 },
                 {
