@@ -2,7 +2,7 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2.3.27  
+Connector Version: 2.3.29  
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
@@ -72,6 +72,7 @@ For **analysis** :
 
   
 **Note:**
+
 -   Create new events with the `create event` action.
 -   To add a single attribute to an existing event use the `add attribute` action.
 -   To add multiple attributes to an event, use the `bulk add attributes` action.
