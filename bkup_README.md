@@ -2,7 +2,7 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2.2.1  
+Connector Version: 2.2.1  (UPDATE THIS) 
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
@@ -24,7 +24,7 @@ Take action with Malware Information Sharing Platform
 [comment]: # "either express or implied. See the License for the specific language governing permissions"
 [comment]: # "and limitations under the License."
 [comment]: # ""
-## pymisp-2.4.138
+## pymisp-2.4.182
 
 This app uses the pymisp module, which is licensed under an open source license. A simplified 2-BSD
 License, Copyright (c) 2017 Raphaël Vinot.
@@ -70,29 +70,18 @@ For **analysis** :
 -   1: Ongoing
 -   2: Completed
 
-  
+
 **Note:**
 
--   There is no validation provided in case of an incorrect value in the 'json' action parameter of
-    the **'create event'** and **'update event'** actions. Hence, the action will pass even if an
-    incorrect attribute value is passed in the 'json' action parameter and no attributes will be
-    added.
-
--   The value of the attribute passed in the 'json' action parameter of **'create event'** and
-    **'update event'** will be treated as a list if a list is specified. If a string is specified
-    then a list will be created by splitting the string by comma (,). For example:
-
-    -   json: {"email_body": \["body 1", "body 2"\], "ip-dst": "8.8.8.8, 12.4.6.34"}
-
-    The value of the 'email_body' will be considered a list and the value of the 'ip-dst' will be
-    converted to a list having two elements(\["8.8.8.8", "12.4.6.34"\]).
-
+-   Create new events with the `create event` action.
+-   To add a single attribute to an existing event use the `add attribute` action.
+-   To add multiple attributes to an event, use the `bulk add attributes` action.
 -   In the **'run query'** action, tags containing a comma (,) in its value can be passed through
-    the 'other' action parameter. For example:
+      the 'other' action parameter. For example:
 
-    -   other: {"tags": \["tag1, tag11", "tag_2"\]}
+      -   other: {"tags": \["tag1, tag11", "tag_2"\]}
 
-    "tag1, tag11" will be considered a single tag.
+      "tag1, tag11" will be considered a single tag.
 
 ## Port Information
 

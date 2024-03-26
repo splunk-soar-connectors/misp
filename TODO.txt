@@ -1,9 +1,6 @@
 TODO
 - add_attribute
     - JSON: output fields
-- _create_event()
-    - verify functionality is working
-    - remove unused params related to attributes
 - new actions
     - remove_attribute by ID
     - update_attribute by ID
@@ -15,3 +12,7 @@ DONE
 - remove add attributes functionality from create/update event actions
 - update pymisp wheel to use 2.4.182 (https://pypi.org/project/pymisp/2.4.182/)
     - " This library will require at least Python 3.10 starting the 1st of January 2024. If you have legacy versions of python, please use the latest PyMISP version that will be released in December 2023,"
+- _create_event()
+    - [IMPORTANT] ability to name an event (title)
+    - verify functionality is working
+    - remove unused params related to attributes

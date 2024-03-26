@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.3.25",
+    "app_version": "2.3.27",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -158,6 +158,7 @@
         {
             "action": "add attribute",
             "description": "Add an attribute to an existing MISP event",
+            "verbose" : "To add multiple attributes to an event, use the 'bulk add attributes' action",
             "type": "generic",
             "identifier": "add_attribute",
             "read_only": false,
