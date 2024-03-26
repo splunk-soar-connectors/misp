@@ -69,7 +69,6 @@ class MispConnector(BaseConnector):
 
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
-    ACTION_ID_UPDATE_EVENT = "update_event"
     ACTION_ID_ADD_ATTRIBUTE = "add_attribute"
     ACTION_ID_BULK_ADD_ATTRIBUTES = "bulk_add_attributes"
     ACTION_ID_RUN_QUERY = "run_query"
@@ -638,8 +637,6 @@ class MispConnector(BaseConnector):
 
         if action_id == self.ACTION_ID_CREATE_EVENT:
             ret_val = self._create_event(param)
-        elif action_id == self.ACTION_ID_UPDATE_EVENT:
-            ret_val = self._update_event(param)
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:
