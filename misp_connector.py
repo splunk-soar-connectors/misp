@@ -621,7 +621,8 @@ class MispConnector(BaseConnector):
                                                                    f"attribute={attribute.to_dict()}")
             self.save_progress(f'Added attribute: {attribute.to_dict()} to event {event_id}.')
 
-        # TODO: return updated event as data
+        updated_event = self._misp.get_event(event_id)["Event"]
+        action_result.add_data({"updated_event": updated_event})
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def handle_action(self, param):

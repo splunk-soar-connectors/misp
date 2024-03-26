@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.3.24",
+    "app_version": "2.3.25",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -148,6 +148,10 @@
                         "success",
                         "failed"
                     ]
+                },
+                {
+                    "data_path": "action_result.data.*.updated_event",
+                    "data_type": "string"
                 }
             ]
         },
