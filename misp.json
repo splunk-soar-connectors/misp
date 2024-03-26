@@ -7,7 +7,7 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.3.21",
+    "app_version": "2.3.22",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
@@ -464,77 +464,6 @@
                     "default": "Event created by test",
                     "order": 0,
                     "required": true
-                },
-                "add_attributes": {
-                    "description": "Add attributes upon event creation",
-                    "data_type": "boolean",
-                    "default": true,
-                    "order": 4
-                },
-                "to_ids": {
-                    "description": "Set 'to_IDS' flag=True in MISP",
-                    "data_type": "boolean",
-                    "default": true,
-                    "order": 5
-                },
-                "source_ips": {
-                    "description": "Source IPs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "order": 6,
-                    "primary": true
-                },
-                "dest_ips": {
-                    "description": "Destination IPs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "order": 7,
-                    "primary": true
-                },
-                "domains": {
-                    "description": "Domains to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "order": 8,
-                    "primary": true
-                },
-                "source_emails": {
-                    "description": "Source email addresses to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "order": 9,
-                    "primary": true
-                },
-                "dest_emails": {
-                    "description": "Destination email addresses to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "order": 10,
-                    "primary": true
-                },
-                "urls": {
-                    "description": "URLs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "order": 11,
-                    "primary": true
-                },
-                "json": {
-                    "description": "JSON key value list of attributes",
-                    "data_type": "string",
-                    "order": 12
                 }
             },
             "render": {

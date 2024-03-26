@@ -300,13 +300,6 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
-    def _update_event(self, param):
-        # TODO: update code to ONLY update the event. No changes to attributes
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        return action_result.set_status(phantom.APP_SUCCESS)
-
     def _do_search(self, action_result, **kwargs):
         try:
             resp = self._misp.search(**kwargs)
