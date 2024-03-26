@@ -17,6 +17,7 @@
 # Phantom App imports
 import ipaddress
 import json
+from typing import Dict
 
 import phantom.app as phantom
 import phantom.rules as ph_rules
@@ -70,6 +71,7 @@ class MispConnector(BaseConnector):
     ACTION_ID_CREATE_EVENT = "create_event"
     ACTION_ID_UPDATE_EVENT = "update_event"
     ACTION_ID_ADD_ATTRIBUTE = "add_attribute"
+    ACTION_ID_BULK_ADD_ATTRIBUTES = "bulk_add_attributes"
     ACTION_ID_RUN_QUERY = "run_query"
     ACTION_ID_GET_EVENT = "get_event"
 
@@ -556,15 +558,27 @@ class MispConnector(BaseConnector):
 
         return self._process_response(r, result)
 
+    def lookup_misp_event(self, event_id) -> Dict:
+        event = self._misp.get_event(event_id)
+        if 'errors' in event:
+            raise LookupError(f"Event with id {event_id} not found: {event}")
+        return event
+
+    @staticmethod
+    def set_attribute_fields(attribute: MISPAttribute, fields: dict):
+        for k, v in fields.items():
+            setattr(attribute, k, v)
+
     def _add_attribute(self, param):
         self.debug_print(f"In _add_attribute: {param}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         event_id = param.get("event_id")
         json_string = param.get("json", "")
 
-        event = self._misp.get_event(event_id)
-        if "errors" in event:
-            return action_result.set_status(phantom.APP_ERROR, f"Event with id {event_id} not found. Error: {event}")
+        try:
+            event = self.lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, str(e))
 
         attribute = MISPAttribute()
         attribute.type = param.get("attribute_type")
@@ -573,11 +587,9 @@ class MispConnector(BaseConnector):
         attribute.comment = param.get("attribute_comment", "")
 
         try:
-            if json_string is not "":
-                if not isinstance(json_string, dict):
-                    json_string = json.loads(json_string)
-                for k, v in json_string.items():
-                    setattr(attribute, k, v)
+            if json_string:
+                json_obj = json.loads(json_string)
+                self.set_attribute_fields(attribute, json_obj)
                 self.debug_print(f'[-] attributes: {attribute.to_dict()}')
             self.save_progress(f'[-] attributes: {attribute.to_dict()}')
         except Exception as e:
@@ -593,10 +605,32 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _bulk_add_attributes(self, param):
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        event_id = param.get("event_id")
+        json_string = param.get("json", "")
+
+        try:
+            event = self.lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, str(e))
+        json_list = json.loads(json_string)
+        if not isinstance(json_list, list):
+            return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected list.")
+        for entry in json_list:
+            attribute = MISPAttribute()
+            if not isinstance(entry, dict):
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected "
+                                                                   "list of objects.")
+            self.set_attribute_fields(attribute, entry)
+            response = self._misp.add_attribute(event, attribute)
+            if "errors" in response:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}. "
+                                                                   f"attribute={attribute.to_dict()}")
+            self.save_progress(f'Added attribute: {attribute.to_dict()} to event {event_id}.')
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def handle_action(self, param):
-
-        ret_val = phantom.APP_SUCCESS
-
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
 
@@ -614,6 +648,8 @@ class MispConnector(BaseConnector):
             ret_val = self._test_connectivity()
         elif action_id == self.ACTION_ID_ADD_ATTRIBUTE:
             ret_val = self._add_attribute(param)
+        elif action_id == self.ACTION_ID_BULK_ADD_ATTRIBUTES:
+            ret_val = self._bulk_add_attributes(param)
         else:
             raise NotImplementedError(f"Unknown action id: {action_id}")
 
