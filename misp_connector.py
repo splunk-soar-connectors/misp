@@ -68,6 +68,7 @@ class MispConnector(BaseConnector):
 
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
+    ACTION_ID_UPDATE_EVENT = "update_event"
     ACTION_ID_ADD_ATTRIBUTE = "add_attribute"
     ACTION_ID_RUN_QUERY = "run_query"
     ACTION_ID_GET_EVENT = "get_event"
@@ -295,6 +296,13 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_message))
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _update_event(self, param):
+        # TODO: update code to ONLY update the event. No changes to attributes
+
+        action_result = self.add_action_result(ActionResult(dict(param)))
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -552,6 +560,8 @@ class MispConnector(BaseConnector):
         self.debug_print(f"In _add_attribute: {param}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         event_id = param.get("event_id")
+        json_string = param.get("json", "")
+
         event = self._misp.get_event(event_id)
         if "errors" in event:
             return action_result.set_status(phantom.APP_ERROR, f"Event with id {event_id} not found. Error: {event}")
@@ -561,6 +571,18 @@ class MispConnector(BaseConnector):
         attribute.value = param.get("attribute_value")
         attribute.category = param.get("attribute_category")
         attribute.comment = param.get("attribute_comment", "")
+
+        try:
+            if json_string is not "":
+                if not isinstance(json_string, dict):
+                    json_string = json.loads(json_string)
+                for k, v in json_string.items():
+                    setattr(attribute, k, v)
+                self.debug_print(f'[-] attributes: {attribute.to_dict()}')
+            self.save_progress(f'[-] attributes: {attribute.to_dict()}')
+        except Exception as e:
+            self.save_progress("Failed to add custom attributes: {}".format(e))
+            self.debug_print("Failed to add custom attributes: {}".format(e))
 
         response = self._misp.add_attribute(event, attribute)
 
@@ -582,6 +604,8 @@ class MispConnector(BaseConnector):
 
         if action_id == self.ACTION_ID_CREATE_EVENT:
             ret_val = self._create_event(param)
+        elif action_id == self.ACTION_ID_UPDATE_EVENT:
+            ret_val = self._update_event(param)
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:

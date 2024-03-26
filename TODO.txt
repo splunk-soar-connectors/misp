@@ -3,6 +3,7 @@ TODO
     - JSON: output fields
 - _create_event()
     - verify functionality is working
+    - remove unused params related to attributes
 - new actions
     - remove_attribute by ID
     - update_attribute by ID
