@@ -400,7 +400,7 @@
                     "description": "Attribute Comment"
                 },
                 "json": {
-                    "description": "JSON key-value object of additional attribute fields. Example: {\"to_ids\" : true}",
+                    "description": "JSON key-value object of additional attribute fields. Example: {\"to_ids\" : true}. For list of available parameters see: https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute",
                     "data_type": "string",
                     "order": 5
                 }
