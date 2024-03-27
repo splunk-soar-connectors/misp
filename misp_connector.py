@@ -17,6 +17,7 @@
 # Phantom App imports
 import ipaddress
 import json
+from typing import Dict
 
 import phantom.app as phantom
 import phantom.rules as ph_rules
@@ -26,7 +27,7 @@ from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 from phantom.vault import Vault
-from pymisp import MISPEvent, PyMISP
+from pymisp import MISPAttribute, MISPEvent, PyMISP
 
 # Imports local to this App
 from misp_consts import *
@@ -68,7 +69,8 @@ class MispConnector(BaseConnector):
 
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
-    ACTION_ID_ADD_ATTRIBUTES = "add_attributes"
+    ACTION_ID_ADD_ATTRIBUTE = "add_attribute"
+    ACTION_ID_BULK_ADD_ATTRIBUTES = "bulk_add_attributes"
     ACTION_ID_RUN_QUERY = "run_query"
     ACTION_ID_GET_EVENT = "get_event"
 
@@ -237,7 +239,7 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_SUCCESS)
 
     def _create_event(self, param):
-
+        self.save_progress(f"In _create_event: {param}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         distrib_map = {
@@ -284,6 +286,7 @@ class MispConnector(BaseConnector):
             event.info = param["info"]
 
             self._event = self._misp.add_event(event, pythonify=True)
+            self.save_progress(f"Created event: {self._event}")
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:{0}".format(error_message))
@@ -295,202 +298,6 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_message))
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
-
-        addAttributes = param.get("add_attributes", True)
-        if addAttributes:
-            ret_val = self._perform_adds(param, action_result, add_data=True)
-
-            error_message = action_result.get_message()
-
-            if error_message is not None:
-                summary = action_result.get_summary()
-                summary["errors"] = error_message
-                action_result.update_summary(summary)
-
-            if phantom.is_fail(ret_val):
-                return action_result.get_status()
-
-            try:
-                event_dict = json.loads(self._event.to_json())
-            except Exception as e:
-                error_message = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
-
-            attributes = event_dict.get('Attribute', [])
-            for attribute in attributes:
-                action_result.add_data(attribute)
-
-        return action_result.set_status(phantom.APP_SUCCESS)
-
-    def _add_indicator(self, indicator_list, action_result, indicator_type, to_ids):
-        is_valid = True
-        indic_type = indicator_type
-        for indicator in indicator_list:
-            if indicator_type == "source_ips":
-                is_valid = self._validate_indicator(indicator_list, "ip")
-                indicator_type = "ip-src"
-            elif indicator_type == "dest_ips":
-                is_valid = self._validate_indicator(indicator_list, "ip")
-                indicator_type = "ip-dst"
-            elif indicator_type == "domains":
-                is_valid = self._validate_indicator(indicator_list, "domain")
-                indicator_type = "domain"
-            elif indicator_type == "source_emails":
-                is_valid = self._validate_indicator(indicator_list, "email")
-                indicator_type = "email-src"
-            elif indicator_type == "dest_emails":
-                is_valid = self._validate_indicator(indicator_list, "email")
-                indicator_type = "email-dst"
-            elif indicator_type == "urls":
-                is_valid = self._validate_indicator(indicator_list, "url")
-                indicator_type = "url"
-
-            if not is_valid:
-                return action_result.set_status(phantom.APP_ERROR, "'{}'".format(indic_type)), 1
-
-            try:
-                self._event.add_attribute(type=indicator_type, value=indicator, to_ids=to_ids)
-            except Exception as e:
-                self.debug_print("Failed to add attribute due to following error: {}".format(str(e)))
-                return action_result.set_status(phantom.APP_ERROR, "'{}'".format(indicator_type)), 2
-
-            try:
-                self._event = self._misp.update_event(self._event, pythonify=True)
-            except Exception as e:
-                self.debug_print("Failed to update MISP event due to following error: {}".format(str(e)))
-                return action_result.set_status(phantom.APP_ERROR, "Failed to update MISP event. Check logs for more details."), 3
-
-        return phantom.APP_SUCCESS, 0
-
-    def _perform_adds(self, param, action_result, add_data=False):
-
-        errors = {}
-        errors["invalid_key"] = list()
-        errors["invalid_value"] = list()
-        is_added = False
-        is_empty = True
-
-        default_indicator_list = [
-            'source_ips', 'dest_ips',
-            'domains', 'urls',
-            'dest_emails', 'source_emails'
-        ]
-
-        for i in default_indicator_list:
-            val = param.get(i)
-            if val:
-                is_empty = False
-                indicator_list = phantom.get_list_from_string(val)
-
-                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, i, param.get('to_ids', False))
-
-                if phantom.is_fail(ret_val):
-                    return action_result.get_status()
-                else:
-                    is_added = True
-
-        json_str = param.get('json')
-        if json_str:
-            try:
-                d = json.loads(json_str)
-            except Exception as e:
-                error_message = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter. {0}".format(error_message))
-            if not isinstance(d, dict):
-                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON parameter")
-            for k, v in d.items():
-                is_empty = False
-                if isinstance(v, list):
-                    indicator_list = v
-                else:
-                    indicator_list = phantom.get_list_from_string(str(v))
-
-                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False))
-
-                if phantom.is_fail(ret_val):
-                    status_message = action_result.get_message()
-                    if cust_error_code == 1:
-                        errors["invalid_value"].append(status_message)
-                    elif cust_error_code == 2:
-                        errors["invalid_key"].append(status_message)
-                    else:
-                        return action_result.get_status()
-                else:
-                    is_added = True
-
-        error_message = None
-        if errors["invalid_value"]:
-            invalid_values = ', '.join(errors["invalid_value"])
-            error_message = "{} key/keys has invalid value".format(invalid_values)
-        if errors["invalid_key"]:
-            invalid_keys = ', '.join(errors["invalid_key"])
-            if error_message is not None:
-                error_message = "{} and ".format(error_message)
-            else:
-                error_message = ''
-            error_message = "{} {} is/are invalid attribute name/names".format(error_message, invalid_keys)
-
-        if error_message is not None:
-            error_message = "{} in 'json' action parameter".format(error_message)
-
-        if self.get_action_identifier() == self.ACTION_ID_ADD_ATTRIBUTES:
-            status = phantom.APP_SUCCESS
-            # if not a single attribute is provided to update event
-            if is_empty:
-                status = phantom.APP_ERROR
-                error_message = "Please provide at least one attribute"
-            # if not a single attribute is attached then "update event" task is completely failed
-            if not is_added:
-                status = phantom.APP_ERROR
-            return action_result.set_status(status, error_message)
-        # Event is already created so it should be success regardless of the number of attributes attached
-        else:
-            return action_result.set_status(phantom.APP_SUCCESS, error_message)
-
-    def _add_attributes(self, param):
-
-        action_result = self.add_action_result(ActionResult(dict(param)))
-
-        if self._event is None:
-            try:
-                ret_val, event_id = self._validate_integer(action_result, param.get("event_id"), MISP_INVALID_EVENT_ID)
-                if phantom.is_fail(ret_val):
-                    return action_result.get_status()
-                self._event = self._misp.get_event(event=event_id, pythonify=True)
-                if not hasattr(self._event, "id"):
-                    if isinstance(self._event, dict):
-                        raise Exception(self._event.get("errors", ""))
-                    else:
-                        raise Exception
-            except Exception as e:
-                error_message = self._get_error_message_from_exception(e)
-                return action_result.set_status(phantom.APP_ERROR, "Failed to get event for adding attributes:{0}".format(error_message))
-
-        ret_val = self._perform_adds(param, action_result, add_data=True)
-
-        error_message = action_result.get_message()
-
-        if phantom.is_fail(ret_val):
-            return action_result.get_status()
-
-        try:
-            event_dict = json.loads(self._event.to_json())
-        except Exception as e:
-            error_message = self._get_error_message_from_exception(e)
-            return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
-
-        attributes = event_dict.get('Attribute', [])
-        for attribute in attributes:
-            action_result.add_data(attribute)
-
-        if hasattr(self._event, "id"):
-            summary = {}
-            summary["message"] = "Attributes added to event: {0}".format(self._event.id)
-            if error_message is not None:
-                summary["errors"] = error_message
-            action_result.set_summary(summary)
-        else:
-            return action_result.set_status(phantom.APP_ERROR, "Failed to get event '{0}' for adding attributes".format(param["event_id"]))
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -744,10 +551,83 @@ class MispConnector(BaseConnector):
 
         return self._process_response(r, result)
 
+    def lookup_misp_event(self, event_id) -> Dict:
+        event = self._misp.get_event(event_id)
+        if 'errors' in event:
+            raise LookupError(f"Event with id {event_id} not found: {event}")
+        return event
+
+    @staticmethod
+    def set_attribute_fields(attribute: MISPAttribute, fields: dict):
+        for k, v in fields.items():
+            setattr(attribute, k, v)
+
+    def _add_attribute(self, param):
+        self.debug_print(f"In _add_attribute: {param}")
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        event_id = param.get("event_id")
+        json_string = param.get("json", "")
+
+        try:
+            event = self.lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, str(e))
+
+        attribute = MISPAttribute()
+        attribute.type = param.get("attribute_type")
+        attribute.value = param.get("attribute_value")
+        attribute.category = param.get("attribute_category")
+        attribute.comment = param.get("attribute_comment", "")
+
+        try:
+            if json_string:
+                json_obj = json.loads(json_string)
+                self.set_attribute_fields(attribute, json_obj)
+                self.debug_print(f'[-] attributes: {attribute.to_dict()}')
+            self.save_progress(f'[-] attributes: {attribute.to_dict()}')
+        except Exception as e:
+            self.save_progress("Failed to add custom attributes: {}".format(e))
+            self.debug_print("Failed to add custom attributes: {}".format(e))
+
+        response = self._misp.add_attribute(event, attribute)
+
+        updated_event = self._misp.get_event(event_id)["Event"]
+        action_result.add_data({"response": response, "updated_event": updated_event})
+        if "errors" in response:
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}")
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _bulk_add_attributes(self, param):
+        self.save_progress(f"In _bulk_add_attributes: {param}")
+        action_result = self.add_action_result(ActionResult(dict(param)))
+        event_id = param.get("event_id")
+        json_string = param.get("json", "")
+
+        try:
+            event = self.lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, str(e))
+        json_list = json.loads(json_string)
+        if not isinstance(json_list, list):
+            return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected list.")
+        for entry in json_list:
+            attribute = MISPAttribute()
+            if not isinstance(entry, dict):
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected "
+                                                                   "list of objects.")
+            self.set_attribute_fields(attribute, entry)
+            response = self._misp.add_attribute(event, attribute)
+            if "errors" in response:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}. "
+                                                                   f"attribute={attribute.to_dict()}")
+            self.save_progress(f'Added attribute: {attribute.to_dict()} to event {event_id}.')
+
+        updated_event = self._misp.get_event(event_id)["Event"]
+        action_result.add_data({"updated_event": updated_event})
+        return action_result.set_status(phantom.APP_SUCCESS)
+
     def handle_action(self, param):
-
-        ret_val = phantom.APP_SUCCESS
-
         # Get the action that we are supposed to execute for this App Run
         action_id = self.get_action_identifier()
 
@@ -755,14 +635,18 @@ class MispConnector(BaseConnector):
 
         if action_id == self.ACTION_ID_CREATE_EVENT:
             ret_val = self._create_event(param)
-        elif action_id == self.ACTION_ID_ADD_ATTRIBUTES:
-            ret_val = self._add_attributes(param)
         elif action_id == self.ACTION_ID_RUN_QUERY:
             ret_val = self._run_query(param)
         elif action_id == self.ACTION_ID_GET_EVENT:
             ret_val = self._get_event(param)
         elif action_id == self.ACTION_ID_TEST_ASSET_CONNECTIVITY:
             ret_val = self._test_connectivity()
+        elif action_id == self.ACTION_ID_ADD_ATTRIBUTE:
+            ret_val = self._add_attribute(param)
+        elif action_id == self.ACTION_ID_BULK_ADD_ATTRIBUTES:
+            ret_val = self._bulk_add_attributes(param)
+        else:
+            raise NotImplementedError(f"Unknown action id: {action_id}")
 
         return ret_val
 

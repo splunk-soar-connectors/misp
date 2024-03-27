@@ -2,11 +2,11 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2.2.1  
+Connector Version: 3.0.0  
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 5.2.0  
+Minimum Product Version: 6.1.1  
 
 Take action with Malware Information Sharing Platform
 
@@ -73,20 +73,9 @@ For **analysis** :
   
 **Note:**
 
--   There is no validation provided in case of an incorrect value in the 'json' action parameter of
-    the **'create event'** and **'update event'** actions. Hence, the action will pass even if an
-    incorrect attribute value is passed in the 'json' action parameter and no attributes will be
-    added.
-
--   The value of the attribute passed in the 'json' action parameter of **'create event'** and
-    **'update event'** will be treated as a list if a list is specified. If a string is specified
-    then a list will be created by splitting the string by comma (,). For example:
-
-    -   json: {"email_body": \["body 1", "body 2"\], "ip-dst": "8.8.8.8, 12.4.6.34"}
-
-    The value of the 'email_body' will be considered a list and the value of the 'ip-dst' will be
-    converted to a list having two elements(\["8.8.8.8", "12.4.6.34"\]).
-
+-   Create new events with the `create event` action.
+-   To add a single attribute to an existing event use the `add attribute` action.
+-   To add multiple attributes to an event, use the `bulk add attributes` action.
 -   In the **'run query'** action, tags containing a comma (,) in its value can be passed through
     the 'other' action parameter. For example:
 
@@ -116,8 +105,9 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions  
 [test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity  
+[bulk add attributes](#action-bulk-add-attributes) - Add multiple attributes to an existing MISP event  
+[add attribute](#action-add-attribute) - Add an attribute to an existing MISP event  
 [create event](#action-create-event) - Create a new event in MISP  
-[update event](#action-update-event) - Add attributes / IOCs to an event in MISP  
 [run query](#action-run-query) - Run a query to find events or attributes  
 [get attributes](#action-get-attributes) - Get attributes for a specific event  
 
@@ -133,13 +123,62 @@ No parameters are required for this action
 #### Action Output
 No Output  
 
+## action: 'bulk add attributes'
+Add multiple attributes to an existing MISP event
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**event_id** |  required  | Event ID | string | 
+**json** |  required  | JSON list of attribute objects to add to the event. Example: [{"category": "Network activity", "type": "ip-src", "value": "1.2.3.4"}] | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.message | string |  |  
+summary.total_objects | numeric |  |  
+summary.total_objects_successful | numeric |  |  
+action_result.data.\*.updated_event | string |  |    
+
+## action: 'add attribute'
+Add an attribute to an existing MISP event
+
+Type: **generic**  
+Read only: **False**
+
+To add multiple attributes to an event, use the 'bulk add attributes' action
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**event_id** |  required  | Event ID | string | 
+**attribute_category** |  optional  | Attribute Category | string | 
+**attribute_type** |  optional  | Attribute Type | string | 
+**attribute_value** |  optional  | Attribute Value | string | 
+**attribute_comment** |  optional  | Attribute Comment | string | 
+**json** |  optional  | JSON key-value object of additional attribute fields. Example: {"to_ids" : true}. For list of available parameters see: https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  |   success  failed 
+action_result.message | string |  |  
+summary.total_objects | numeric |  |  
+summary.total_objects_successful | numeric |  |  
+action_result.data.\*.updated_event | string |  |  
+action_result.data.\*.response | string |  |    
+
 ## action: 'create event'
 Create a new event in MISP
 
 Type: **generic**  
 Read only: **False**
 
-This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
+This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
@@ -148,33 +187,15 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **threat_level_id** |  required  | Threat level id | string | 
 **analysis** |  required  | Current stage of analysis for event | string | 
 **info** |  required  | Information / Description for Event | string | 
-**add_attributes** |  optional  | Add attributes upon event creation | boolean | 
-**to_ids** |  optional  | Set 'to_IDS' flag=True in MISP | boolean | 
-**source_ips** |  optional  | Source IPs to be added as attributes | string |  `ip` 
-**dest_ips** |  optional  | Destination IPs to be added as attributes | string |  `ip` 
-**domains** |  optional  | Domains to be added as attributes | string |  `domain` 
-**source_emails** |  optional  | Source email addresses to be added as attributes | string |  `email` 
-**dest_emails** |  optional  | Destination email addresses to be added as attributes | string |  `email` 
-**urls** |  optional  | URLs to be added as attributes | string |  `url` 
-**json** |  optional  | JSON key value list of attributes | string | 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string |  |   success  failed 
-action_result.parameter.add_attributes | boolean |  |   True  False 
 action_result.parameter.analysis | string |  |   Initial 
-action_result.parameter.dest_emails | string |  `email`  |   test@test.com 
-action_result.parameter.dest_ips | string |  `ip`  |   122.122.122.122 
 action_result.parameter.distribution | string |  |   This Community Only 
-action_result.parameter.domains | string |  `domain`  |   www.test.com 
 action_result.parameter.info | string |  |   Event Info Goes Here 
-action_result.parameter.json | string |  |   {"ip-src|port":"1.1.1.1:888"} 
-action_result.parameter.source_emails | string |  `email`  |   test@test.com 
-action_result.parameter.source_ips | string |  `ip`  |   122.122.122.122 
 action_result.parameter.threat_level_id | string |  |   undefined 
-action_result.parameter.to_ids | boolean |  |   True  False 
-action_result.parameter.urls | string |  `url`  |   https://test.com 
 action_result.data.\*.Org.id | string |  |   1 
 action_result.data.\*.Org.local | boolean |  |   True  False 
 action_result.data.\*.Org.name | string |  |   ORGNAME 
@@ -214,61 +235,6 @@ action_result.data.0.id | string |  `misp event id`  |
 action_result.summary.errors | string |  |    'test' is/are invalid attribute name/names in 'json' action parameter 
 action_result.summary.message | string |  |   Event created with id: 2139 
 action_result.message | string |  |   Message: Event created with id: 2139, Errors: 'test' is/are invalid attribute name/names in 'json' action parameter 
-summary.total_objects | numeric |  |   1 
-summary.total_objects_successful | numeric |  |   1   
-
-## action: 'update event'
-Add attributes / IOCs to an event in MISP
-
-Type: **generic**  
-Read only: **False**
-
-Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
-
-#### Action Parameters
-PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
---------- | -------- | ----------- | ---- | --------
-**event_id** |  required  | MISP event ID for adding attributes | numeric |  `misp event id` 
-**to_ids** |  optional  | Set 'to_IDS' flag=True in MISP | boolean | 
-**source_ips** |  optional  | Source IPs to be added as attributes | string |  `ip` 
-**dest_ips** |  optional  | Destination IPs to be added as attributes | string |  `ip` 
-**domains** |  optional  | Domains to be added as attributes | string |  `domain` 
-**source_emails** |  optional  | Source email addresses to be added as attributes | string |  `email` 
-**dest_emails** |  optional  | Destination email addresses to be added as attributes | string |  `email` 
-**urls** |  optional  | URLs to be added as attributes | string |  `url` 
-**json** |  optional  | JSON key value list of attributes | string | 
-
-#### Action Output
-DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
---------- | ---- | -------- | --------------
-action_result.status | string |  |   success  failed 
-action_result.parameter.dest_emails | string |  `email`  |   test@test.com 
-action_result.parameter.dest_ips | string |  `ip`  |   122.122.122.122 
-action_result.parameter.domains | string |  `domain`  |   www.test.com 
-action_result.parameter.event_id | numeric |  `misp event id`  |   686 
-action_result.parameter.json | string |  |   {"comment":["email_1,email11","email_2"], "soufds":"jflkl"} 
-action_result.parameter.source_emails | string |  `email`  |   test@test.com 
-action_result.parameter.source_ips | string |  `ip`  |   122.122.122.122 
-action_result.parameter.to_ids | boolean |  |   True  False 
-action_result.parameter.urls | string |  `url`  |   http://test.com 
-action_result.data.\*.category | string |  |   Other 
-action_result.data.\*.comment | string |  |  
-action_result.data.\*.deleted | boolean |  |   True  False 
-action_result.data.\*.disable_correlation | boolean |  |   True  False 
-action_result.data.\*.distribution | string |  |   5 
-action_result.data.\*.event_id | string |  `misp event id`  |   2121 
-action_result.data.\*.id | string |  `misp attribute id`  |   5360 
-action_result.data.\*.object_id | string |  |   0 
-action_result.data.\*.sharing_group_id | string |  |   0 
-action_result.data.\*.timestamp | string |  |   1623038555 
-action_result.data.\*.to_ids | boolean |  |   True  False 
-action_result.data.\*.type | string |  |   port 
-action_result.data.\*.uuid | string |  |   68e219ee-5727-4cb2-a32f-8dc27aa4231f 
-action_result.data.\*.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1`  |   email1@email.com 
-action_result.summary | string |  |  
-action_result.summary.errors | string |  |    'soufds' is/are invalid attribute name/names in 'json' action parameter 
-action_result.summary.message | string |  |   Attributes added to event: 2121 
-action_result.message | string |  |   Message: Attributes added to event: 2121, Errors:  'soufds' is/are invalid attribute name/names in 'json' action parameter 
 summary.total_objects | numeric |  |   1 
 summary.total_objects_successful | numeric |  |   1   
 
