@@ -157,7 +157,7 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **attribute_type** |  optional  | Attribute Type | string | 
 **attribute_value** |  optional  | Attribute Value | string | 
 **attribute_comment** |  optional  | Attribute Comment | string | 
-**json** |  optional  | JSON key-value object of additional attribute fields. Example: {"to_ids" : true} | string | 
+**json** |  optional  | JSON key-value object of additional attribute fields. Example: {"to_ids" : true}. For list of available parameters see: https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute | string | 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
