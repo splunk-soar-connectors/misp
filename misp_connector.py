@@ -239,7 +239,7 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_SUCCESS)
 
     def _create_event(self, param):
-
+        self.save_progress(f"In _create_event: {param}")
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         distrib_map = {
@@ -286,6 +286,7 @@ class MispConnector(BaseConnector):
             event.info = param["info"]
 
             self._event = self._misp.add_event(event, pythonify=True)
+            self.save_progress(f"Created event: {self._event}")
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, "Failed to create MISP event:{0}".format(error_message))
@@ -598,6 +599,7 @@ class MispConnector(BaseConnector):
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def _bulk_add_attributes(self, param):
+        self.save_progress(f"In _bulk_add_attributes: {param}")
         action_result = self.add_action_result(ActionResult(dict(param)))
         event_id = param.get("event_id")
         json_string = param.get("json", "")
