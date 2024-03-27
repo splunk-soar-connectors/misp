@@ -2,7 +2,7 @@
 # MISP
 
 Publisher: Splunk  
-Connector Version: 2.3.29  
+Connector Version: 3.0.0  
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
