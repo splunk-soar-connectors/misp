@@ -6,7 +6,7 @@ Connector Version: 3.0.0
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.1.1  
+Minimum Product Version: 6.2.0  
 
 Take action with Malware Information Sharing Platform
 
@@ -24,6 +24,50 @@ Take action with Malware Information Sharing Platform
 [comment]: # "either express or implied. See the License for the specific language governing permissions"
 [comment]: # "and limitations under the License."
 [comment]: # ""
+
+## Playbook Backward Compatibility
+
+-   "**create event**" action has been updated
+    -   The following parameters have been removed from the create event action:
+        -   to_ids
+        -   source ips
+        -   dest ips
+        -   domains
+        -   source emails
+        -   dest emails
+        -   urls
+    -   The input for the `json` parameter has changed. Please refer the notes below to see the new format.
+
+-   The "**update event**" action has been renamed to "**add attribute**" and has the following changes:
+    -   The following new parameters are added :
+        -   attribute category
+        -   attribute type
+        -   attribute value
+        -   attribute comment
+
+    -   The following parameters are removed and moved to `attribute type`:
+        -   source_ips
+        -   dest_ips
+        -   domains
+        -   source_emails
+        -   dest_emails
+        -   urls
+
+    -   The input for the `json` parameter has changed. Please refer the notes below to see the new format.
+
+
+-   The below-mentioned actions have been added
+    -   bulk add attributes
+
+-   Hence, it is requested to the end-user to please
+    update their existing playbooks by inserting the corresponding action blocks for this action on
+    the earlier versions of the app.
+
+
+Note: The asset configuration parameter 'timezone', will be used for the 'occur_date' parameter in
+the 'add ttp' action.
+
+
 ## pymisp-2.4.138
 
 This app uses the pymisp module, which is licensed under an open source license. A simplified 2-BSD
@@ -74,14 +118,42 @@ For **analysis** :
 **Note:**
 
 -   Create new events with the `create event` action.
+-   `create event` action supports add attributes while creating the event.
 -   To add a single attribute to an existing event use the `add attribute` action.
+    -   To add a single attribute using `json` paramter, pass json data as show below:
+        ```
+        {
+            "category": "Network activity",
+            "type": "comment",
+            "value": "Example value for and event",
+            "to_ids": true
+        }
+        ```
+    - All the properties that can be added using the `json` parameter can be checked in the [misp documentation](https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute)  
 -   To add multiple attributes to an event, use the `bulk add attributes` action.
--   In the **'run query'** action, tags containing a comma (,) in its value can be passed through
+-   The `json` parameter of `create event` and `bulk add attribute` takes similar input. The user needs to pass a list of dictionaries in the format given below:
+    ```
+       [
+             {
+                "category": "Network activity",
+                "type": "comment",
+                "value": "Example value for and event 1",
+                "to_ids": true
+            },
+            {
+                "type": "comment",
+                "value": "Example value for and event 2",
+                "to_ids": false
+            }
+        ]
+    ```
+-   In the "**run query**" action, tags containing a comma (,) in its value can be passed through
     the 'other' action parameter. For example:
 
     -   other: {"tags": \["tag1, tag11", "tag_2"\]}
 
     "tag1, tag11" will be considered a single tag.
+
 
 ## Port Information
 
@@ -138,8 +210,25 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
+action_result.parameter.event_id | numeric |  |  
+action_result.parameter.json | numeric |  |  
+action_result.data.\*.category | string |  |   Other 
+action_result.data.\*.comment | string |  |  
+action_result.data.\*.deleted | boolean |  |   True  False 
+action_result.data.\*.disable_correlation | boolean |  |   True  False 
+action_result.data.\*.distribution | string |  |   5 
+action_result.data.\*.event_id | string |  `misp event id`  |   2121 
+action_result.data.\*.id | string |  `misp attribute id`  |   5360 
+action_result.data.\*.object_id | string |  |   0 
+action_result.data.\*.sharing_group_id | string |  |   0 
+action_result.data.\*.timestamp | string |  |   1623038555 
+action_result.data.\*.to_ids | boolean |  |   True  False 
+action_result.data.\*.type | string |  |   port 
+action_result.data.\*.uuid | string |  |   68e219ee-5727-4cb2-a32f-8dc27aa4231f 
+action_result.data.\*.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1`  |   email1@email.com 
 action_result.status | string |  |   success  failed 
 action_result.message | string |  |  
+action_result.summary | string |  |  
 summary.total_objects | numeric |  |  
 summary.total_objects_successful | numeric |  |  
 action_result.data.\*.updated_event | string |  |    
@@ -156,6 +245,7 @@ To add multiple attributes to an event, use the 'bulk add attributes' action
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **event_id** |  required  | Event ID | string | 
+**to_ids** |  optional  | Set 'to_IDS' flag=True in MISP | boolean | 
 **attribute_category** |  optional  | Attribute Category | string | 
 **attribute_type** |  optional  | Attribute Type | string | 
 **attribute_value** |  optional  | Attribute Value | string | 
@@ -165,12 +255,34 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
+action_result.parameter.event_id | string |  |  
+action_result.parameter.to_ids | boolean |  |  
+action_result.parameter.attribute_category | string |  |  
+action_result.parameter.attribute_type | string |  |  
+action_result.parameter.attribute_value | string |  |  
+action_result.parameter.attribute_comment | string |  |  
+action_result.parameter.json | string |  |  
+action_result.data.\*.category | string |  |   Other 
+action_result.data.\*.comment | string |  |  
+action_result.data.\*.deleted | boolean |  |   True  False 
+action_result.data.\*.disable_correlation | boolean |  |   True  False 
+action_result.data.\*.distribution | string |  |   5 
+action_result.data.\*.event_id | string |  `misp event id`  |   2121 
+action_result.data.\*.id | string |  `misp attribute id`  |   5360 
+action_result.data.\*.object_id | string |  |   0 
+action_result.data.\*.sharing_group_id | string |  |   0 
+action_result.data.\*.timestamp | string |  |   1623038555 
+action_result.data.\*.to_ids | boolean |  |   True  False 
+action_result.data.\*.type | string |  |   port 
+action_result.data.\*.uuid | string |  |   68e219ee-5727-4cb2-a32f-8dc27aa4231f 
+action_result.data.\*.value | string |  `url`  `domain`  `ip`  `email`  `hash`  `md5`  `sha256`  `md1`  |   email1@email.com 
 action_result.status | string |  |   success  failed 
 action_result.message | string |  |  
 summary.total_objects | numeric |  |  
 summary.total_objects_successful | numeric |  |  
 action_result.data.\*.updated_event | string |  |  
-action_result.data.\*.response | string |  |    
+action_result.data.\*.response | string |  |  
+action_result.summary | string |  |    
 
 ## action: 'create event'
 Create a new event in MISP
@@ -187,6 +299,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **threat_level_id** |  required  | Threat level id | string | 
 **analysis** |  required  | Current stage of analysis for event | string | 
 **info** |  required  | Information / Description for Event | string | 
+**json** |  optional  | JSON list of attribute objects to add to the event. Example: [{"category": "Network activity", "type": "ip-src", "value": "1.2.3.4"}] | string | 
+**add_attribute** |  optional  | Add an attributes to the event from the json | boolean | 
 
 #### Action Output
 DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
@@ -196,6 +310,8 @@ action_result.parameter.analysis | string |  |   Initial
 action_result.parameter.distribution | string |  |   This Community Only 
 action_result.parameter.info | string |  |   Event Info Goes Here 
 action_result.parameter.threat_level_id | string |  |   undefined 
+action_result.parameter.json | string |  |  
+action_result.parameter.add_attribute | boolean |  |  
 action_result.data.\*.Org.id | string |  |   1 
 action_result.data.\*.Org.local | boolean |  |   True  False 
 action_result.data.\*.Org.name | string |  |   ORGNAME 
