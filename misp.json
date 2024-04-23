@@ -12,7 +12,7 @@
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "6.1.1",
+    "min_phantom_version": "6.2.0",
     "fips_compliant": true,
     "python_version": "3",
     "latest_tested_versions": [
@@ -39,10 +39,6 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "charset_normalizer",
-                "input_file": "wheels/py3/charset_normalizer-2.0.12-py3-none-any.whl"
-            },
-            {
                 "module": "importlib_metadata",
                 "input_file": "wheels/py3/importlib_metadata-4.8.3-py3-none-any.whl"
             },
@@ -51,16 +47,8 @@
                 "input_file": "wheels/shared/jsonschema-3.2.0-py2.py3-none-any.whl"
             },
             {
-                "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
-            },
-            {
                 "module": "pyrsistent",
                 "input_file": "wheels/py36/pyrsistent-0.18.0-cp36-cp36m-manylinux1_x86_64.manylinux_2_5_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
-                "module": "python_dateutil",
-                "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
             },
             {
                 "module": "setuptools",
@@ -125,10 +113,9 @@
             "type": "generic",
             "identifier": "bulk_add_attributes",
             "read_only": false,
-            "versions": "EQ(*)",
             "parameters": {
                 "event_id": {
-                    "order" : 0,
+                    "order": 0,
                     "data_type": "string",
                     "required": true,
                     "description": "Event ID"
@@ -142,6 +129,138 @@
             },
             "output": [
                 {
+                    "data_path": "action_result.parameter.event_id",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.category",
+                    "data_type": "string",
+                    "column_name": "Attribute Category",
+                    "column_order": 3,
+                    "example_values": [
+                        "Other"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4,
+                    "example_values": [
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.event_id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 2,
+                    "example_values": [
+                        "2121"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp attribute id"
+                    ],
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 0,
+                    "example_values": [
+                        "5360"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.object_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1623038555"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string",
+                    "example_values": [
+                        "port"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "68e219ee-5727-4cb2-a32f-8dc27aa4231f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Attribute Value",
+                    "column_order": 1,
+                    "example_values": [
+                        "email1@email.com"
+                    ],
+                    "contains": [
+                        "url",
+                        "domain",
+                        "ip",
+                        "email",
+                        "hash",
+                        "md5",
+                        "sha256",
+                        "md1"
+                    ]
+                },
+                {
                     "data_path": "action_result.status",
                     "data_type": "string",
                     "example_values": [
@@ -151,6 +270,10 @@
                 },
                 {
                     "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
                     "data_type": "string"
                 },
                 {
@@ -165,24 +288,37 @@
                     "data_path": "action_result.data.*.updated_event",
                     "data_type": "string"
                 }
-            ]
+            ],
+            "render": {
+                "width": 18,
+                "title": "Attributes Added",
+                "type": "table",
+                "height": 5
+            },
+            "versions": "EQ(*)"
         },
         {
             "action": "add attribute",
             "description": "Add an attribute to an existing MISP event",
-            "verbose" : "To add multiple attributes to an event, use the 'bulk add attributes' action",
+            "verbose": "To add multiple attributes to an event, use the 'bulk add attributes' action",
             "type": "generic",
             "identifier": "add_attribute",
             "read_only": false,
             "parameters": {
                 "event_id": {
-                    "order" : 0,
+                    "order": 0,
                     "data_type": "string",
                     "required": true,
                     "description": "Event ID"
                 },
+                "to_ids": {
+                    "description": "Set 'to_IDS' flag=True in MISP",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 1
+                },
                 "attribute_category": {
-                    "order" : 1,
+                    "order": 2,
                     "data_type": "string",
                     "value_list": [
                         "Internal reference",
@@ -206,7 +342,7 @@
                     "description": "Attribute Category"
                 },
                 "attribute_type": {
-                    "order" : 2,
+                    "order": 3,
                     "data_type": "string",
                     "value_list": [
                         "md5",
@@ -400,13 +536,13 @@
                     "description": "Attribute Type"
                 },
                 "attribute_value": {
-                    "order" : 3,
+                    "order": 4,
                     "data_type": "string",
                     "required": false,
                     "description": "Attribute Value"
                 },
                 "attribute_comment": {
-                    "order" : 4,
+                    "order": 5,
                     "data_type": "string",
                     "required": false,
                     "description": "Attribute Comment"
@@ -414,10 +550,162 @@
                 "json": {
                     "description": "JSON key-value object of additional attribute fields. Example: {\"to_ids\" : true}. For list of available parameters see: https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute",
                     "data_type": "string",
-                    "order": 5
+                    "order": 6
                 }
             },
             "output": [
+                {
+                    "data_path": "action_result.parameter.event_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.to_ids",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_category",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.category",
+                    "data_type": "string",
+                    "column_name": "Attribute Category",
+                    "column_order": 3,
+                    "example_values": [
+                        "Other"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4,
+                    "example_values": [
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.event_id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 2,
+                    "example_values": [
+                        "2121"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp attribute id"
+                    ],
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 0,
+                    "example_values": [
+                        "5360"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.object_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1623038555"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string",
+                    "example_values": [
+                        "port"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "68e219ee-5727-4cb2-a32f-8dc27aa4231f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Attribute Value",
+                    "column_order": 1,
+                    "example_values": [
+                        "email1@email.com"
+                    ],
+                    "contains": [
+                        "url",
+                        "domain",
+                        "ip",
+                        "email",
+                        "hash",
+                        "md5",
+                        "sha256",
+                        "md1"
+                    ]
+                },
                 {
                     "data_path": "action_result.status",
                     "data_type": "string",
@@ -445,8 +733,18 @@
                 {
                     "data_path": "action_result.data.*.response",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
                 }
             ],
+            "render": {
+                "width": 18,
+                "title": "Attributes Added",
+                "type": "table",
+                "height": 5
+            },
             "versions": "EQ(*)"
         },
         {
@@ -501,6 +799,17 @@
                     "default": "Event created by test",
                     "order": 0,
                     "required": true
+                },
+                "json": {
+                    "description": "JSON list of attribute objects to add to the event. Example: [{\"category\": \"Network activity\", \"type\": \"ip-src\", \"value\": \"1.2.3.4\"}]",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "add_attribute": {
+                    "description": "Add an attributes to the event from the json",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 5
                 }
             },
             "render": {
@@ -545,6 +854,14 @@
                     "example_values": [
                         "undefined"
                     ]
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.add_attribute",
+                    "data_type": "boolean"
                 },
                 {
                     "data_path": "action_result.data.*.Org.id",
@@ -2200,7 +2517,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/py3/attrs-23.1.0-py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-23.2.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -2211,28 +2528,16 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "charset_normalizer",
-                "input_file": "wheels/py39/charset_normalizer-3.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
                 "module": "jsonschema",
                 "input_file": "wheels/shared/jsonschema-3.2.0-py2.py3-none-any.whl"
-            },
-            {
-                "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
             },
             {
                 "module": "pyrsistent",
                 "input_file": "wheels/py39/pyrsistent-0.20.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
-                "module": "python_dateutil",
-                "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
-            },
-            {
                 "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-69.0.2-py3-none-any.whl"
+                "input_file": "wheels/py3/setuptools-69.5.1-py3-none-any.whl"
             },
             {
                 "module": "six",

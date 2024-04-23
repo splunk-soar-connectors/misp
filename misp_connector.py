@@ -227,7 +227,6 @@ class MispConnector(BaseConnector):
     def _test_connectivity(self):
         action_result = self.add_action_result(ActionResult())
         self.save_progress("Checking connectivity to your MISP instance...")
-        self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
         ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
@@ -298,6 +297,31 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Failed to add data of MISP event:{0}".format(error_message))
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
+
+        addAttributes = param.get("add_attributes", True)
+        if addAttributes:
+            json_string = param.get("json")
+            if not json_string:
+                return action_result.set_status(phantom.APP_ERROR, "No JSON string provided in parameter 'json'to add attribute")
+
+            try:
+                event = self._lookup_misp_event(self._event.id)
+            except LookupError as e:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
+
+            retval = self._perform_add(action_result, event, json_string)
+            if phantom.is_fail(retval):
+                return action_result.get_status()
+
+            try:
+                updated_event = self._lookup_misp_event(self._event.id)
+            except LookupError as e:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
+
+            updated_event = updated_event.get("Event")
+            attributes = updated_event.get('Attribute', [])
+            for attribute in attributes:
+                action_result.add_data(attribute)
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -551,14 +575,13 @@ class MispConnector(BaseConnector):
 
         return self._process_response(r, result)
 
-    def lookup_misp_event(self, event_id) -> Dict:
+    def _lookup_misp_event(self, event_id) -> Dict:
         event = self._misp.get_event(event_id)
         if 'errors' in event:
-            raise LookupError(f"Event with id {event_id} not found: {event}")
+            raise LookupError(f"Event with id {event_id} not found: {event.get('errors')}")
         return event
 
-    @staticmethod
-    def set_attribute_fields(attribute: MISPAttribute, fields: dict):
+    def _set_attribute_fields(self, attribute: MISPAttribute, fields: dict):
         for k, v in fields.items():
             setattr(attribute, k, v)
 
@@ -569,32 +592,77 @@ class MispConnector(BaseConnector):
         json_string = param.get("json", "")
 
         try:
-            event = self.lookup_misp_event(event_id)
+            event = self._lookup_misp_event(event_id)
         except LookupError as e:
-            return action_result.set_status(phantom.APP_ERROR, str(e))
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
 
         attribute = MISPAttribute()
         attribute.type = param.get("attribute_type")
         attribute.value = param.get("attribute_value")
         attribute.category = param.get("attribute_category")
         attribute.comment = param.get("attribute_comment", "")
+        attribute.to_ids = param.get("to_ids", True)
+
+        if json_string:
+            try:
+                json_obj = json.loads(json_string)
+            except Exception as e:
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to parse JSON: {error_message}. Please provide valid JSON")
+
+            self._set_attribute_fields(attribute, json_obj)
+            self.debug_print(f'[-] attributes: {attribute.to_dict()}')
 
         try:
-            if json_string:
-                json_obj = json.loads(json_string)
-                self.set_attribute_fields(attribute, json_obj)
-                self.debug_print(f'[-] attributes: {attribute.to_dict()}')
-            self.save_progress(f'[-] attributes: {attribute.to_dict()}')
+            response = self._misp.add_attribute(event, attribute)
+            self.debug_print(f'[-] response: {response}')
+            if "errors" in response:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response.get('errors')}")
         except Exception as e:
-            self.save_progress("Failed to add custom attributes: {}".format(e))
-            self.debug_print("Failed to add custom attributes: {}".format(e))
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {error_message}")
 
-        response = self._misp.add_attribute(event, attribute)
+        try:
+            updated_event = self._lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
 
-        updated_event = self._misp.get_event(event_id)["Event"]
-        action_result.add_data({"response": response, "updated_event": updated_event})
-        if "errors" in response:
-            return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}")
+        updated_event = updated_event.get("Event")
+        attributes = updated_event.get('Attribute', [])
+        for attribute in attributes:
+            action_result.add_data(attribute)
+
+        summary = {}
+        summary["message"] = "Attributes added to event: {0}".format(updated_event.get("id"))
+        action_result.set_summary(summary)
+
+        return action_result.set_status(phantom.APP_SUCCESS)
+
+    def _perform_add(self, action_result, event, json_string):
+
+        try:
+            json_list = json.loads(json_string)
+        except Exception as e:
+            error_message = self._get_error_message_from_exception(e)
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to parse JSON: {error_message}. Please provide valid JSON")
+
+        if not isinstance(json_list, list):
+            return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected list.")
+
+        for entry in json_list:
+            attribute = MISPAttribute()
+            if not isinstance(entry, dict):
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected "
+                                                                   "list of objects.")
+
+            if "type" not in entry or "value" not in entry:
+                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON, 'type' and 'value' are required to add an attribute")
+
+            self._set_attribute_fields(attribute, entry)
+            response = self._misp.add_attribute(event, attribute)
+            if "errors" in response:
+                return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}. "
+                                                                   f"attribute={attribute.to_dict()}")
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
@@ -605,26 +673,28 @@ class MispConnector(BaseConnector):
         json_string = param.get("json", "")
 
         try:
-            event = self.lookup_misp_event(event_id)
+            event = self._lookup_misp_event(event_id)
         except LookupError as e:
-            return action_result.set_status(phantom.APP_ERROR, str(e))
-        json_list = json.loads(json_string)
-        if not isinstance(json_list, list):
-            return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected list.")
-        for entry in json_list:
-            attribute = MISPAttribute()
-            if not isinstance(entry, dict):
-                return action_result.set_status(phantom.APP_ERROR, "Invalid JSON in 'json' action parameter. Expected "
-                                                                   "list of objects.")
-            self.set_attribute_fields(attribute, entry)
-            response = self._misp.add_attribute(event, attribute)
-            if "errors" in response:
-                return action_result.set_status(phantom.APP_ERROR, f"Failed to add attribute. Response: {response}. "
-                                                                   f"attribute={attribute.to_dict()}")
-            self.save_progress(f'Added attribute: {attribute.to_dict()} to event {event_id}.')
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
 
-        updated_event = self._misp.get_event(event_id)["Event"]
-        action_result.add_data({"updated_event": updated_event})
+        retval = self._perform_add(action_result, event, json_string)
+        if phantom.is_fail(retval):
+            return action_result.get_status()
+
+        try:
+            updated_event = self._lookup_misp_event(event_id)
+        except LookupError as e:
+            return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
+
+        updated_event = updated_event.get("Event")
+        attributes = updated_event.get('Attribute', [])
+        for attribute in attributes:
+            action_result.add_data(attribute)
+
+        summary = {}
+        summary["message"] = "Attributes added to event: {0}".format(updated_event.get("id"))
+        action_result.set_summary(summary)
+
         return action_result.set_status(phantom.APP_SUCCESS)
 
     def handle_action(self, param):
