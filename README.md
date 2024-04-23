@@ -237,7 +237,7 @@ Add an attribute to an existing MISP event
 Type: **generic**  
 Read only: **False**
 
-To add multiple attributes to an event, use the 'bulk add attributes' action
+To add multiple attributes to an event, use the 'bulk add attributes' action.
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
