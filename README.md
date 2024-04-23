@@ -288,7 +288,7 @@ Create a new event in MISP
 Type: **generic**  
 Read only: **False**
 
-This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values
+This action first creates an event, then adds attributes to that event. To add attributes use the json parameter (Refer the documentation for more details).
 
 #### Action Parameters
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
