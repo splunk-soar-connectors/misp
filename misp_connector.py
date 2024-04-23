@@ -229,6 +229,8 @@ class MispConnector(BaseConnector):
         self.save_progress("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
+
+        self.debug_print("making rest call")
         ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
         if phantom.is_fail(ret_val):
             action_result.append_to_message('Test connectivity failed')
@@ -682,6 +684,7 @@ class MispConnector(BaseConnector):
             return action_result.get_status()
 
         try:
+            self.debug_print("Fetching updated events after adding attributes")
             updated_event = self._lookup_misp_event(event_id)
         except LookupError as e:
             return action_result.set_status(phantom.APP_ERROR, f"Failed to fetch event, Error : {e}")
