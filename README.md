@@ -55,9 +55,7 @@ Take action with Malware Information Sharing Platform
 
     -   The input for the `json` parameter has changed. Please refer the notes below to see the new format.
 
-
--   The below-mentioned actions have been added
-    -   bulk add attributes
+-   Added "**bulk add attributes**" actions 
 
 -   Hence, it is requested to the end-user to please
     update their existing playbooks by inserting the corresponding action blocks for this action on
