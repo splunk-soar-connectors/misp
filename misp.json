@@ -300,7 +300,7 @@
         {
             "action": "add attribute",
             "description": "Add an attribute to an existing MISP event",
-            "verbose": "To add multiple attributes to an event, use the 'bulk add attributes' action",
+            "verbose": "To add multiple attributes to an event, use the 'bulk add attributes' action.",
             "type": "generic",
             "identifier": "add_attribute",
             "read_only": false,
