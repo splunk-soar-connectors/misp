@@ -750,7 +750,7 @@
         {
             "action": "create event",
             "description": "Create a new event in MISP",
-            "verbose": "This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values",
+            "verbose": "This action first creates an event, then adds attributes to that event. To add attributes use the json parameter (Refer the documentation for more details).",
             "type": "generic",
             "identifier": "create_event",
             "read_only": false,
