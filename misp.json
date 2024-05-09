@@ -20,6 +20,11 @@
     ],
     "logo": "logo_misp.svg",
     "logo_dark": "logo_misp_dark.svg",
+    "contributors": [
+        {
+            "name": "Ben Liew"
+        }
+    ],
     "pip_dependencies": {
         "wheel": [
             {
