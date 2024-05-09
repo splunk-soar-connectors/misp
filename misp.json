@@ -7,12 +7,12 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.2.1",
+    "app_version": "3.0.0",
     "utctime_updated": "2022-02-03T21:33:46.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.2.0",
+    "min_phantom_version": "6.2.0",
     "fips_compliant": true,
     "python_version": "3",
     "latest_tested_versions": [
@@ -20,6 +20,11 @@
     ],
     "logo": "logo_misp.svg",
     "logo_dark": "logo_misp_dark.svg",
+    "contributors": [
+        {
+            "name": "Ben Liew"
+        }
+    ],
     "pip_dependencies": {
         "wheel": [
             {
@@ -39,10 +44,6 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "charset_normalizer",
-                "input_file": "wheels/py3/charset_normalizer-2.0.12-py3-none-any.whl"
-            },
-            {
                 "module": "importlib_metadata",
                 "input_file": "wheels/py3/importlib_metadata-4.8.3-py3-none-any.whl"
             },
@@ -51,16 +52,8 @@
                 "input_file": "wheels/shared/jsonschema-3.2.0-py2.py3-none-any.whl"
             },
             {
-                "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
-            },
-            {
                 "module": "pyrsistent",
                 "input_file": "wheels/py36/pyrsistent-0.18.0-cp36-cp36m-manylinux1_x86_64.manylinux_2_5_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
-                "module": "python_dateutil",
-                "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
             },
             {
                 "module": "setuptools",
@@ -120,9 +113,649 @@
             "versions": "EQ(*)"
         },
         {
+            "action": "bulk add attributes",
+            "description": "Add multiple attributes to an existing MISP event",
+            "type": "generic",
+            "identifier": "bulk_add_attributes",
+            "read_only": false,
+            "parameters": {
+                "event_id": {
+                    "order": 0,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Event ID"
+                },
+                "json": {
+                    "description": "JSON list of attribute objects to add to the event. Example: [{\"category\": \"Network activity\", \"type\": \"ip-src\", \"value\": \"1.2.3.4\"}]",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.event_id",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.category",
+                    "data_type": "string",
+                    "column_name": "Attribute Category",
+                    "column_order": 3,
+                    "example_values": [
+                        "Other"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4,
+                    "example_values": [
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.event_id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 2,
+                    "example_values": [
+                        "2121"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp attribute id"
+                    ],
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 0,
+                    "example_values": [
+                        "5360"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.object_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1623038555"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string",
+                    "example_values": [
+                        "port"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "68e219ee-5727-4cb2-a32f-8dc27aa4231f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Attribute Value",
+                    "column_order": 1,
+                    "example_values": [
+                        "email1@email.com"
+                    ],
+                    "contains": [
+                        "url",
+                        "domain",
+                        "ip",
+                        "email",
+                        "hash",
+                        "md5",
+                        "sha256",
+                        "md1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.updated_event",
+                    "data_type": "string"
+                }
+            ],
+            "render": {
+                "width": 18,
+                "title": "Attributes Added",
+                "type": "table",
+                "height": 5
+            },
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add attribute",
+            "description": "Add an attribute to an existing MISP event",
+            "verbose": "To add multiple attributes to an event, use the 'bulk add attributes' action.",
+            "type": "generic",
+            "identifier": "add_attribute",
+            "read_only": false,
+            "parameters": {
+                "event_id": {
+                    "order": 0,
+                    "data_type": "string",
+                    "required": true,
+                    "description": "Event ID"
+                },
+                "to_ids": {
+                    "description": "Set 'to_IDS' flag=True in MISP",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 1
+                },
+                "attribute_category": {
+                    "order": 2,
+                    "data_type": "string",
+                    "value_list": [
+                        "Internal reference",
+                        "Targeting data",
+                        "Antivirus detection",
+                        "Payload delivery",
+                        "Artifacts dropped",
+                        "Payload installation",
+                        "Persistence mechanism",
+                        "Network activity",
+                        "Payload type",
+                        "Attribution",
+                        "External analysis",
+                        "Financial fraud",
+                        "Support Tool",
+                        "Social network",
+                        "Person",
+                        "Other"
+                    ],
+                    "required": false,
+                    "description": "Attribute Category"
+                },
+                "attribute_type": {
+                    "order": 3,
+                    "data_type": "string",
+                    "value_list": [
+                        "md5",
+                        "sha1",
+                        "sha256",
+                        "filename",
+                        "pdb",
+                        "filename|md5",
+                        "filename|sha1",
+                        "filename|sha256",
+                        "ip-src",
+                        "ip-dst",
+                        "hostname",
+                        "domain",
+                        "domain|ip",
+                        "email",
+                        "email-src",
+                        "eppn",
+                        "email-dst",
+                        "email-subject",
+                        "email-attachment",
+                        "email-body",
+                        "float",
+                        "git-commit-id",
+                        "url",
+                        "http-method",
+                        "user-agent",
+                        "ja3-fingerprint-md5",
+                        "jarm-fingerprint",
+                        "favicon-mmh3",
+                        "hassh-md5",
+                        "hasshserver-md5",
+                        "regkey",
+                        "regkey|value",
+                        "AS",
+                        "snort",
+                        "bro",
+                        "zeek",
+                        "community-id",
+                        "pattern-in-file",
+                        "pattern-in-traffic",
+                        "pattern-in-memory",
+                        "pattern-filename",
+                        "pgp-public-key",
+                        "pgp-private-key",
+                        "yara",
+                        "stix2-pattern",
+                        "sigma",
+                        "gene",
+                        "kusto-query",
+                        "mime-type",
+                        "identity-card-number",
+                        "cookie",
+                        "vulnerability",
+                        "cpe",
+                        "weakness",
+                        "attachment",
+                        "malware-sample",
+                        "link",
+                        "comment",
+                        "text",
+                        "hex",
+                        "other",
+                        "named pipe",
+                        "mutex",
+                        "process-state",
+                        "target-user",
+                        "target-email",
+                        "target-machine",
+                        "target-org",
+                        "target-location",
+                        "target-external",
+                        "btc",
+                        "dash",
+                        "xmr",
+                        "iban",
+                        "bic",
+                        "bank-account-nr",
+                        "aba-rtn",
+                        "bin",
+                        "cc-number",
+                        "prtn",
+                        "phone-number",
+                        "threat-actor",
+                        "campaign-name",
+                        "campaign-id",
+                        "malware-type",
+                        "uri",
+                        "authentihash",
+                        "vhash",
+                        "ssdeep",
+                        "imphash",
+                        "telfhash",
+                        "pehash",
+                        "impfuzzy",
+                        "sha224",
+                        "sha384",
+                        "sha512",
+                        "sha512/224",
+                        "sha512/256",
+                        "sha3-224",
+                        "sha3-256",
+                        "sha3-384",
+                        "sha3-512",
+                        "tlsh",
+                        "cdhash",
+                        "filename|authentihash",
+                        "filename|vhash",
+                        "filename|ssdeep",
+                        "filename|imphash",
+                        "filename|impfuzzy",
+                        "filename|pehash",
+                        "filename|sha224",
+                        "filename|sha384",
+                        "filename|sha512",
+                        "filename|sha512/224",
+                        "filename|sha512/256",
+                        "filename|sha3-224",
+                        "filename|sha3-256",
+                        "filename|sha3-384",
+                        "filename|sha3-512",
+                        "filename|tlsh",
+                        "windows-scheduled-task",
+                        "windows-service-name",
+                        "windows-service-displayname",
+                        "whois-registrant-email",
+                        "whois-registrant-phone",
+                        "whois-registrant-name",
+                        "whois-registrant-org",
+                        "whois-registrar",
+                        "whois-creation-date",
+                        "x509-fingerprint-sha1",
+                        "x509-fingerprint-md5",
+                        "x509-fingerprint-sha256",
+                        "dns-soa-email",
+                        "size-in-bytes",
+                        "counter",
+                        "datetime",
+                        "port",
+                        "ip-dst|port",
+                        "ip-src|port",
+                        "hostname|port",
+                        "mac-address",
+                        "mac-eui-64",
+                        "email-dst-display-name",
+                        "email-src-display-name",
+                        "email-header",
+                        "email-reply-to",
+                        "email-x-mailer",
+                        "email-mime-boundary",
+                        "email-thread-index",
+                        "email-message-id",
+                        "github-username",
+                        "github-repository",
+                        "github-organisation",
+                        "jabber-id",
+                        "twitter-id",
+                        "dkim",
+                        "dkim-signature",
+                        "first-name",
+                        "middle-name",
+                        "last-name",
+                        "full-name",
+                        "date-of-birth",
+                        "place-of-birth",
+                        "gender",
+                        "passport-number",
+                        "passport-country",
+                        "passport-expiration",
+                        "redress-number",
+                        "nationality",
+                        "visa-number",
+                        "issue-date-of-the-visa",
+                        "primary-residence",
+                        "country-of-residence",
+                        "special-service-request",
+                        "frequent-flyer-number",
+                        "travel-details",
+                        "payment-details",
+                        "place-port-of-original-embarkation",
+                        "place-port-of-clearance",
+                        "place-port-of-onward-foreign-destination",
+                        "passenger-name-record-locator-number",
+                        "mobile-application-id",
+                        "chrome-extension-id",
+                        "cortex",
+                        "boolean",
+                        "anonymised"
+                    ],
+                    "required": false,
+                    "description": "Attribute Type"
+                },
+                "attribute_value": {
+                    "order": 4,
+                    "data_type": "string",
+                    "required": false,
+                    "description": "Attribute Value"
+                },
+                "attribute_comment": {
+                    "order": 5,
+                    "data_type": "string",
+                    "required": false,
+                    "description": "Attribute Comment"
+                },
+                "json": {
+                    "description": "JSON key-value object of additional attribute fields. Example: {\"to_ids\" : true}. For list of available parameters see: https://www.misp-project.org/openapi/#tag/Attributes/operation/addAttribute",
+                    "data_type": "string",
+                    "order": 6
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.event_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.to_ids",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_category",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.attribute_comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.category",
+                    "data_type": "string",
+                    "column_name": "Attribute Category",
+                    "column_order": 3,
+                    "example_values": [
+                        "Other"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.comment",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.deleted",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.disable_correlation",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.distribution",
+                    "data_type": "string",
+                    "column_name": "Distribution",
+                    "column_order": 4,
+                    "example_values": [
+                        "5"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.event_id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp event id"
+                    ],
+                    "column_name": "MISP Event ID",
+                    "column_order": 2,
+                    "example_values": [
+                        "2121"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "contains": [
+                        "misp attribute id"
+                    ],
+                    "column_name": "MISP Attribute ID",
+                    "column_order": 0,
+                    "example_values": [
+                        "5360"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.object_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.sharing_group_id",
+                    "data_type": "string",
+                    "example_values": [
+                        "0"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.timestamp",
+                    "data_type": "string",
+                    "example_values": [
+                        "1623038555"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.to_ids",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.type",
+                    "data_type": "string",
+                    "example_values": [
+                        "port"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.uuid",
+                    "data_type": "string",
+                    "example_values": [
+                        "68e219ee-5727-4cb2-a32f-8dc27aa4231f"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Attribute Value",
+                    "column_order": 1,
+                    "example_values": [
+                        "email1@email.com"
+                    ],
+                    "contains": [
+                        "url",
+                        "domain",
+                        "ip",
+                        "email",
+                        "hash",
+                        "md5",
+                        "sha256",
+                        "md1"
+                    ]
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.updated_event",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.response",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary",
+                    "data_type": "string"
+                }
+            ],
+            "render": {
+                "width": 18,
+                "title": "Attributes Added",
+                "type": "table",
+                "height": 5
+            },
+            "versions": "EQ(*)"
+        },
+        {
             "action": "create event",
             "description": "Create a new event in MISP",
-            "verbose": "This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
+            "verbose": "This action first creates an event, then adds attributes to that event. To add attributes use the json parameter (Refer the documentation for more details).",
             "type": "generic",
             "identifier": "create_event",
             "read_only": false,
@@ -172,76 +805,16 @@
                     "order": 0,
                     "required": true
                 },
-                "add_attributes": {
-                    "description": "Add attributes upon event creation",
-                    "data_type": "boolean",
-                    "default": true,
+                "json": {
+                    "description": "JSON list of attribute objects to add to the event. Example: [{\"category\": \"Network activity\", \"type\": \"ip-src\", \"value\": \"1.2.3.4\"}]",
+                    "data_type": "string",
                     "order": 4
                 },
-                "to_ids": {
-                    "description": "Set 'to_IDS' flag=True in MISP",
+                "add_attribute": {
+                    "description": "Add an attributes to the event from the json",
                     "data_type": "boolean",
                     "default": true,
                     "order": 5
-                },
-                "source_ips": {
-                    "description": "Source IPs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "order": 6,
-                    "primary": true
-                },
-                "dest_ips": {
-                    "description": "Destination IPs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "order": 7,
-                    "primary": true
-                },
-                "domains": {
-                    "description": "Domains to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "order": 8,
-                    "primary": true
-                },
-                "source_emails": {
-                    "description": "Source email addresses to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "order": 9,
-                    "primary": true
-                },
-                "dest_emails": {
-                    "description": "Destination email addresses to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "order": 10,
-                    "primary": true
-                },
-                "urls": {
-                    "description": "URLs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "order": 11,
-                    "primary": true
-                },
-                "json": {
-                    "description": "JSON key value list of attributes",
-                    "data_type": "string",
-                    "order": 12
                 }
             },
             "render": {
@@ -260,38 +833,10 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.add_attributes",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
                     "data_path": "action_result.parameter.analysis",
                     "data_type": "string",
                     "example_values": [
                         "Initial"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
                     ]
                 },
                 {
@@ -302,47 +847,10 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.domains",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "example_values": [
-                        "www.test.com"
-                    ]
-                },
-                {
                     "data_path": "action_result.parameter.info",
                     "data_type": "string",
                     "example_values": [
                         "Event Info Goes Here"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.json",
-                    "data_type": "string",
-                    "example_values": [
-                        "{\"ip-src|port\":\"1.1.1.1:888\"}"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
                     ]
                 },
                 {
@@ -353,22 +861,12 @@
                     ]
                 },
                 {
-                    "data_path": "action_result.parameter.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
+                    "data_path": "action_result.parameter.json",
+                    "data_type": "string"
                 },
                 {
-                    "data_path": "action_result.parameter.urls",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "example_values": [
-                        "https://test.com"
-                    ]
+                    "data_path": "action_result.parameter.add_attribute",
+                    "data_type": "boolean"
                 },
                 {
                     "data_path": "action_result.data.*.Org.id",
@@ -653,356 +1151,6 @@
                     "data_type": "string",
                     "example_values": [
                         "Message: Event created with id: 2139, Errors: 'test' is/are invalid attribute name/names in 'json' action parameter"
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                },
-                {
-                    "data_path": "summary.total_objects_successful",
-                    "data_type": "numeric",
-                    "example_values": [
-                        1
-                    ]
-                }
-            ],
-            "versions": "EQ(*)"
-        },
-        {
-            "action": "update event",
-            "description": "Add attributes / IOCs to an event in MISP",
-            "type": "generic",
-            "verbose": "Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
-            "identifier": "add_attributes",
-            "read_only": false,
-            "parameters": {
-                "event_id": {
-                    "description": "MISP event ID for adding attributes",
-                    "data_type": "numeric",
-                    "required": true,
-                    "primary": true,
-                    "order": 0,
-                    "contains": [
-                        "misp event id"
-                    ]
-                },
-                "to_ids": {
-                    "description": "Set 'to_IDS' flag=True in MISP",
-                    "data_type": "boolean",
-                    "default": true,
-                    "order": 1
-                },
-                "source_ips": {
-                    "description": "Source IPs to be added as attributes",
-                    "data_type": "string",
-                    "order": 2,
-                    "contains": [
-                        "ip"
-                    ],
-                    "primary": true
-                },
-                "dest_ips": {
-                    "description": "Destination IPs to be added as attributes",
-                    "data_type": "string",
-                    "order": 3,
-                    "contains": [
-                        "ip"
-                    ],
-                    "primary": true
-                },
-                "domains": {
-                    "description": "Domains to be added as attributes",
-                    "data_type": "string",
-                    "order": 4,
-                    "contains": [
-                        "domain"
-                    ],
-                    "primary": true
-                },
-                "source_emails": {
-                    "description": "Source email addresses to be added as attributes",
-                    "data_type": "string",
-                    "order": 5,
-                    "contains": [
-                        "email"
-                    ],
-                    "primary": true
-                },
-                "dest_emails": {
-                    "description": "Destination email addresses to be added as attributes",
-                    "data_type": "string",
-                    "order": 6,
-                    "contains": [
-                        "email"
-                    ],
-                    "primary": true
-                },
-                "urls": {
-                    "description": "URLs to be added as attributes",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "order": 7,
-                    "primary": true
-                },
-                "json": {
-                    "description": "JSON key value list of attributes",
-                    "data_type": "string",
-                    "order": 8
-                }
-            },
-            "render": {
-                "width": 18,
-                "title": "Attributes Added",
-                "type": "table",
-                "height": 5
-            },
-            "output": [
-                {
-                    "data_path": "action_result.status",
-                    "data_type": "string",
-                    "example_values": [
-                        "success",
-                        "failed"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.dest_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.domains",
-                    "data_type": "string",
-                    "contains": [
-                        "domain"
-                    ],
-                    "example_values": [
-                        "www.test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.event_id",
-                    "data_type": "numeric",
-                    "contains": [
-                        "misp event id"
-                    ],
-                    "example_values": [
-                        686
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.json",
-                    "data_type": "string",
-                    "example_values": [
-                        "{\"comment\":[\"email_1,email11\",\"email_2\"], \"soufds\":\"jflkl\"}"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_emails",
-                    "data_type": "string",
-                    "contains": [
-                        "email"
-                    ],
-                    "example_values": [
-                        "test@test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.source_ips",
-                    "data_type": "string",
-                    "contains": [
-                        "ip"
-                    ],
-                    "example_values": [
-                        "122.122.122.122"
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.parameter.urls",
-                    "data_type": "string",
-                    "contains": [
-                        "url"
-                    ],
-                    "example_values": [
-                        "http://test.com"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.category",
-                    "data_type": "string",
-                    "column_name": "Attribute Category",
-                    "column_order": 3,
-                    "example_values": [
-                        "Other"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.comment",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.data.*.deleted",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.disable_correlation",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.distribution",
-                    "data_type": "string",
-                    "column_name": "Distribution",
-                    "column_order": 4,
-                    "example_values": [
-                        "5"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.event_id",
-                    "data_type": "string",
-                    "contains": [
-                        "misp event id"
-                    ],
-                    "column_name": "MISP Event ID",
-                    "column_order": 2,
-                    "example_values": [
-                        "2121"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.id",
-                    "data_type": "string",
-                    "contains": [
-                        "misp attribute id"
-                    ],
-                    "column_name": "MISP Attribute ID",
-                    "column_order": 0,
-                    "example_values": [
-                        "5360"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.object_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.sharing_group_id",
-                    "data_type": "string",
-                    "example_values": [
-                        "0"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.timestamp",
-                    "data_type": "string",
-                    "example_values": [
-                        "1623038555"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.to_ids",
-                    "data_type": "boolean",
-                    "example_values": [
-                        true,
-                        false
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.type",
-                    "data_type": "string",
-                    "example_values": [
-                        "port"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.uuid",
-                    "data_type": "string",
-                    "example_values": [
-                        "68e219ee-5727-4cb2-a32f-8dc27aa4231f"
-                    ]
-                },
-                {
-                    "data_path": "action_result.data.*.value",
-                    "data_type": "string",
-                    "column_name": "Attribute Value",
-                    "column_order": 1,
-                    "example_values": [
-                        "email1@email.com"
-                    ],
-                    "contains": [
-                        "url",
-                        "domain",
-                        "ip",
-                        "email",
-                        "hash",
-                        "md5",
-                        "sha256",
-                        "md1"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary",
-                    "data_type": "string"
-                },
-                {
-                    "data_path": "action_result.summary.errors",
-                    "data_type": "string",
-                    "example_values": [
-                        " 'soufds' is/are invalid attribute name/names in 'json' action parameter"
-                    ]
-                },
-                {
-                    "data_path": "action_result.summary.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Attributes added to event: 2121"
-                    ]
-                },
-                {
-                    "data_path": "action_result.message",
-                    "data_type": "string",
-                    "example_values": [
-                        "Message: Attributes added to event: 2121, Errors:  'soufds' is/are invalid attribute name/names in 'json' action parameter"
                     ]
                 },
                 {
@@ -2374,7 +2522,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/py3/attrs-23.1.0-py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-23.2.0-py3-none-any.whl"
             },
             {
                 "module": "beautifulsoup4",
@@ -2385,28 +2533,16 @@
                 "input_file": "wheels/py3/cachetools-4.2.2-py3-none-any.whl"
             },
             {
-                "module": "charset_normalizer",
-                "input_file": "wheels/py39/charset_normalizer-3.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
-            },
-            {
                 "module": "jsonschema",
                 "input_file": "wheels/shared/jsonschema-3.2.0-py2.py3-none-any.whl"
-            },
-            {
-                "module": "pymisp",
-                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
             },
             {
                 "module": "pyrsistent",
                 "input_file": "wheels/py39/pyrsistent-0.20.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
             },
             {
-                "module": "python_dateutil",
-                "input_file": "wheels/shared/python_dateutil-2.8.2-py2.py3-none-any.whl"
-            },
-            {
                 "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-69.0.2-py3-none-any.whl"
+                "input_file": "wheels/py3/setuptools-69.5.1-py3-none-any.whl"
             },
             {
                 "module": "six",
