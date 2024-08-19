@@ -763,14 +763,20 @@
                     "primary": true
                 },
                 "tags": {
-                    "description": "Comma separated list of tags",
+                    "description": "Comma separated list of tags (append to existing tags default)",
                     "data_type": "string",
                     "order": 8
+                },
+                "replace_tags": {
+                    "description": "Replace tags with new provided tags",
+                    "data_type": "boolean",
+                    "default": false,
+                    "order": 9
                 },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 9
+                    "order": 10
                 }
             },
             "render": {
@@ -833,6 +839,14 @@
                     "data_type": "string",
                     "example_values": [
                         "test_1,test2"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.replace_tags",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
                     ]
                 },
                 {

@@ -494,9 +494,15 @@ class MispConnector(BaseConnector):
             action_result.add_data(attribute)
 
         tags = param.get("tags", "")
+        replace_tags = param.get("replace_tags", False)
         tag_list = [tag.strip() for tag in tags.split(",")] if tags else []
         if tag_list:
             try:
+                if replace_tags:
+                    existing_tags = self._event.tags
+                    for tag in existing_tags:
+                        self._misp.untag(self._event, tag.name)
+
                 for tag in tag_list:
                     self._misp.tag(self._event, tag)
             except Exception as e:
