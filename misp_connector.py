@@ -296,6 +296,16 @@ class MispConnector(BaseConnector):
 
         action_result.set_summary({"message": "Event created with id: {0}".format(self._event.id)})
 
+        tags = param.get("tags", "")
+        tag_list = [tag.strip() for tag in tags.split(",")] if tags else []
+        if tag_list:
+            try:
+                for tag in tag_list:
+                    self._misp.tag(self._event, tag)
+            except Exception as e:
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Failed to add tags to MISP event:{0}".format(error_message))
+
         addAttributes = param.get("add_attributes", True)
         if addAttributes:
             ret_val = self._perform_adds(param, action_result, add_data=True)
@@ -482,6 +492,16 @@ class MispConnector(BaseConnector):
         attributes = event_dict.get('Attribute', [])
         for attribute in attributes:
             action_result.add_data(attribute)
+
+        tags = param.get("tags", "")
+        tag_list = [tag.strip() for tag in tags.split(",")] if tags else []
+        if tag_list:
+            try:
+                for tag in tag_list:
+                    self._misp.tag(self._event, tag)
+            except Exception as e:
+                error_message = self._get_error_message_from_exception(e)
+                return action_result.set_status(phantom.APP_ERROR, "Failed to add tags to MISP event:{0}".format(error_message))
 
         if hasattr(self._event, "id"):
             summary = {}
