@@ -238,7 +238,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **source_emails** |  optional  | Source email addresses to be added as attributes | string |  `email` 
 **dest_emails** |  optional  | Destination email addresses to be added as attributes | string |  `email` 
 **urls** |  optional  | URLs to be added as attributes | string |  `url` 
-**tags** |  optional  | Comma separated list of tags | string | 
+**tags** |  optional  | Comma separated list of tags (append to existing tags default) | string | 
+**replace_tags** |  optional  | Replace tags with new provided tags | boolean | 
 **json** |  optional  | JSON key value list of attributes | string | 
 
 #### Action Output
@@ -250,6 +251,7 @@ action_result.parameter.dest_ips | string |  `ip`  |   122.122.122.122
 action_result.parameter.domains | string |  `domain`  |   www.test.com 
 action_result.parameter.event_id | numeric |  `misp event id`  |   686 
 action_result.parameter.tags | string |  |   test_1,test2 
+action_result.parameter.replace_tags | boolean |  |   True  False 
 action_result.parameter.json | string |  |   {"comment":["email_1,email11","email_2"], "soufds":"jflkl"} 
 action_result.parameter.source_emails | string |  `email`  |   test@test.com 
 action_result.parameter.source_ips | string |  `ip`  |   122.122.122.122 
