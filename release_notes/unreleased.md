@@ -1,3 +1,1 @@
 **Unreleased**
-
-* Tags can now be added during an event create or update [PAPP-34531]
