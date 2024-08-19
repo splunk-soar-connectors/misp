@@ -379,7 +379,7 @@
                     "data_path": "action_result.parameter.tags",
                     "data_type": "string",
                     "example_values": [
-                        "test_1"
+                        "test_1,test_2"
                     ]
                 },
                 {
@@ -832,7 +832,7 @@
                     "data_path": "action_result.parameter.tags",
                     "data_type": "string",
                     "example_values": [
-                        "test_1"
+                        "test_1,test2"
                     ]
                 },
                 {
