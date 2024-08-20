@@ -7,12 +7,12 @@
     "type": "threat intel",
     "license": "Copyright (c) 2017-2024 Splunk Inc.",
     "main_module": "misp_connector.py",
-    "app_version": "2.2.1",
-    "utctime_updated": "2022-02-03T21:33:46.000000Z",
+    "app_version": "2.2.2",
+    "utctime_updated": "2024-08-19T20:43:28.000000Z",
     "product_vendor": "MISP",
     "product_name": "MISP",
     "product_version_regex": ".*",
-    "min_phantom_version": "5.2.0",
+    "min_phantom_version": "6.2.1",
     "fips_compliant": true,
     "python_version": "3",
     "latest_tested_versions": [
@@ -238,10 +238,15 @@
                     "order": 11,
                     "primary": true
                 },
+                "tags": {
+                    "description": "Comma separated list of tags",
+                    "data_type": "string",
+                    "order": 12
+                },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 12
+                    "order": 13
                 }
             },
             "render": {
@@ -368,6 +373,13 @@
                     ],
                     "example_values": [
                         "https://test.com"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.tags",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_1,test_2"
                     ]
                 },
                 {
@@ -750,10 +762,21 @@
                     "order": 7,
                     "primary": true
                 },
+                "tags": {
+                    "description": "Comma separated list of tags (append to existing tags default)",
+                    "data_type": "string",
+                    "order": 8
+                },
+                "replace_tags": {
+                    "description": "Replace tags with new provided tags",
+                    "data_type": "boolean",
+                    "default": false,
+                    "order": 9
+                },
                 "json": {
                     "description": "JSON key value list of attributes",
                     "data_type": "string",
-                    "order": 8
+                    "order": 10
                 }
             },
             "render": {
@@ -809,6 +832,21 @@
                     ],
                     "example_values": [
                         686
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.tags",
+                    "data_type": "string",
+                    "example_values": [
+                        "test_1,test2"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.replace_tags",
+                    "data_type": "boolean",
+                    "example_values": [
+                        true,
+                        false
                     ]
                 },
                 {
