@@ -6,7 +6,7 @@ Connector Version: 2.2.2
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.2.1  
+Minimum Product Version: 6.2.2  
 
 Take action with Malware Information Sharing Platform
 
@@ -97,7 +97,7 @@ For **analysis** :
 ## Port Information
 
 The app uses HTTP/HTTPS protocol for communicating with the Misp Server. Below are the default ports
-used by Splunk SOAR.
+used by Splunk SOAR. 
 
 | Service Name | Transport Protocol | Port |
 |--------------|--------------------|------|
