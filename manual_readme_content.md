@@ -85,7 +85,7 @@ For **analysis** :
 ## Port Information
 
 The app uses HTTP/HTTPS protocol for communicating with the Misp Server. Below are the default ports
-used by Splunk SOAR.
+used by Splunk SOAR. 
 
 | Service Name | Transport Protocol | Port |
 |--------------|--------------------|------|
