@@ -6,7 +6,7 @@ Connector Version: 2.2.2
 Product Vendor: MISP  
 Product Name: MISP  
 Product Version Supported (regex): ".\*"  
-Minimum Product Version: 6.2.1  
+Minimum Product Version: 6.2.2  
 
 Take action with Malware Information Sharing Platform
 
