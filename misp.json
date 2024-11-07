@@ -2369,6 +2369,10 @@
             {
                 "module": "wrapt",
                 "input_file": "wheels/py39/wrapt-1.16.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
+            },
+            {
+                "module": "zipp",
+                "input_file": "wheels/py3/zipp-3.19.1-py3-none-any.whl"
             }
         ]
     },
@@ -2403,20 +2407,12 @@
                 "input_file": "wheels/py36/pyrsistent-0.18.0-cp36-cp36m-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.manylinux_2_28_x86_64.whl"
             },
             {
-                "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-59.6.0-py3-none-any.whl"
-            },
-            {
                 "module": "typing_extensions",
                 "input_file": "wheels/py3/typing_extensions-4.1.1-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
                 "input_file": "wheels/py36/wrapt-1.16.0-cp36-cp36m-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.manylinux_2_28_x86_64.whl"
-            },
-            {
-                "module": "zipp",
-                "input_file": "wheels/py3/zipp-3.6.0-py3-none-any.whl"
             }
         ]
     }
