@@ -43,14 +43,14 @@ def patch_requests():
 
     def get(self, *args, **kwargs):
         if self.verify is not None:
-            kwargs.pop('verify', None)
+            kwargs.pop("verify", None)
         else:
             self.verify = True
         return __orig_session_get(self, verify=self.verify, *args, **kwargs)
 
     def post(self, *args, **kwargs):
         if self.verify is not None:
-            kwargs.pop('verify', None)
+            kwargs.pop("verify", None)
         else:
             self.verify = True
         return __orig_session_post(self, verify=self.verify, *args, **kwargs)
@@ -83,21 +83,21 @@ class MispConnector(BaseConnector):
         if parameter is not None:
             try:
                 if not float(parameter).is_integer():
-                    return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=key)), None
+                    return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=key)), None
 
                 parameter = int(parameter)
             except Exception:
-                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=key)), None
+                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=key)), None
 
             if parameter < 0:
-                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='non-negative', param=key)), None
+                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="non-negative", param=key)), None
             if not allow_zero and parameter == 0:
-                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='non-zero positive', param=key)), None
+                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="non-zero positive", param=key)), None
 
         return phantom.APP_SUCCESS, parameter
 
     def _get_error_message_from_exception(self, e):
-        """ This function is used to get appropriate error message from the exception.
+        """This function is used to get appropriate error message from the exception.
         :param e: Exception object
         :return: error message
         """
@@ -123,8 +123,8 @@ class MispConnector(BaseConnector):
 
     def _validate_ip(self, input_data):
         ips = []
-        if ';' in input_data:
-            ips = list(filter(None, input_data.split(';')))
+        if ";" in input_data:
+            ips = list(filter(None, input_data.split(";")))
 
         else:
             ips = phantom.get_list_from_string(input_data)
@@ -139,8 +139,8 @@ class MispConnector(BaseConnector):
 
     def _validate_domain(self, input_data):
         domains = []
-        if ';' in input_data:
-            domains = list(filter(None, input_data.split(';')))
+        if ";" in input_data:
+            domains = list(filter(None, input_data.split(";")))
         else:
             domains = phantom.get_list_from_string(input_data)
 
@@ -151,8 +151,8 @@ class MispConnector(BaseConnector):
 
     def _validate_email(self, input_data):
         emails = []
-        if ';' in input_data:
-            emails = list(filter(None, input_data.split(';')))
+        if ";" in input_data:
+            emails = list(filter(None, input_data.split(";")))
         else:
             emails = phantom.get_list_from_string(input_data)
 
@@ -163,8 +163,8 @@ class MispConnector(BaseConnector):
 
     def _validate_url(self, input_data):
         urls = []
-        if ';' in input_data:
-            urls = list(filter(None, input_data.split(';')))
+        if ";" in input_data:
+            urls = list(filter(None, input_data.split(";")))
         else:
             urls = phantom.get_list_from_string(input_data)
 
@@ -178,10 +178,10 @@ class MispConnector(BaseConnector):
         incs = []
         if isinstance(input_data, list):
             incs = input_data
-        elif ',' in input_data:
-            incs = input_data.split(',')
-        elif ';' in input_data:
-            incs = input_data.split(';')
+        elif "," in input_data:
+            incs = input_data.split(",")
+        elif ";" in input_data:
+            incs = input_data.split(";")
 
         incs = list(filter(None, incs))
 
@@ -215,10 +215,10 @@ class MispConnector(BaseConnector):
             error_message = self._get_error_message_from_exception(e)
             return self.set_status(phantom.APP_ERROR, "Failed to create API session:{0}".format(error_message))
 
-        self.set_validator('ip', self._validate_ip)
-        self.set_validator('domain', self._validate_domain)
-        self.set_validator('email', self._validate_email)
-        self.set_validator('url', self._validate_url)
+        self.set_validator("ip", self._validate_ip)
+        self.set_validator("domain", self._validate_domain)
+        self.set_validator("email", self._validate_email)
+        self.set_validator("url", self._validate_url)
 
         return phantom.APP_SUCCESS
 
@@ -228,9 +228,9 @@ class MispConnector(BaseConnector):
         self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
-        ret_val, resp_json = self._make_rest_call('/servers/getPyMISPVersion.json', action_result, headers=auth)
+        ret_val, resp_json = self._make_rest_call("/servers/getPyMISPVersion.json", action_result, headers=auth)
         if phantom.is_fail(ret_val):
-            action_result.append_to_message('Test connectivity failed')
+            action_result.append_to_message("Test connectivity failed")
             return action_result.get_status()
         else:
             self.save_progress("Test Connectivity Passed")
@@ -241,38 +241,22 @@ class MispConnector(BaseConnector):
         action_result = self.add_action_result(ActionResult(dict(param)))
 
         distrib_map = {
-            'your org only': 0,
-            'this community only': 1,
-            'connected communities': 2,
-            'all communities': 3,
-            '0': 0,
-            '1': 1,
-            '2': 2,
-            '3': 3
+            "your org only": 0,
+            "this community only": 1,
+            "connected communities": 2,
+            "all communities": 3,
+            "0": 0,
+            "1": 1,
+            "2": 2,
+            "3": 3,
         }
-        tli_map = {
-            'high': 1,
-            'medium': 2,
-            'low': 3,
-            'undefined': 4,
-            '1': 1,
-            '2': 2,
-            '3': 3,
-            '4': 4
-        }
-        analysis_map = {
-            'initial': 0,
-            'ongoing': 1,
-            'completed': 2,
-            '0': 0,
-            '1': 1,
-            '2': 2
-        }
+        tli_map = {"high": 1, "medium": 2, "low": 3, "undefined": 4, "1": 1, "2": 2, "3": 3, "4": 4}
+        analysis_map = {"initial": 0, "ongoing": 1, "completed": 2, "0": 0, "1": 1, "2": 2}
 
         try:
-            distribution = distrib_map[str(param['distribution']).lower()]
-            threat_level_id = tli_map[str(param['threat_level_id']).lower()]
-            analysis = analysis_map[str(param['analysis']).lower()]
+            distribution = distrib_map[str(param["distribution"]).lower()]
+            threat_level_id = tli_map[str(param["threat_level_id"]).lower()]
+            analysis = analysis_map[str(param["analysis"]).lower()]
         except KeyError as e:
             return action_result.set_status(phantom.APP_ERROR, "Invalid string in parameter: {}".format(str(e)))
 
@@ -326,7 +310,7 @@ class MispConnector(BaseConnector):
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
 
-            attributes = event_dict.get('Attribute', [])
+            attributes = event_dict.get("Attribute", [])
             for attribute in attributes:
                 action_result.add_data(attribute)
 
@@ -380,11 +364,7 @@ class MispConnector(BaseConnector):
         is_added = False
         is_empty = True
 
-        default_indicator_list = [
-            'source_ips', 'dest_ips',
-            'domains', 'urls',
-            'dest_emails', 'source_emails'
-        ]
+        default_indicator_list = ["source_ips", "dest_ips", "domains", "urls", "dest_emails", "source_emails"]
 
         for i in default_indicator_list:
             val = param.get(i)
@@ -392,14 +372,14 @@ class MispConnector(BaseConnector):
                 is_empty = False
                 indicator_list = phantom.get_list_from_string(val)
 
-                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, i, param.get('to_ids', False))
+                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, i, param.get("to_ids", False))
 
                 if phantom.is_fail(ret_val):
                     return action_result.get_status()
                 else:
                     is_added = True
 
-        json_str = param.get('json')
+        json_str = param.get("json")
         if json_str:
             try:
                 d = json.loads(json_str)
@@ -415,7 +395,7 @@ class MispConnector(BaseConnector):
                 else:
                     indicator_list = phantom.get_list_from_string(str(v))
 
-                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, k, param.get('to_ids', False))
+                ret_val, cust_error_code = self._add_indicator(indicator_list, action_result, k, param.get("to_ids", False))
 
                 if phantom.is_fail(ret_val):
                     status_message = action_result.get_message()
@@ -430,14 +410,14 @@ class MispConnector(BaseConnector):
 
         error_message = None
         if errors["invalid_value"]:
-            invalid_values = ', '.join(errors["invalid_value"])
+            invalid_values = ", ".join(errors["invalid_value"])
             error_message = "{} key/keys has invalid value".format(invalid_values)
         if errors["invalid_key"]:
-            invalid_keys = ', '.join(errors["invalid_key"])
+            invalid_keys = ", ".join(errors["invalid_key"])
             if error_message is not None:
                 error_message = "{} and ".format(error_message)
             else:
-                error_message = ''
+                error_message = ""
             error_message = "{} {} is/are invalid attribute name/names".format(error_message, invalid_keys)
 
         if error_message is not None:
@@ -489,7 +469,7 @@ class MispConnector(BaseConnector):
             error_message = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, "Failed to load data of MISP event:{0}".format(error_message))
 
-        attributes = event_dict.get('Attribute', [])
+        attributes = event_dict.get("Attribute", [])
         for attribute in attributes:
             action_result.add_data(attribute)
 
@@ -534,31 +514,31 @@ class MispConnector(BaseConnector):
         self.save_progress("In action handler for: {0}".format(self.get_action_identifier()))
         action_result = self.add_action_result(ActionResult(param))
         query_dict = {}
-        controller = param['controller']
-        query_dict['controller'] = controller
-        if 'event_id' in param:
-            if ',' in param['event_id']:
-                query_dict['eventid'] = list()
-                for event_id in phantom.get_list_from_string(param['event_id']):
+        controller = param["controller"]
+        query_dict["controller"] = controller
+        if "event_id" in param:
+            if "," in param["event_id"]:
+                query_dict["eventid"] = list()
+                for event_id in phantom.get_list_from_string(param["event_id"]):
                     ret_val, event_id = self._validate_integer(action_result, event_id, MISP_INVALID_EVENT_ID)
 
                     if phantom.is_fail(ret_val):
                         return action_result.get_status()
 
-                    query_dict['eventid'].append(event_id)
+                    query_dict["eventid"].append(event_id)
             else:
-                ret_val, event_id = self._validate_integer(action_result, param['event_id'], MISP_INVALID_EVENT_ID)
+                ret_val, event_id = self._validate_integer(action_result, param["event_id"], MISP_INVALID_EVENT_ID)
 
                 if phantom.is_fail(ret_val):
                     return action_result.get_status()
-                query_dict['eventid'] = event_id
+                query_dict["eventid"] = event_id
 
-        if 'tags' in param:
-            query_dict['tags'] = list(filter(None, param['tags'].split(',')))
+        if "tags" in param:
+            query_dict["tags"] = list(filter(None, param["tags"].split(",")))
 
-        if 'other' in param:
+        if "other" in param:
             try:
-                other = json.loads(param['other'])
+                other = json.loads(param["other"])
             except Exception as e:
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, "Unable to parse JSON object{0}".format(error_message))
@@ -568,30 +548,30 @@ class MispConnector(BaseConnector):
 
             query_dict.update(other)
 
-        max_results = param.get('max_results', 10)
+        max_results = param.get("max_results", 10)
         try:
             if not float(max_results).is_integer():
-                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
+                return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=MISP_INVALID_MAX_RESULT))
 
             max_results = int(max_results)
         except Exception:
-            return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg='', param=MISP_INVALID_MAX_RESULT))
+            return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=MISP_INVALID_MAX_RESULT))
 
         # pagination
         response_list = []
         page = 1
         records_remaining = max_results
-        query_dict['limit'] = 1000
+        query_dict["limit"] = 1000
         if 0 < max_results < 1000:
-            query_dict['limit'] = max_results
+            query_dict["limit"] = max_results
         while True:
-            query_dict['page'] = page
+            query_dict["page"] = page
             ret_val, response = self._do_search(action_result, **query_dict)
             if phantom.is_fail(ret_val):
                 return action_result.get_status()
             page = page + 1
-            if response and controller == 'attributes':
-                response = response.get('Attribute')
+            if response and controller == "attributes":
+                response = response.get("Attribute")
             response_size = len(response)
             if response_size == 0:
                 break
@@ -610,7 +590,7 @@ class MispConnector(BaseConnector):
         if max_results < 0:
             response_list = response_list[max_results:]
 
-        if controller == 'attributes':
+        if controller == "attributes":
             action_result.add_data({"Attribute": response_list})
         else:
             action_result.add_data(response_list)
@@ -619,17 +599,17 @@ class MispConnector(BaseConnector):
 
     def _download_malware_samples(self, action_result):
         try:
-            """ Download malware samples for an event """
+            """Download malware samples for an event"""
             objects = self._event.objects
             for obj in objects:
                 for attrib in obj.Attribute:
                     if attrib.malware_binary:
-                        if hasattr(Vault, 'get_vault_tmp_dir'):
+                        if hasattr(Vault, "get_vault_tmp_dir"):
                             file_path = "{}/{}".format(Vault.get_vault_tmp_dir(), attrib.malware_filename)
                             Vault.create_attachment(file_path, self.get_container_id(), file_name=attrib.malware_filename)
                         else:
-                            file_path = '/vault/tmp/{}'.format(attrib.malware_filename)
-                            with open(file_path, 'wb') as fp:
+                            file_path = "/vault/tmp/{}".format(attrib.malware_filename)
+                            with open(file_path, "wb") as fp:
                                 fp.write(attrib.malware_binary.read())
                                 ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=attrib.malware_filename)
         except Exception as e:
@@ -663,14 +643,14 @@ class MispConnector(BaseConnector):
             return action_result.set_status(phantom.APP_ERROR, "Failed to get event for getting attachment:{0}".format(error_message))
 
         query_dict = {}
-        query_dict['eventid'] = event_id
-        query_dict['controller'] = 'attributes'
+        query_dict["eventid"] = event_id
+        query_dict["controller"] = "attributes"
 
         ret_val, attachments = self._do_search(action_result, **query_dict)
         if phantom.is_fail(ret_val):
             return action_result.get_status()
 
-        if param.get('download_samples'):
+        if param.get("download_samples"):
             # Don't forget about this
             ret_val = self._download_malware_samples(action_result)
 
@@ -689,16 +669,15 @@ class MispConnector(BaseConnector):
         try:
             soup = BeautifulSoup(response.text, "html.parser")
             error_text = soup.text
-            split_lines = error_text.split('\n')
+            split_lines = error_text.split("\n")
             split_lines = [x.strip() for x in split_lines if x.strip()]
-            error_text = '\n'.join(split_lines)
+            error_text = "\n".join(split_lines)
         except Exception:
             error_text = "Cannot parse error details"
 
-        message = "Status Code: {0}. Data from server:\n{1}\n".format(status_code,
-                                                                      error_text)
+        message = "Status Code: {0}. Data from server:\n{1}\n".format(status_code, error_text)
 
-        message = message.replace('{', '{{').replace('}', '}}')
+        message = message.replace("{", "{{").replace("}", "}}")
 
         return action_result.set_status(phantom.APP_ERROR, message), None
 
@@ -715,27 +694,28 @@ class MispConnector(BaseConnector):
             return phantom.APP_SUCCESS, resp_json
 
         action_result.add_data(resp_json)
-        message = r.text.replace('{', '{{').replace('}', '}}')
-        return action_result.set_status(phantom.APP_ERROR,
-                                        "Error from server, Status Code: {0} data returned: {1}".format(
-                                         r.status_code, message)), resp_json
+        message = r.text.replace("{", "{{").replace("}", "}}")
+        return (
+            action_result.set_status(phantom.APP_ERROR, "Error from server, Status Code: {0} data returned: {1}".format(r.status_code, message)),
+            resp_json,
+        )
 
     def _process_response(self, r, action_result):
 
         # store the r_text in debug data, it will get dumped in the logs if an error occurs
-        if hasattr(action_result, 'add_debug_data'):
+        if hasattr(action_result, "add_debug_data"):
             if r is not None:
-                action_result.add_debug_data({'r_text': r.text})
-                action_result.add_debug_data({'r_headers': r.headers})
-                action_result.add_debug_data({'r_status_code': r.status_code})
+                action_result.add_debug_data({"r_text": r.text})
+                action_result.add_debug_data({"r_headers": r.headers})
+                action_result.add_debug_data({"r_status_code": r.status_code})
             else:
-                action_result.add_debug_data({'r_text': 'r is None'})
+                action_result.add_debug_data({"r_text": "r is None"})
 
         # There are just too many differences in the response to handle all of them in the same function
-        if 'json' in r.headers.get('Content-Type', ''):
+        if "json" in r.headers.get("Content-Type", ""):
             return self._process_json_response(r, action_result)
 
-        if 'html' in r.headers.get('Content-Type', ''):
+        if "html" in r.headers.get("Content-Type", ""):
             return self._process_html_response(r, action_result)
 
         # it's not an html or json, handle if it is a successful empty response
@@ -744,7 +724,8 @@ class MispConnector(BaseConnector):
 
         # everything else is actually an error at this point
         message = "Can't process response from server. Status Code: {0} Data from server: {1}".format(
-            r.status_code, r.text.replace('{', '{{').replace('}', '}}'))
+            r.status_code, r.text.replace("{", "{{").replace("}", "}}")
+        )
 
         return action_result.set_status(phantom.APP_ERROR, message), None
 
@@ -793,7 +774,7 @@ class MispConnector(BaseConnector):
         return ret_val
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import sys
 
