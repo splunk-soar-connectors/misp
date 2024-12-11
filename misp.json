@@ -20,9 +20,6 @@
     ],
     "logo": "logo_misp.svg",
     "logo_dark": "logo_misp_dark.svg",
-    "pip_dependencies": {
-        "wheel": []
-    },
     "configuration": {
         "base_url": {
             "description": "MISP instance URL (http://misp_instance.company.com/)",
