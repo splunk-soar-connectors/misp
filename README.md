@@ -105,8 +105,8 @@ used by Splunk SOAR.
 | https        | tcp                | 443  |
 
 
-### Configuration Variables
-The below configuration variables are required for this Connector to operate.  These variables are specified when configuring a MISP asset in SOAR.
+### Configuration variables
+This table lists the configuration variables required to operate MISP. These variables are specified when configuring a MISP asset in Splunk SOAR.
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
