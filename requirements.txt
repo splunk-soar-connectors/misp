@@ -1,3 +1,5 @@
 cachetools==5.5.0
 Deprecated==1.2.15
-jsonschema==4.23.0
+jsonschema==3.2.0
+pymisp==2.4.138
+setuptools==75.2.0

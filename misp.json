@@ -2352,19 +2352,19 @@
             },
             {
                 "module": "jsonschema",
-                "input_file": "wheels/py3/jsonschema-4.23.0-py3-none-any.whl"
+                "input_file": "wheels/shared/jsonschema-3.2.0-py2.py3-none-any.whl"
             },
             {
-                "module": "jsonschema_specifications",
-                "input_file": "wheels/py3/jsonschema_specifications-2024.10.1-py3-none-any.whl"
+                "module": "pymisp",
+                "input_file": "wheels/py3/pymisp-2.4.138-py3-none-any.whl"
             },
             {
-                "module": "referencing",
-                "input_file": "wheels/py3/referencing-0.35.1-py3-none-any.whl"
+                "module": "pyrsistent",
+                "input_file": "wheels/py39/pyrsistent-0.20.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
             },
             {
-                "module": "rpds_py",
-                "input_file": "wheels/py39/rpds_py-0.22.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+                "module": "setuptools",
+                "input_file": "wheels/py3/setuptools-75.2.0-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
