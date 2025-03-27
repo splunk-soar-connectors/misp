@@ -1,35 +1,89 @@
 Splunk SOAR MISP
-Copyright (c) 2017-2024 Splunk Inc.
+Copyright (c) 2017-2025 Splunk Inc.
 
-Third-party Software Attributions:
+Third Party Software Attributions:
 
-Library: Deprecated
-Version: 1.2.12
-License: MIT
-Copyright 2017 Laurent LAPORTE
+Name: attrs
+Version: 25.3.0
+Author:
+License:
 
-Library: beautifulsoup4
+Name: beautifulsoup4
 Version: 4.9.1
+Author: Leonard Richardson
 License: MIT
-Copyright 2004-2017 Leonard Richardson
-Copyright 2004-2019 Leonard Richardson
-Copyright 2018 Isaac Muse
 
-Library: cachetools
+Name: cachetools
 Version: 4.2.2
+Author: Thomas Kemmer
 License: MIT
-Copyright 2014-2021 Thomas Kemmer
-Copyright 2014-2021 Thomas Kemmer
 
-Library: jsonschema
+Name: certifi
+Version: 2025.1.31
+Author: Kenneth Reitz
+License: MPL-2.0
+
+Name: charset-normalizer
+Version: 3.4.1
+Author:
+License: MIT
+
+Name: Deprecated
+Version: 1.2.12
+Author: Laurent LAPORTE
+License: MIT
+
+Name: idna
+Version: 3.10
+Author:
+License:
+
+Name: jsonschema
 Version: 3.2.0
-License: MIT
-Copyright 2013 Julian Berman
+Author: Julian Berman
+License: UNKNOWN
 
-Library: pymisp
+Name: pymisp
 Version: 2.4.138
-License: BSD 2
-Copyright 2013-2014 Alexandre Dulaunoy
-Copyright 2013-2014 CIRCL
-Copyright 2013-2014 Rapha
-Copyright 2014 Koen Van Impe
+Author: Raphaël Vinot
+License: BSD-2-Clause
+
+Name: pyrsistent
+Version: 0.20.0
+Author: Tobias Gustafsson
+License: MIT
+
+Name: python-dateutil
+Version: 2.9.0.post0
+Author: Gustavo Niemeyer
+License: Dual License
+
+Name: requests
+Version: 2.32.3
+Author: Kenneth Reitz
+License: Apache-2.0
+
+Name: six
+Version: 1.17.0
+Author: Benjamin Peterson
+License: MIT
+
+Name: soupsieve
+Version: 2.6
+Author:
+License:
+
+Name: urllib3
+Version: 2.3.0
+Author:
+License:
+
+Name: wrapt
+Version: 1.17.2
+Author: Graham Dumpleton
+License: BSD
+
+Name: zipp
+Version: 3.19.1
+Author:
+License:
