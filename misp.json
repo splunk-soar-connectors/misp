@@ -2364,7 +2364,7 @@
             },
             {
                 "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-75.2.0-py3-none-any.whl"
+                "input_file": "wheels/py3/setuptools-78.1.1-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
@@ -2404,7 +2404,7 @@
             },
             {
                 "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-75.2.0-py3-none-any.whl"
+                "input_file": "wheels/py3/setuptools-78.1.1-py3-none-any.whl"
             },
             {
                 "module": "wrapt",
