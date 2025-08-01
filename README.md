@@ -1,7 +1,7 @@
 # MISP
 
 Publisher: Splunk \
-Connector Version: 2.2.6 \
+Connector Version: 2.2.7 \
 Product Vendor: MISP \
 Product Name: MISP \
 Minimum Product Version: 6.3.0
