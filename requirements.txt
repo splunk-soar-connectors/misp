@@ -1,7 +1,7 @@
-beautifulsoup4==4.9.1
-cachetools==4.2.2
-Deprecated==1.2.12
-jsonschema==3.2.0
-pymisp==2.4.138
-setuptools==78.1.1
-zipp==3.19.1
+beautifulsoup4==4.13.5
+cachetools==6.2.0
+Deprecated==1.2.18
+jsonschema==4.25.1
+pymisp==2.5.17.1
+setuptools==80.9.0
+zipp==3.23.0

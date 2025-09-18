@@ -26,7 +26,7 @@ from bs4 import BeautifulSoup
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
 from phantom.vault import Vault
-from pymisp import MISPEvent, PyMISP
+from pymisp import MISPAttribute, MISPEvent, MISPTag, PyMISP
 
 # Imports local to this App
 from misp_consts import *
@@ -184,18 +184,22 @@ class MispConnector(BaseConnector):
 
         for inc in incs:
             if inc_type == "ip":
-                if not self._validate_ip(inc.strip()):
-                    return False
+                if self._validate_ip(inc.strip()):
+                    return True
             elif inc_type == "email":
-                if not ph_utils.is_email(inc.strip()):
-                    return False
+                if ph_utils.is_email(inc.strip()):
+                    return True
             elif inc_type == "domain":
-                if not ph_utils.is_domain(inc.strip()):
-                    return False
+                if ph_utils.is_domain(inc.strip()):
+                    return True
             elif inc_type == "url":
-                if not ph_utils.is_url(inc.strip()):
-                    return False
-        return True
+                if ph_utils.is_url(inc.strip()):
+                    return True
+            elif inc_type == "attribute":
+                if isinstance(inc, dict):
+                    return True
+
+        return False
 
     def initialize(self):
         patch_requests()
@@ -311,6 +315,24 @@ class MispConnector(BaseConnector):
 
         return action_result.set_status(phantom.APP_SUCCESS)
 
+    def _create_attribute(self, attr_dict):
+        attr = MISPAttribute()
+        attr.type = attr_dict["type"]
+        attr.value = attr_dict["value"]
+        attr.category = attr_dict["category"]
+        if attr_dict["tags"] is not None:
+            tags = []
+            for tag in attr_dict["tags"]:
+                misp_tag = MISPTag()
+                misp_tag.name = tag
+                misp_tag.local = 1
+                tags.append(misp_tag)
+            attr.tags = tags
+        if attr_dict["to_ids"]:
+            attr.to_ids = attr_dict["to_ids"]
+
+        return attr
+
     def _add_indicator(self, indicator_list, action_result, indicator_type, to_ids):
         is_valid = True
         indic_type = indicator_type
@@ -333,12 +355,19 @@ class MispConnector(BaseConnector):
             elif indicator_type == "urls":
                 is_valid = self._validate_indicator(indicator_list, "url")
                 indicator_type = "url"
+            elif indicator_type == "attribute":
+                is_valid = self._validate_indicator(indicator_list, "attribute")
+                indicator_type = "attribute"
 
             if not is_valid:
                 return action_result.set_status(phantom.APP_ERROR, f"'{indic_type}'"), 1
 
             try:
-                self._event.add_attribute(type=indicator_type, value=indicator, to_ids=to_ids)
+                if indicator_type == "attribute":
+                    attribute = self._create_attribute(indicator)
+                    self._event.add_attribute(**attribute.to_dict())
+                else:
+                    self._event.add_attribute(type=indicator_type, value=indicator, to_ids=to_ids)
             except Exception as e:
                 self.debug_print(f"Failed to add attribute due to following error: {e!s}")
                 return action_result.set_status(phantom.APP_ERROR, f"'{indicator_type}'"), 2
