@@ -2371,10 +2371,6 @@
                 "input_file": "wheels/py39/rpds_py-0.27.1-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
             },
             {
-                "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-80.9.0-py3-none-any.whl"
-            },
-            {
                 "module": "typing_extensions",
                 "input_file": "wheels/py3/typing_extensions-4.15.0-py3-none-any.whl"
             },
@@ -2421,10 +2417,6 @@
             {
                 "module": "rpds_py",
                 "input_file": "wheels/py313/rpds_py-0.27.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
-            },
-            {
-                "module": "setuptools",
-                "input_file": "wheels/py3/setuptools-80.9.0-py3-none-any.whl"
             },
             {
                 "module": "typing_extensions",

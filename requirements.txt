@@ -3,5 +3,4 @@ cachetools==6.2.0
 Deprecated==1.2.18
 jsonschema==4.25.1
 pymisp==2.5.17.1
-setuptools==80.9.0
 zipp==3.23.0
