@@ -17,6 +17,7 @@
 # Phantom App imports
 import ipaddress
 import json
+from collections import deque
 
 import phantom.app as phantom
 import phantom.rules as ph_rules
@@ -65,6 +66,7 @@ class RetVal(tuple):
 
 
 class MispConnector(BaseConnector):
+    MAX_QUERY_PAGES = 100
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
     ACTION_ID_ADD_ATTRIBUTES = "add_attributes"
@@ -549,14 +551,20 @@ class MispConnector(BaseConnector):
         except Exception:
             return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=MISP_INVALID_MAX_RESULT))
 
+        if max_results == 0:
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                "Please provide a non-zero integer for the 'max_results' action parameter",
+            )
+
         # pagination
-        response_list = []
+        response_list = deque(maxlen=abs(max_results)) if max_results < 0 else []
         page = 1
         records_remaining = max_results
         query_dict["limit"] = 1000
         if 0 < max_results < 1000:
             query_dict["limit"] = max_results
-        while True:
+        while page <= self.MAX_QUERY_PAGES:
             query_dict["page"] = page
             ret_val, response = self._do_search(action_result, **query_dict)
             if phantom.is_fail(ret_val):
@@ -578,9 +586,17 @@ class MispConnector(BaseConnector):
                 if records_remaining <= 0:
                     break
 
+            if response_size < query_dict["limit"]:
+                break
+        else:
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                f"MISP query exceeded the maximum of {self.MAX_QUERY_PAGES} pages",
+            )
+
         # slice the result in case of negative max_results value
         if max_results < 0:
-            response_list = response_list[max_results:]
+            response_list = list(response_list)
 
         if controller == "attributes":
             action_result.add_data({"Attribute": response_list})

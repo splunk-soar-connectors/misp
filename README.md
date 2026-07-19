@@ -273,10 +273,10 @@ summary.total_objects_successful | numeric | | 1 |
 
 Run a query to find events or attributes
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
-By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 10, and this will be the oldest 10 results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query. From there, you can take the timestamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {"timestamp": \<timestamp + 1>}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.
+The default max results is 10, and this returns the oldest 10 results. Zero is rejected. A negative value, <i>n</i>, returns the last <i>n</i> results within the bounded query window.<br><br>The other field expects a JSON string containing key-value pairs supported by the search API. To continue a time-based query, pass the first returned object's timestamp plus one in the <b>other</b> field, for example {"timestamp": \<timestamp + 1>}. Also note that when searching for events, events with no attributes will not be returned.
 
 #### Action Parameters
 
