@@ -221,13 +221,23 @@ class MispConnector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
+    @staticmethod
+    def _get_pymisp_error(response):
+        if not isinstance(response, dict):
+            return None
+        if response.get("errors"):
+            return response["errors"]
+        if response.get("saved") is False:
+            return response.get("message") or "MISP reported that the operation was not saved"
+        return None
+
     def _test_connectivity(self):
         action_result = self.add_action_result(ActionResult())
         self.save_progress("Checking connectivity to your MISP instance...")
         self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
-        ret_val, resp_json = self._make_rest_call("/servers/getPyMISPVersion.json", action_result, headers=auth)
+        ret_val, _resp_json = self._make_rest_call("/servers/getPyMISPVersion.json", action_result, headers=auth)
         if phantom.is_fail(ret_val):
             action_result.append_to_message("Test connectivity failed")
             return action_result.get_status()
@@ -283,7 +293,9 @@ class MispConnector(BaseConnector):
         if tag_list:
             try:
                 for tag in tag_list:
-                    self._misp.tag(self._event, tag)
+                    response = self._misp.tag(self._event, tag)
+                    if error := self._get_pymisp_error(response):
+                        raise Exception(error)
             except Exception as e:
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, f"Failed to add tags to MISP event:{error_message}")
@@ -477,10 +489,14 @@ class MispConnector(BaseConnector):
                 if replace_tags:
                     existing_tags = self._event.tags
                     for tag in existing_tags:
-                        self._misp.untag(self._event, tag.name)
+                        response = self._misp.untag(self._event, tag.name)
+                        if error := self._get_pymisp_error(response):
+                            raise Exception(error)
 
                 for tag in tag_list:
-                    self._misp.tag(self._event, tag)
+                    response = self._misp.tag(self._event, tag)
+                    if error := self._get_pymisp_error(response):
+                        raise Exception(error)
             except Exception as e:
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, f"Failed to add tags to MISP event:{error_message}")
