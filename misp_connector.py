@@ -200,7 +200,7 @@ class MispConnector(BaseConnector):
     def initialize(self):
         patch_requests()
         config = self.get_config()
-        self._verify = config.get("verify_server_cert", False)
+        self._verify = config.get("verify_server_cert", True)
         self._misp_url = config.get("base_url").rstrip("/")
         api_key = config.get("api_key")
 
