@@ -658,9 +658,9 @@ class MispConnector(BaseConnector):
                 if isinstance(self._event, dict):
                     errors = self._event.get("errors", "")
                     if isinstance(errors, tuple) and errors[0] == 404:
-                        return action_result.set_status(phantom.APP_SUCCESS, f"Failed to get event for getting attachment:{errors}")
+                        return action_result.set_status(phantom.APP_ERROR, f"Failed to get event for getting attachment:{errors}")
                     else:
-                        Exception(errors)
+                        raise Exception(errors)
                 else:
                     raise Exception
         except Exception as e:

@@ -4,3 +4,4 @@
 * Bound run query pagination and reject zero maximum results.
 * Attach downloaded malware sample bytes with sanitized file names.
 * Fail tag updates when PyMISP reports an in-body error.
+* Report MISP event lookup failures as action errors.
