@@ -17,6 +17,7 @@
 # Phantom App imports
 import ipaddress
 import json
+import os
 from collections import deque
 
 import phantom.app as phantom
@@ -612,14 +613,15 @@ class MispConnector(BaseConnector):
             for obj in objects:
                 for attrib in obj.Attribute:
                     if attrib.malware_binary:
+                        file_name = os.path.basename(attrib.malware_filename or "") or "malware_sample"
+                        file_contents = attrib.malware_binary.read()
                         if hasattr(Vault, "get_vault_tmp_dir"):
-                            file_path = f"{Vault.get_vault_tmp_dir()}/{attrib.malware_filename}"
-                            Vault.create_attachment(file_path, self.get_container_id(), file_name=attrib.malware_filename)
+                            Vault.create_attachment(file_contents, self.get_container_id(), file_name=file_name)
                         else:
-                            file_path = f"/vault/tmp/{attrib.malware_filename}"
+                            file_path = f"/vault/tmp/{file_name}"
                             with open(file_path, "wb") as fp:
-                                fp.write(attrib.malware_binary.read())
-                                ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=attrib.malware_filename)
+                                fp.write(file_contents)
+                                ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=file_name)
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, f"Failed to download malware samples: {error_message}")
