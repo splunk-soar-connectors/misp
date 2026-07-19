@@ -5,7 +5,7 @@
     "publisher": "Splunk",
     "package_name": "phantom_misp",
     "type": "threat intel",
-    "license": "Copyright (c) 2017-2025 Splunk Inc.",
+    "license": "Copyright (c) 2017-2026 Splunk Inc.",
     "main_module": "misp_connector.py",
     "app_version": "2.2.7",
     "utctime_updated": "2025-08-01T20:35:11.479264Z",
@@ -2344,7 +2344,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/py3/attrs-25.3.0-py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-26.1.0-py3-none-any.whl"
             },
             {
                 "module": "cachetools",
@@ -2368,7 +2368,7 @@
             },
             {
                 "module": "wrapt",
-                "input_file": "wheels/py39/wrapt-1.17.2-cp39-cp39-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.manylinux_2_28_x86_64.whl"
+                "input_file": "wheels/py39/wrapt-1.17.3-cp39-cp39-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
             },
             {
                 "module": "zipp",
@@ -2384,7 +2384,7 @@
             },
             {
                 "module": "attrs",
-                "input_file": "wheels/py3/attrs-25.3.0-py3-none-any.whl"
+                "input_file": "wheels/py3/attrs-26.1.0-py3-none-any.whl"
             },
             {
                 "module": "cachetools",
@@ -2408,7 +2408,7 @@
             },
             {
                 "module": "wrapt",
-                "input_file": "wheels/py313/wrapt-1.17.2-cp313-cp313-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.manylinux_2_28_x86_64.whl"
+                "input_file": "wheels/py313/wrapt-1.17.3-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl"
             },
             {
                 "module": "zipp",

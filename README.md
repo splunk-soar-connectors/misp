@@ -1,9 +1,9 @@
 # MISP
 
-Publisher: Splunk \
-Connector Version: 2.2.7 \
-Product Vendor: MISP \
-Product Name: MISP \
+Publisher: Splunk <br>
+Connector Version: 2.2.7 <br>
+Product Vendor: MISP <br>
+Product Name: MISP <br>
 Minimum Product Version: 6.3.0
 
 Take action with Malware Information Sharing Platform
@@ -97,17 +97,17 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity \
-[create event](#action-create-event) - Create a new event in MISP \
-[update event](#action-update-event) - Add attributes / IOCs to an event in MISP \
-[run query](#action-run-query) - Run a query to find events or attributes \
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity <br>
+[create event](#action-create-event) - Create a new event in MISP <br>
+[update event](#action-update-event) - Add attributes / IOCs to an event in MISP <br>
+[run query](#action-run-query) - Run a query to find events or attributes <br>
 [get attributes](#action-get-attributes) - Get attributes for a specific event
 
 ## action: 'test connectivity'
 
 Validate the asset configuration for connectivity
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -122,7 +122,7 @@ No Output
 
 Create a new event in MISP
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
@@ -211,7 +211,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Add attributes / IOCs to an event in MISP
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
@@ -437,7 +437,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Get attributes for a specific event
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 <b>download_samples</b> will only download files which are marked as a 'malware-sample'.
@@ -491,7 +491,7 @@ ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.
 
-Copyright 2025 Splunk Inc.
+Copyright 2026 Splunk Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
