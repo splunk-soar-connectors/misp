@@ -1,9 +1,9 @@
 # MISP
 
-Publisher: Splunk \
-Connector Version: 2.2.7 \
-Product Vendor: MISP \
-Product Name: MISP \
+Publisher: Splunk <br>
+Connector Version: 2.2.7 <br>
+Product Vendor: MISP <br>
+Product Name: MISP <br>
 Minimum Product Version: 6.3.0
 
 Take action with Malware Information Sharing Platform
@@ -97,17 +97,17 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 
 ### Supported Actions
 
-[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity \
-[create event](#action-create-event) - Create a new event in MISP \
-[update event](#action-update-event) - Add attributes / IOCs to an event in MISP \
-[run query](#action-run-query) - Run a query to find events or attributes \
+[test connectivity](#action-test-connectivity) - Validate the asset configuration for connectivity <br>
+[create event](#action-create-event) - Create a new event in MISP <br>
+[update event](#action-update-event) - Add attributes / IOCs to an event in MISP <br>
+[run query](#action-run-query) - Run a query to find events or attributes <br>
 [get attributes](#action-get-attributes) - Get attributes for a specific event
 
 ## action: 'test connectivity'
 
 Validate the asset configuration for connectivity
 
-Type: **test** \
+Type: **test** <br>
 Read only: **True**
 
 #### Action Parameters
@@ -122,7 +122,7 @@ No Output
 
 Create a new event in MISP
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
@@ -211,7 +211,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Add attributes / IOCs to an event in MISP
 
-Type: **generic** \
+Type: **generic** <br>
 Read only: **False**
 
 Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.
@@ -273,10 +273,10 @@ summary.total_objects_successful | numeric | | 1 |
 
 Run a query to find events or attributes
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
-By setting max_results to 0, you can get every result. It is recommended you do not do this, as MISP can return <b>a lot</b> of data. The default is 10, and this will be the oldest 10 results.<br><br>The other field expects a json string, which can have the key value pairs of any field which the search API supports.<br><br>By giving max results as a negative number, <i>n</i>, it will take the last <i>n</i> results from the query. From there, you can take the timestamp from the first object in the resulting list, then pass it in the <b>other</b> field like so: {"timestamp": \<timestamp + 1>}. All the results will now be after that specified timestamp.<br><br>Also note that when searching for events, events with no attributes will not be returned.
+The default max results is 10, and this returns the oldest 10 results. Zero is rejected. A negative value, <i>n</i>, returns the last <i>n</i> results within the bounded query window.<br><br>The other field expects a JSON string containing key-value pairs supported by the search API. To continue a time-based query, pass the first returned object's timestamp plus one in the <b>other</b> field, for example {"timestamp": \<timestamp + 1>}. Also note that when searching for events, events with no attributes will not be returned.
 
 #### Action Parameters
 
@@ -437,7 +437,7 @@ summary.total_objects_successful | numeric | | 1 |
 
 Get attributes for a specific event
 
-Type: **investigate** \
+Type: **investigate** <br>
 Read only: **True**
 
 <b>download_samples</b> will only download files which are marked as a 'malware-sample'.
@@ -491,7 +491,7 @@ ______________________________________________________________________
 
 Auto-generated Splunk SOAR Connector documentation.
 
-Copyright 2025 Splunk Inc.
+Copyright 2026 Splunk Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

@@ -1,6 +1,6 @@
 # File: misp_connector.py
 #
-# Copyright (c) 2017-2025 Splunk Inc.
+# Copyright (c) 2017-2026 Splunk Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 # Phantom App imports
 import ipaddress
 import json
+import os
+from collections import deque
 
 import phantom.app as phantom
 import phantom.rules as ph_rules
@@ -65,6 +67,7 @@ class RetVal(tuple):
 
 
 class MispConnector(BaseConnector):
+    MAX_QUERY_PAGES = 100
     ACTION_ID_TEST_ASSET_CONNECTIVITY = "test_asset_connectivity"
     ACTION_ID_CREATE_EVENT = "create_event"
     ACTION_ID_ADD_ATTRIBUTES = "add_attributes"
@@ -200,7 +203,7 @@ class MispConnector(BaseConnector):
     def initialize(self):
         patch_requests()
         config = self.get_config()
-        self._verify = config.get("verify_server_cert", False)
+        self._verify = config.get("verify_server_cert", True)
         self._misp_url = config.get("base_url").rstrip("/")
         api_key = config.get("api_key")
 
@@ -218,13 +221,23 @@ class MispConnector(BaseConnector):
 
         return phantom.APP_SUCCESS
 
+    @staticmethod
+    def _get_pymisp_error(response):
+        if not isinstance(response, dict):
+            return None
+        if response.get("errors"):
+            return response["errors"]
+        if response.get("saved") is False:
+            return response.get("message") or "MISP reported that the operation was not saved"
+        return None
+
     def _test_connectivity(self):
         action_result = self.add_action_result(ActionResult())
         self.save_progress("Checking connectivity to your MISP instance...")
         self.debug_print("Checking connectivity to your MISP instance...")
         config = self.get_config()
         auth = {"Authorization": config.get("api_key")}
-        ret_val, resp_json = self._make_rest_call("/servers/getPyMISPVersion.json", action_result, headers=auth)
+        ret_val, _resp_json = self._make_rest_call("/servers/getPyMISPVersion.json", action_result, headers=auth)
         if phantom.is_fail(ret_val):
             action_result.append_to_message("Test connectivity failed")
             return action_result.get_status()
@@ -280,7 +293,9 @@ class MispConnector(BaseConnector):
         if tag_list:
             try:
                 for tag in tag_list:
-                    self._misp.tag(self._event, tag)
+                    response = self._misp.tag(self._event, tag)
+                    if error := self._get_pymisp_error(response):
+                        raise Exception(error)
             except Exception as e:
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, f"Failed to add tags to MISP event:{error_message}")
@@ -474,10 +489,14 @@ class MispConnector(BaseConnector):
                 if replace_tags:
                     existing_tags = self._event.tags
                     for tag in existing_tags:
-                        self._misp.untag(self._event, tag.name)
+                        response = self._misp.untag(self._event, tag.name)
+                        if error := self._get_pymisp_error(response):
+                            raise Exception(error)
 
                 for tag in tag_list:
-                    self._misp.tag(self._event, tag)
+                    response = self._misp.tag(self._event, tag)
+                    if error := self._get_pymisp_error(response):
+                        raise Exception(error)
             except Exception as e:
                 error_message = self._get_error_message_from_exception(e)
                 return action_result.set_status(phantom.APP_ERROR, f"Failed to add tags to MISP event:{error_message}")
@@ -549,14 +568,20 @@ class MispConnector(BaseConnector):
         except Exception:
             return action_result.set_status(phantom.APP_ERROR, MISP_INVALID_INT_ERR.format(msg="", param=MISP_INVALID_MAX_RESULT))
 
+        if max_results == 0:
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                "Please provide a non-zero integer for the 'max_results' action parameter",
+            )
+
         # pagination
-        response_list = []
+        response_list = deque(maxlen=abs(max_results)) if max_results < 0 else []
         page = 1
         records_remaining = max_results
         query_dict["limit"] = 1000
         if 0 < max_results < 1000:
             query_dict["limit"] = max_results
-        while True:
+        while page <= self.MAX_QUERY_PAGES:
             query_dict["page"] = page
             ret_val, response = self._do_search(action_result, **query_dict)
             if phantom.is_fail(ret_val):
@@ -578,9 +603,17 @@ class MispConnector(BaseConnector):
                 if records_remaining <= 0:
                     break
 
+            if response_size < query_dict["limit"]:
+                break
+        else:
+            return action_result.set_status(
+                phantom.APP_ERROR,
+                f"MISP query exceeded the maximum of {self.MAX_QUERY_PAGES} pages",
+            )
+
         # slice the result in case of negative max_results value
         if max_results < 0:
-            response_list = response_list[max_results:]
+            response_list = list(response_list)
 
         if controller == "attributes":
             action_result.add_data({"Attribute": response_list})
@@ -596,14 +629,15 @@ class MispConnector(BaseConnector):
             for obj in objects:
                 for attrib in obj.Attribute:
                     if attrib.malware_binary:
+                        file_name = os.path.basename(attrib.malware_filename or "") or "malware_sample"
+                        file_contents = attrib.malware_binary.read()
                         if hasattr(Vault, "get_vault_tmp_dir"):
-                            file_path = f"{Vault.get_vault_tmp_dir()}/{attrib.malware_filename}"
-                            Vault.create_attachment(file_path, self.get_container_id(), file_name=attrib.malware_filename)
+                            Vault.create_attachment(file_contents, self.get_container_id(), file_name=file_name)
                         else:
-                            file_path = f"/vault/tmp/{attrib.malware_filename}"
+                            file_path = f"/vault/tmp/{file_name}"
                             with open(file_path, "wb") as fp:
-                                fp.write(attrib.malware_binary.read())
-                                ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=attrib.malware_filename)
+                                fp.write(file_contents)
+                                ph_rules.vault_add(container=self.get_container_id(), file_location=file_path, file_name=file_name)
         except Exception as e:
             error_message = self._get_error_message_from_exception(e)
             return action_result.set_status(phantom.APP_ERROR, f"Failed to download malware samples: {error_message}")
@@ -624,9 +658,9 @@ class MispConnector(BaseConnector):
                 if isinstance(self._event, dict):
                     errors = self._event.get("errors", "")
                     if isinstance(errors, tuple) and errors[0] == 404:
-                        return action_result.set_status(phantom.APP_SUCCESS, f"Failed to get event for getting attachment:{errors}")
+                        return action_result.set_status(phantom.APP_ERROR, f"Failed to get event for getting attachment:{errors}")
                     else:
-                        Exception(errors)
+                        raise Exception(errors)
                 else:
                     raise Exception
         except Exception as e:
