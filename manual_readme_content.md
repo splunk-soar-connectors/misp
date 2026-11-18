@@ -1,76 +1,58 @@
-## pymisp-2.4.138
-
-This app uses the pymisp module, which is licensed under an open source license. A simplified 2-BSD
-License, Copyright (c) 2017 Raphaël Vinot.
-
-## jsonschema-3.2.0
-
-This app uses the jsonschema module, which is licensed under the MIT License, Copyright (c) 2013
-Julian Berman.
-
-## Deprecated-1.2.12
-
-This app uses the Deprecated module, which is licensed under the MIT License, Copyright (c) 2017
-Laurent LAPORTE.
-
-## cachetools-4.2.2
-
-This app uses the cachetools module, which is licensed under the MIT License, Copyright (c)
-2014-2021 Thomas Kemmer.
-
-Misp will return integers which correspond to various values. Here is the complete list:
-
-For **distribution** :
-
-- 0: Your Org Only
-- 1: This Community Only
-- 2: Connected Communities
-- 3: All Communities
-- 4: Sharing Group
-- 5: Inherit
-
-For **threat level id** :
-
-- 1: High
-- 2: Medium
-- 3: Low
-- 4: Undefined
-
-For **analysis** :
-
-- 0: Initial
-- 1: Ongoing
-- 2: Completed
-
-**Note:**
-
-- There is no validation provided in case of an incorrect value in the 'json' action parameter of
-  the **'create event'** and **'update event'** actions. Hence, the action will pass even if an
-  incorrect attribute value is passed in the 'json' action parameter and no attributes will be
-  added.
-
-- The value of the attribute passed in the 'json' action parameter of **'create event'** and
-  **'update event'** will be treated as a list if a list is specified. If a string is specified
-  then a list will be created by splitting the string by comma (,). For example:
-
-  - json: {"email_body": ["body 1", "body 2"], "ip-dst": "8.8.8.8, 12.4.6.34"}
-
-  The value of the 'email_body' will be considered a list and the value of the 'ip-dst' will be
-  converted to a list having two elements(["8.8.8.8", "12.4.6.34"]).
-
-- In the **'run query'** action, tags containing a comma (,) in its value can be passed through
-  the 'other' action parameter. For example:
-
-  - other: {"tags": ["tag1, tag11", "tag_2"]}
-
-  "tag1, tag11" will be considered a single tag.
-
 ## Port Information
 
-The app uses HTTP/HTTPS protocol for communicating with the Misp Server. Below are the default ports
-used by Splunk SOAR.
+The app communicates with the MISP server over HTTP or HTTPS. The default ports are:
 
-| Service Name | Transport Protocol | Port |
-|--------------|--------------------|------|
-| http | tcp | 80 |
-| https | tcp | 443 |
+| Service | Transport | Port |
+|---------|-----------|------|
+| HTTP | TCP | 80 |
+| HTTPS | TCP | 443 |
+
+## Additional Usage Notes
+
+### MISP Enumerated Values
+
+MISP uses the following integer values for event fields:
+
+| Field | Value | Meaning |
+|-------|-------|---------|
+| Distribution | 0 | Your organization only |
+| Distribution | 1 | This community only |
+| Distribution | 2 | Connected communities |
+| Distribution | 3 | All communities |
+| Distribution | 4 | Sharing group |
+| Distribution | 5 | Inherit |
+| Threat level | 1 | High |
+| Threat level | 2 | Medium |
+| Threat level | 3 | Low |
+| Threat level | 4 | Undefined |
+| Analysis | 0 | Initial |
+| Analysis | 1 | Ongoing |
+| Analysis | 2 | Completed |
+
+### Attribute Input
+
+For **create event** and **update event**, the `json` parameter accepts either a mapping of MISP
+attribute types to values or a list of attribute objects containing `type` and `value`. Values may
+be strings or lists. A comma-separated string is split into multiple values; pass a JSON list when
+a value itself contains a comma. MISP API errors, including an explicit `saved: false` response,
+fail the action. If some attributes were added before a later failure, the action returns those
+successful rows with the failure.
+
+In **create event**, the event may already have been created when adding its attributes or tags
+fails. In that case, the action fails while retaining the created event in its output.
+
+In **run query**, use a list in the `other` JSON object to keep a comma-containing tag as one value:
+
+```json
+{"tags": ["tag1, tag11", "tag_2"]}
+```
+
+### Endpoint Query Parameters
+
+For custom MISP API requests, query parameters already present in the endpoint URL are combined
+with the `query_params` JSON object. Repeated keys and values from both sources are retained.
+
+### Malware Sample Downloads
+
+When **get attributes** is run with `download_samples` enabled, malware-sample attributes are
+decrypted and the sample files are added to the SOAR Vault.
