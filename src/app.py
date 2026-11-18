@@ -37,7 +37,7 @@ class Asset(BaseAsset):
     )
 
 app = App(
-    name="misp",
+    name="MISP",
     app_type="threat intel",
     logo="logo_misp.svg",
     logo_dark="logo_misp_dark.svg",
