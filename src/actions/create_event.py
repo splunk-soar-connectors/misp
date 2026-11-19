@@ -22,6 +22,7 @@ from soar_sdk.params import Param, Params
 from ..app import Asset, app
 from ..helper import add_iocs, add_tags, output, request
 
+
 class CreateEventParams(Params):
     distribution: str = Param(
         description="Distribution level for sharing",
@@ -56,33 +57,42 @@ class CreateEventParams(Params):
     source_ips: str | None = Param(
         description="Source IPs to be added as attributes",
         primary=True,
-        cef_types=["ip"],
+        cef_types=["ip", "ipv6"],
+        allow_list=True,
     )
     dest_ips: str | None = Param(
         description="Destination IPs to be added as attributes",
         primary=True,
-        cef_types=["ip"],
+        cef_types=["ip", "ipv6"],
+        allow_list=True,
     )
     domains: str | None = Param(
         description="Domains to be added as attributes",
         primary=True,
         cef_types=["domain"],
+        allow_list=True,
     )
     source_emails: str | None = Param(
         description="Source email addresses to be added as attributes",
         primary=True,
         cef_types=["email"],
+        allow_list=True,
     )
     dest_emails: str | None = Param(
         description="Destination email addresses to be added as attributes",
         primary=True,
         cef_types=["email"],
+        allow_list=True,
     )
     urls: str | None = Param(
-        description="URLs to be added as attributes", primary=True, cef_types=["url"]
+        description="URLs to be added as attributes",
+        primary=True,
+        cef_types=["url"],
+        allow_list=True,
     )
     tags: str | None = Param(description="Comma separated list of tags")
     json: str | None = Param(description="JSON key value list of attributes")
+
 
 class OrgOutput(ActionOutput):
     id: str = OutputField(example_values=["1"])
@@ -90,39 +100,44 @@ class OrgOutput(ActionOutput):
     name: str = OutputField(example_values=["ORGNAME"])
     uuid: str = OutputField(example_values=["2af87aa3-a713-4ca5-83f7-03ae949c8459"])
 
+
 class OrgcOutput(ActionOutput):
     id: str = OutputField(example_values=["1"])
     local: bool
     name: str = OutputField(example_values=["ORGNAME"])
     uuid: str = OutputField(example_values=["2af87aa3-a713-4ca5-83f7-03ae949c8459"])
 
+
 class CreateEventOutput(PermissiveActionOutput):
     """A create action emits both an event row and attribute rows."""
 
+    created_event_id: str | None = OutputField(
+        column_name="MISP Event ID", cef_types=["misp event id"]
+    )
+    id: str = OutputField(column_name="MISP Attribute ID")
+    info: str = OutputField(column_name="Event Info / Description")
+    threat_level_id: str = OutputField(column_name="Threat Level ID")
+    distribution: str = OutputField(column_name="Distribution")
+    attribute_count: str = OutputField(column_name="Attribute Count")
     Org: OrgOutput
     Orgc: OrgcOutput
     analysis: str = OutputField(example_values=["0"])
-    attribute_count: str
     category: str = OutputField(example_values=["Network activity"])
     comment: str
     date: str = OutputField(example_values=["2021-06-09"])
     deleted: bool
     disable_correlation: bool
-    distribution: str
     event_creator_email: str = OutputField(example_values=["test@test.com"])
     event_id: str = OutputField(cef_types=["misp event id"], example_values=["2052"])
     extends_uuid: str
-    id: str
-    info: str
     locked: bool
     object_id: str = OutputField(example_values=["0"])
     org_id: str = OutputField(example_values=["1"])
     orgc_id: str = OutputField(example_values=["1"])
     proposal_email_lock: bool
-    publish_timestamp: float = OutputField(example_values=[0])
+    publish_timestamp: str = OutputField(example_values=["0"])
     published: bool
     sharing_group_id: str = OutputField(example_values=["0"])
-    threat_level_id: str
     timestamp: str = OutputField(example_values=["1623206691"])
     to_ids: bool
     type: str = OutputField(example_values=["url"])
@@ -163,8 +178,12 @@ def create_event(
         "/events/add",
         payload={
             "Event": {
-                "distribution": distributions.get(params.distribution.lower(), params.distribution),
-                "threat_level_id": threat_levels.get(params.threat_level_id.lower(), params.threat_level_id),
+                "distribution": distributions.get(
+                    params.distribution.lower(), params.distribution
+                ),
+                "threat_level_id": threat_levels.get(
+                    params.threat_level_id.lower(), params.threat_level_id
+                ),
                 "analysis": analyses.get(params.analysis.lower(), params.analysis),
                 "info": params.info,
             }
@@ -176,17 +195,27 @@ def create_event(
     if not event_id:
         raise RuntimeError("MISP created the event but returned no event ID")
     event = dict(event)
+    # The legacy table selects data.0.id for the event and data.*.id for attributes.
+    # Keep id unchanged and expose the first row's event ID as an SDK-native column.
+    event_output = {**event, "created_event_id": str(event_id)}
     try:
-        add_tags(asset, event_id, params.tags)
+        add_tags(asset, event.get("uuid") or event_id, params.tags)
     except Exception as exc:
         return _partial_create_failure(
-            params, event, event_id, f"Failed to add tags to MISP event: {exc}"
+            params, event_output, event_id, f"Failed to add tags to MISP event: {exc}"
         )
     try:
-        attributes = add_iocs(asset, event_id, params) if params.add_attributes else []
+        attributes = (
+            add_iocs(asset, event_id, params, event=event)
+            if params.add_attributes
+            else []
+        )
     except Exception as exc:
         return _partial_create_failure(
-            params, event, event_id, f"Failed to add attributes to MISP event: {exc}"
+            params,
+            event_output,
+            event_id,
+            f"Failed to add attributes to MISP event: {exc}",
         )
 
     soar.set_summary(
@@ -196,7 +225,7 @@ def create_event(
         )
     )
     soar.set_message(f"Event created with id: {event_id}")
-    return [output(CreateEventOutput, event)] + [
+    return [output(CreateEventOutput, event_output)] + [
         output(CreateEventOutput, attribute) for attribute in attributes
     ]
 
@@ -209,6 +238,8 @@ def _partial_create_failure(params, event, event_id, message):
     )
     failed_result.add_data(event)
     failed_result.set_summary(
-        CreateEventSummary(created_event_id=int(event_id), attributes_added=0).model_dump()
+        CreateEventSummary(
+            created_event_id=int(event_id), attributes_added=0
+        ).model_dump()
     )
     return failed_result

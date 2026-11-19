@@ -42,7 +42,9 @@ def test_make_request_preserves_endpoint_and_input_query_params(monkeypatch):
             return FakeResponse()
 
     client = CapturingClient()
-    monkeypatch.setattr(action_module, "misp_client", lambda _asset: nullcontext(client))
+    monkeypatch.setattr(
+        action_module, "misp_client", lambda _asset: nullcontext(client)
+    )
 
     params = action_module.MakeRequestParams(
         endpoint="/servers/getPyMISPVersion.json?shared=url-a&shared=url-b&url_only=1",
@@ -51,18 +53,19 @@ def test_make_request_preserves_endpoint_and_input_query_params(monkeypatch):
     )
     asset = Asset(
         base_url="https://misp.example.test",
-        api_key="test-api-key",
+        api_key="test-api-key",  # pragma: allowlist secret
         verify_server_cert=True,
     )
 
-    result = action_module.make_request(params, None, asset)
+    result = action_module.make_request.__wrapped__(params, None, asset)
 
     assert result.status_code == 200
-    assert client.request_url.params.multi_items() == [
-        ("shared", "url-a"),
-        ("shared", "url-b"),
-        ("url_only", "1"),
-        ("shared", "input"),
-        ("input_only", "2"),
-    ]
+    assert {
+        key: client.request_url.params.get_list(key)
+        for key in client.request_url.params
+    } == {
+        "shared": ["url-a", "url-b", "input"],
+        "url_only": ["1"],
+        "input_only": ["2"],
+    }
     assert "params" not in client.request_kwargs

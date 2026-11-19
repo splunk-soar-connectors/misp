@@ -19,15 +19,17 @@ from .helper import request
 
 logger = getLogger()
 
+
 class Asset(BaseAsset):
     base_url: str = AssetField(
         required=True,
         category=FieldCategory.CONNECTIVITY,
-        description="MISP instance URL (http://misp_instance.company.com/)"
+        description="MISP instance URL (http://misp_instance.company.com/)",
     )
     verify_server_cert: bool | None = AssetField(
         category=FieldCategory.CONNECTIVITY,
-        description="Verify server certificate", default=True
+        description="Verify server certificate",
+        default=True,
     )
     api_key: str = AssetField(
         required=True,
@@ -35,6 +37,7 @@ class Asset(BaseAsset):
         sensitive=True,
         description="API Key found under Event Actions: Automation",
     )
+
 
 app = App(
     name="MISP",
@@ -51,13 +54,21 @@ app = App(
     asset_cls=Asset,
 )
 
+
 @app.test_connectivity()
 def test_connectivity(soar: SOARClient, asset: Asset) -> None:
     request(asset, "GET", "/servers/getPyMISPVersion.json")
     soar.set_message("Test connectivity passed")
 
+
 # Importing action modules registers their handlers with the SDK app.
-from .actions import add_attributes, create_event, get_attributes, make_request, run_query  # noqa: F401
+from .actions import (
+    add_attributes,
+    create_event,
+    get_attributes,
+    make_request,
+    run_query,
+)
 
 if __name__ == "__main__":
     app.cli()

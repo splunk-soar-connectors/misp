@@ -18,8 +18,11 @@ from __future__ import annotations
 import ipaddress
 import json
 
+from soar_sdk.action_results import PermissiveActionOutput
+from soar_sdk.exceptions import ActionFailure
 
-class PartialIOCError(RuntimeError):
+
+class PartialIOCError(ActionFailure):
     """An IOC write failed after zero or more earlier writes succeeded."""
 
     def __init__(self, message: str, completed_rows: list[dict]):
@@ -29,8 +32,8 @@ class PartialIOCError(RuntimeError):
 
 def misp_client(asset):
     """Build an HTTP client using the SDK's static-token auth handler."""
-    import httpx  # noqa: PLC0415
-    from soar_sdk.auth import StaticTokenAuth  # noqa: PLC0415
+    import httpx
+    from soar_sdk.auth import StaticTokenAuth
 
     return httpx.Client(
         auth=StaticTokenAuth(asset.api_key, token_type=""),
@@ -39,7 +42,15 @@ def misp_client(asset):
     )
 
 
-def request(asset, method: str, endpoint: str, *, payload=None, params=None):
+def request(
+    asset,
+    method: str,
+    endpoint: str,
+    *,
+    payload=None,
+    params=None,
+    timeout: float | None = 60,
+):
     """Call the MISP REST API and return decoded JSON."""
     base_url = asset.base_url.rstrip("/")
     with misp_client(asset) as client:
@@ -49,11 +60,14 @@ def request(asset, method: str, endpoint: str, *, payload=None, params=None):
             headers={"Accept": "application/json"},
             json=payload,
             params=params,
+            timeout=timeout,
         )
     try:
         body = response.json()
     except ValueError as exc:
-        raise RuntimeError(f"MISP returned HTTP {response.status_code}: {response.text[:1000]}") from exc
+        raise RuntimeError(
+            f"MISP returned HTTP {response.status_code}: {response.text[:1000]}"
+        ) from exc
     # Match requests.Response.ok semantics used by the legacy connector while
     # avoiding that requests-only property on an httpx.Response.
     if response.status_code >= 400:
@@ -66,22 +80,14 @@ def request(asset, method: str, endpoint: str, *, payload=None, params=None):
     )
     if errors:
         raise RuntimeError(f"MISP error: {errors}")
-    saved_false = (
-        isinstance(body, dict)
-        and body.get("saved") is False
-        or isinstance(response_body, dict)
-        and response_body.get("saved") is False
+    saved_false = (isinstance(body, dict) and body.get("saved") is False) or (
+        isinstance(response_body, dict) and response_body.get("saved") is False
     )
     if saved_false:
         message = (
-            response_body.get("message")
-            if isinstance(response_body, dict)
-            else None
+            response_body.get("message") if isinstance(response_body, dict) else None
         )
-        raise RuntimeError(
-            "MISP did not save the requested change: "
-            f"{message or body}"
-        )
+        raise RuntimeError(f"MISP did not save the requested change: {message or body}")
     return body
 
 
@@ -91,6 +97,9 @@ def output(model, payload):
         payload = payload["response"]
     if not isinstance(payload, dict):
         payload = {"result": payload}
+    if issubclass(model, PermissiveActionOutput):
+        # The constructor initializes the raw payload used by SDK serialization.
+        return model(**payload)
     return model.model_construct(**payload)
 
 
@@ -102,20 +111,29 @@ def split_values(value):
     return [item.strip() for item in value.split(separator) if item.strip()]
 
 
-def positive_int(value, field_name):
-    """Parse a legacy-compatible positive integer parameter without truncation."""
+def integer_value(value, field_name):
+    """Parse the original value without float rounding or fractional truncation."""
     try:
-        numeric = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{field_name} must be a positive integer") from exc
-    if not numeric.is_integer() or numeric <= 0:
+        if not isinstance(value, int | float | str):
+            raise ValueError("Unsupported integer value")
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError("Fractional or non-finite value")
+        return int(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{field_name} must be an integer") from exc
+
+
+def positive_int(value, field_name):
+    """Parse a positive integer without converting through float."""
+    numeric = integer_value(value, field_name)
+    if numeric <= 0:
         raise ValueError(f"{field_name} must be a positive integer")
-    return int(numeric)
+    return numeric
 
 
-def add_iocs(asset, event_id, params):
-    """Add the supplied IOC parameters to an event."""
-    from soar_sdk.shims.phantom import utils as phantom_utils  # noqa: PLC0415
+def add_iocs(asset, event_id, params, *, event):
+    """Append attributes and submit the complete event as in the legacy connector."""
+    from soar_sdk.shims.phantom import utils as phantom_utils
 
     mapping = (
         ("source_ips", "ip-src", "ip"),
@@ -127,52 +145,35 @@ def add_iocs(asset, event_id, params):
     )
     to_ids = bool(getattr(params, "to_ids", False))
     completed_rows = []
+    current_event = None
 
     def submit_row(row):
+        from pymisp import MISPEvent
+
+        nonlocal current_event
         try:
+            if current_event is None:
+                current_event = MISPEvent()
+                current_event.load(event)
+            current_event.add_attribute(**row)
             response = request(
                 asset,
                 "POST",
-                f"/attributes/add/{event_id}",
-                payload=row,
+                f"/events/edit/{current_event.uuid}",
+                payload=json.loads(current_event.to_json()),
             )
+            updated_event = MISPEvent()
+            updated_event.load(response)
+            if str(updated_event.id) != str(event_id):
+                raise ValueError(
+                    "MISP returned an unexpected event ID after updating attributes"
+                )
+            current_event = updated_event
+            # Event edits return the complete saved event. Retain exactly those
+            # attributes; do not infer that a submitted duplicate was changed.
+            completed_rows[:] = json.loads(current_event.to_json()).get("Attribute", [])
         except Exception as exc:
             raise PartialIOCError(str(exc), completed_rows.copy()) from exc
-
-        response_data = response.get("response", response) if isinstance(response, dict) else None
-        returned_attribute = (
-            response_data.get("Attribute", response_data)
-            if isinstance(response_data, dict)
-            else None
-        )
-        if isinstance(row, dict) and isinstance(returned_attribute, dict):
-            attribute_fields = {
-                "category",
-                "comment",
-                "deleted",
-                "disable_correlation",
-                "distribution",
-                "event_id",
-                "first_seen",
-                "id",
-                "last_seen",
-                "object_id",
-                "object_relation",
-                "sharing_group_id",
-                "timestamp",
-                "to_ids",
-                "type",
-                "uuid",
-                "value",
-            }
-            row.update(
-                {
-                    key: value
-                    for key, value in returned_attribute.items()
-                    if key in attribute_fields
-                }
-            )
-        completed_rows.append(row)
 
     def submit(attribute_type, value):
         submit_row({"type": attribute_type, "value": value, "to_ids": to_ids})
@@ -223,6 +224,11 @@ def _valid_ip(value):
     return True
 
 
-def add_tags(asset, event_id, value):
+def add_tags(asset, event_identifier, value):
     for tag in split_values(value):
-        request(asset, "POST", f"/events/addTag/{event_id}", payload={"tag": tag})
+        request(
+            asset,
+            "POST",
+            "/tags/attachTagToObject",
+            payload={"uuid": str(event_identifier), "tag": tag, "local": False},
+        )

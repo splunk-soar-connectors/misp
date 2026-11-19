@@ -58,8 +58,8 @@ def make_request(
     params: MakeRequestParams, soar: SOARClient, asset: Asset
 ) -> MakeRequestOutput:
     """Make an authenticated request to a relative MISP API endpoint."""
-    import httpx  # noqa: PLC0415
-    from urllib.parse import urlsplit  # noqa: PLC0415
+    import httpx
+    from urllib.parse import urlsplit
 
     endpoint = params.endpoint.strip()
     parsed_endpoint = urlsplit(endpoint)

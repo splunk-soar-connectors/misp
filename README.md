@@ -1,4 +1,4 @@
-# misp
+# MISP
 
 Publisher: Splunk <br>
 Connector Version: 3.0.0 <br>
@@ -69,7 +69,7 @@ decrypted and the sample files are added to the SOAR Vault.
 
 ### Configuration variables
 
-This table lists the configuration variables required to operate misp. These variables are specified when configuring a MISP asset in Splunk SOAR.
+This table lists the configuration variables required to operate MISP. These variables are specified when configuring a MISP asset in Splunk SOAR.
 
 VARIABLE | REQUIRED | TYPE | DESCRIPTION
 -------- | -------- | ---- | -----------
@@ -123,8 +123,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
 **event_id** | required | MISP event ID for adding attributes | numeric | `misp event id` |
 **to_ids** | optional | Set 'to_IDS' flag=True in MISP | boolean | |
-**source_ips** | optional | Source IPs to be added as attributes | string | `ip` |
-**dest_ips** | optional | Destination IPs to be added as attributes | string | `ip` |
+**source_ips** | optional | Source IPs to be added as attributes | string | `ip` `ipv6` |
+**dest_ips** | optional | Destination IPs to be added as attributes | string | `ip` `ipv6` |
 **domains** | optional | Domains to be added as attributes | string | `domain` |
 **source_emails** | optional | Source email addresses to be added as attributes | string | `email` |
 **dest_emails** | optional | Destination email addresses to be added as attributes | string | `email` |
@@ -141,8 +141,8 @@ action_result.status | string | | success failure |
 action_result.message | string | | |
 action_result.parameter.event_id | numeric | `misp event id` | |
 action_result.parameter.to_ids | boolean | | |
-action_result.parameter.source_ips | string | `ip` | |
-action_result.parameter.dest_ips | string | `ip` | |
+action_result.parameter.source_ips | string | `ip` `ipv6` | |
+action_result.parameter.dest_ips | string | `ip` `ipv6` | |
 action_result.parameter.domains | string | `domain` | |
 action_result.parameter.source_emails | string | `email` | |
 action_result.parameter.dest_emails | string | `email` | |
@@ -150,20 +150,20 @@ action_result.parameter.urls | string | `url` | |
 action_result.parameter.tags | string | | |
 action_result.parameter.replace_tags | boolean | | |
 action_result.parameter.json | string | | |
+action_result.data.\*.id | string | `misp attribute id` | 5360 |
+action_result.data.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | email1@email.com |
+action_result.data.\*.event_id | string | `misp event id` | 2121 |
 action_result.data.\*.category | string | | Other |
+action_result.data.\*.distribution | string | | 5 |
 action_result.data.\*.comment | string | | |
 action_result.data.\*.deleted | boolean | | True False |
 action_result.data.\*.disable_correlation | boolean | | True False |
-action_result.data.\*.distribution | string | | 5 |
-action_result.data.\*.event_id | string | `misp event id` | 2121 |
-action_result.data.\*.id | string | `misp attribute id` | 5360 |
 action_result.data.\*.object_id | string | | 0 |
 action_result.data.\*.sharing_group_id | string | | 0 |
 action_result.data.\*.timestamp | string | | 1623038555 |
 action_result.data.\*.to_ids | boolean | | True False |
 action_result.data.\*.type | string | | port |
 action_result.data.\*.uuid | string | | 68e219ee-5727-4cb2-a32f-8dc27aa4231f |
-action_result.data.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | email1@email.com |
 action_result.summary.updated_event_id | numeric | | |
 action_result.summary.attributes_added | numeric | | |
 summary.total_objects | numeric | | 1 |
@@ -188,8 +188,8 @@ PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 **info** | required | Information / Description for Event | string | |
 **add_attributes** | optional | Add attributes upon event creation | boolean | |
 **to_ids** | optional | Set 'to_IDS' flag=True in MISP | boolean | |
-**source_ips** | optional | Source IPs to be added as attributes | string | `ip` |
-**dest_ips** | optional | Destination IPs to be added as attributes | string | `ip` |
+**source_ips** | optional | Source IPs to be added as attributes | string | `ip` `ipv6` |
+**dest_ips** | optional | Destination IPs to be added as attributes | string | `ip` `ipv6` |
 **domains** | optional | Domains to be added as attributes | string | `domain` |
 **source_emails** | optional | Source email addresses to be added as attributes | string | `email` |
 **dest_emails** | optional | Destination email addresses to be added as attributes | string | `email` |
@@ -209,14 +209,20 @@ action_result.parameter.analysis | string | | |
 action_result.parameter.info | string | | |
 action_result.parameter.add_attributes | boolean | | |
 action_result.parameter.to_ids | boolean | | |
-action_result.parameter.source_ips | string | `ip` | |
-action_result.parameter.dest_ips | string | `ip` | |
+action_result.parameter.source_ips | string | `ip` `ipv6` | |
+action_result.parameter.dest_ips | string | `ip` `ipv6` | |
 action_result.parameter.domains | string | `domain` | |
 action_result.parameter.source_emails | string | `email` | |
 action_result.parameter.dest_emails | string | `email` | |
 action_result.parameter.urls | string | `url` | |
 action_result.parameter.tags | string | | |
 action_result.parameter.json | string | | |
+action_result.data.\*.created_event_id | string | `misp event id` | |
+action_result.data.\*.id | string | | |
+action_result.data.\*.info | string | | |
+action_result.data.\*.threat_level_id | string | | |
+action_result.data.\*.distribution | string | | |
+action_result.data.\*.attribute_count | string | | |
 action_result.data.\*.Org.id | string | | 1 |
 action_result.data.\*.Org.local | boolean | | True False |
 action_result.data.\*.Org.name | string | | ORGNAME |
@@ -226,27 +232,22 @@ action_result.data.\*.Orgc.local | boolean | | True False |
 action_result.data.\*.Orgc.name | string | | ORGNAME |
 action_result.data.\*.Orgc.uuid | string | | 2af87aa3-a713-4ca5-83f7-03ae949c8459 |
 action_result.data.\*.analysis | string | | 0 |
-action_result.data.\*.attribute_count | string | | |
 action_result.data.\*.category | string | | Network activity |
 action_result.data.\*.comment | string | | |
 action_result.data.\*.date | string | | 2021-06-09 |
 action_result.data.\*.deleted | boolean | | True False |
 action_result.data.\*.disable_correlation | boolean | | True False |
-action_result.data.\*.distribution | string | | |
 action_result.data.\*.event_creator_email | string | | test@test.com |
 action_result.data.\*.event_id | string | `misp event id` | 2052 |
 action_result.data.\*.extends_uuid | string | | |
-action_result.data.\*.id | string | | |
-action_result.data.\*.info | string | | |
 action_result.data.\*.locked | boolean | | True False |
 action_result.data.\*.object_id | string | | 0 |
 action_result.data.\*.org_id | string | | 1 |
 action_result.data.\*.orgc_id | string | | 1 |
 action_result.data.\*.proposal_email_lock | boolean | | True False |
-action_result.data.\*.publish_timestamp | numeric | | 0 |
+action_result.data.\*.publish_timestamp | string | | 0 |
 action_result.data.\*.published | boolean | | True False |
 action_result.data.\*.sharing_group_id | string | | 0 |
-action_result.data.\*.threat_level_id | string | | |
 action_result.data.\*.timestamp | string | | 1623206691 |
 action_result.data.\*.to_ids | boolean | | True False |
 action_result.data.\*.type | string | | url |
@@ -291,6 +292,8 @@ action_result.data.\*.Attribute.\*.Object.distribution | string | | 5 |
 action_result.data.\*.Attribute.\*.Object.id | string | | 10 |
 action_result.data.\*.Attribute.\*.Object.sharing_group_id | string | | 0 |
 action_result.data.\*.Attribute.\*.category | string | | Network activity |
+action_result.data.\*.Attribute.\*.type | string | | ip-src |
+action_result.data.\*.Attribute.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | 192.162.8.1 |
 action_result.data.\*.Attribute.\*.comment | string | | |
 action_result.data.\*.Attribute.\*.deleted | boolean | | True False |
 action_result.data.\*.Attribute.\*.disable_correlation | boolean | | True False |
@@ -304,9 +307,7 @@ action_result.data.\*.Attribute.\*.object_relation | string | | filename |
 action_result.data.\*.Attribute.\*.sharing_group_id | string | | 0 |
 action_result.data.\*.Attribute.\*.timestamp | string | | 1498002097 |
 action_result.data.\*.Attribute.\*.to_ids | boolean | | True False |
-action_result.data.\*.Attribute.\*.type | string | | ip-src |
 action_result.data.\*.Attribute.\*.uuid | string | | 5949b2b1-35b4-4152-a633-7e530a10000d |
-action_result.data.\*.Attribute.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | 192.162.8.1 |
 action_result.summary.returned_attributes | numeric | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
@@ -389,8 +390,8 @@ action_result.data.\*.Attribute.\*.Object.id | string | | 10 |
 action_result.data.\*.Attribute.\*.Object.sharing_group_id | string | | 0 |
 action_result.data.\*.Attribute.\*.category | string | | Other Payload delivery |
 action_result.data.\*.Attribute.\*.comment | string | | |
-action_result.data.\*.Attribute.\*.deleted | numeric | | |
-action_result.data.\*.Attribute.\*.disable_correlation | numeric | | False True |
+action_result.data.\*.Attribute.\*.deleted | boolean | | True False |
+action_result.data.\*.Attribute.\*.disable_correlation | boolean | | True False |
 action_result.data.\*.Attribute.\*.distribution | string | | 5 |
 action_result.data.\*.Attribute.\*.event_id | string | `misp event id` | 1 |
 action_result.data.\*.Attribute.\*.first_seen | string | | |

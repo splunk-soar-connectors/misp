@@ -12,19 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
+from collections import deque
 
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
-from ..helper import output, positive_int, request
+from ..helper import integer_value, output, positive_int, request
+
+
+def _query_limit(value):
+    limit = integer_value(10 if value is None or value == "" else value, "max_results")
+    if limit == 0:
+        raise ValueError("max_results must be a non-zero integer")
+    return limit
+
 
 class RunQueryParams(Params):
     controller: str = Param(
         description="Search for events or attributes",
         value_list=["events", "attributes"],
     )
-    max_results: float | None = Param(description="Max results to return", default=10)
+    max_results: int | None = Param(description="Max results to return", default=10)
     event_id: str | None = Param(
         description="Comma seperated list of Event IDs",
         primary=True,
@@ -32,6 +41,7 @@ class RunQueryParams(Params):
     )
     tags: str | None = Param(description="Comma seperated list of tags")
     other: str | None = Param(description="Other search parameters, as a JSON object")
+
 
 class EventOutput(ActionOutput):
     distribution: str = OutputField(example_values=["1"])
@@ -41,18 +51,20 @@ class EventOutput(ActionOutput):
     orgc_id: str = OutputField(example_values=["1"])
     uuid: str = OutputField(example_values=["342c12ab-32ad-41d0-aea2-1c3dccc6ce09"])
 
+
 class ObjectOutput(ActionOutput):
     distribution: str = OutputField(example_values=["5"])
     id: str = OutputField(example_values=["10"])
     sharing_group_id: str = OutputField(example_values=["0"])
+
 
 class AttributeOutput(ActionOutput):
     Event: EventOutput
     Object: ObjectOutput
     category: str = OutputField(example_values=["Other", "Payload delivery"])
     comment: str
-    deleted: float
-    disable_correlation: float = OutputField(example_values=[False, True])
+    deleted: bool
+    disable_correlation: bool = OutputField(example_values=[False, True])
     distribution: str = OutputField(example_values=["5"])
     event_id: str = OutputField(cef_types=["misp event id"], example_values=["1"])
     first_seen: str
@@ -97,16 +109,14 @@ class RunQuerySummary(ActionOutput):
 @app.action(
     description="Run a query to find events or attributes",
     action_type="investigate",
-    render_as="table",
+    render_as="json",
     summary_type=RunQuerySummary,
     verbose='The default max results is 10, and this returns the oldest 10 results. Zero is rejected. A negative value, <i>n</i>, returns the last <i>n</i> results within the bounded query window.<br><br>The other field expects a JSON string containing key-value pairs supported by the search API. To continue a time-based query, pass the first returned object\'s timestamp plus one in the <b>other</b> field, for example {\\"timestamp\\": &lt;timestamp + 1&gt;}. Also note that when searching for events, events with no attributes will not be returned.',
 )
 def run_query(
     params: RunQueryParams, soar: SOARClient, asset: Asset
 ) -> list[RunQueryOutput]:
-    if not float(params.max_results).is_integer() or int(params.max_results) == 0:
-        raise ValueError("max_results must be a non-zero integer")
-    max_results = int(params.max_results)
+    max_results = _query_limit(params.max_results)
     filters = {}
     if params.event_id:
         ids = [item.strip() for item in params.event_id.split(",") if item.strip()]
@@ -114,7 +124,9 @@ def run_query(
         if ids:
             filters["eventid"] = ids if len(ids) > 1 else ids[0]
     if params.tags:
-        filters["tags"] = [item.strip() for item in params.tags.split(",") if item.strip()]
+        filters["tags"] = [
+            item.strip() for item in params.tags.split(",") if item.strip()
+        ]
     if params.other:
         other = json.loads(params.other)
         if not isinstance(other, dict):
@@ -127,17 +139,20 @@ def run_query(
     controller = params.controller.lower()
     if controller not in {"events", "attributes"}:
         raise ValueError("controller must be events or attributes")
-    rows = []
+    rows = deque(maxlen=abs(max_results)) if max_results < 0 else []
     for page in range(1, 101):
         result = request(
             asset,
             "POST",
             f"/{controller}/restSearch",
             payload={**filters, "page": page},
+            timeout=None if max_results < 0 else 60,
         )
         batch = result.get("response", result) if isinstance(result, dict) else result
         if isinstance(batch, dict):
-            batch = batch.get("Attribute" if controller == "attributes" else "Event", [])
+            batch = batch.get(
+                "Attribute" if controller == "attributes" else "Event", []
+            )
         if isinstance(batch, dict):
             batch = [batch]
         if not isinstance(batch, list):
@@ -153,7 +168,7 @@ def run_query(
     else:
         raise RuntimeError("MISP query exceeded the maximum of 100 pages")
     if max_results < 0:
-        rows = rows[-abs(max_results):]
+        rows = list(rows)
     result_key = "Event" if controller == "events" else "Attribute"
     soar.set_summary(RunQuerySummary(returned_rows=len(rows)))
     soar.set_message("Successfully ran query")

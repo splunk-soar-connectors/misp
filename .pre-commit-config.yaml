@@ -70,10 +70,6 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
-      - id: notice-file
-        language: python
-        additional_dependencies: ["local-hooks"]
-        args: ['.']
       - id: release-notes
         language: python
         additional_dependencies: ["local-hooks"]
@@ -85,3 +81,11 @@ repos:
         language: python
         additional_dependencies: ["local-hooks"]
         args: ['.']
+  - repo: local
+    hooks:
+      - id: notice-file
+        name: Generate SDK NOTICE
+        entry: uv run --no-sync soarapps manifests create-notice .
+        language: system
+        pass_filenames: false
+        always_run: true

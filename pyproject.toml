@@ -87,6 +87,8 @@ ignore = [
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
+# Importing action modules registers their decorators with the SDK app.
+"src/app.py" = ["F401"]
 "tests/**/*" = [
     "ANN",  # Disable flake8-annotations rules for test files
     "S",    # Disable flake8-bandit rules for test files

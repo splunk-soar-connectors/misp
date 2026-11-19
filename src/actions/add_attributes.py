@@ -13,12 +13,14 @@
 # limitations under the License.
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, ActionResult, OutputField
+from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
 from ..helper import PartialIOCError, add_iocs, add_tags, output, positive_int, request
 
+
 class UpdateEventParams(Params):
-    event_id: float = Param(
+    event_id: int = Param(
         description="MISP event ID for adding attributes",
         primary=True,
         cef_types=["misp event id"],
@@ -29,30 +31,38 @@ class UpdateEventParams(Params):
     source_ips: str | None = Param(
         description="Source IPs to be added as attributes",
         primary=True,
-        cef_types=["ip"],
+        cef_types=["ip", "ipv6"],
+        allow_list=True,
     )
     dest_ips: str | None = Param(
         description="Destination IPs to be added as attributes",
         primary=True,
-        cef_types=["ip"],
+        cef_types=["ip", "ipv6"],
+        allow_list=True,
     )
     domains: str | None = Param(
         description="Domains to be added as attributes",
         primary=True,
         cef_types=["domain"],
+        allow_list=True,
     )
     source_emails: str | None = Param(
         description="Source email addresses to be added as attributes",
         primary=True,
         cef_types=["email"],
+        allow_list=True,
     )
     dest_emails: str | None = Param(
         description="Destination email addresses to be added as attributes",
         primary=True,
         cef_types=["email"],
+        allow_list=True,
     )
     urls: str | None = Param(
-        description="URLs to be added as attributes", primary=True, cef_types=["url"]
+        description="URLs to be added as attributes",
+        primary=True,
+        cef_types=["url"],
+        allow_list=True,
     )
     tags: str | None = Param(
         description="Comma separated list of tags (append to existing tags default)"
@@ -62,24 +72,36 @@ class UpdateEventParams(Params):
     )
     json: str | None = Param(description="JSON key value list of attributes")
 
+
 class UpdateEventOutput(ActionOutput):
-    category: str = OutputField(example_values=["Other"])
+    id: str = OutputField(
+        column_name="MISP Attribute ID",
+        cef_types=["misp attribute id"],
+        example_values=["5360"],
+    )
+    value: str = OutputField(
+        column_name="Attribute Value",
+        cef_types=["url", "domain", "ip", "email", "hash", "md5", "sha256", "md1"],
+        example_values=["email1@email.com"],
+    )
+    event_id: str = OutputField(
+        column_name="MISP Event ID",
+        cef_types=["misp event id"],
+        example_values=["2121"],
+    )
+    category: str = OutputField(
+        column_name="Attribute Category", example_values=["Other"]
+    )
+    distribution: str = OutputField(column_name="Distribution", example_values=["5"])
     comment: str
     deleted: bool
     disable_correlation: bool
-    distribution: str = OutputField(example_values=["5"])
-    event_id: str = OutputField(cef_types=["misp event id"], example_values=["2121"])
-    id: str = OutputField(cef_types=["misp attribute id"], example_values=["5360"])
     object_id: str = OutputField(example_values=["0"])
     sharing_group_id: str = OutputField(example_values=["0"])
     timestamp: str = OutputField(example_values=["1623038555"])
     to_ids: bool
     type: str = OutputField(example_values=["port"])
     uuid: str = OutputField(example_values=["68e219ee-5727-4cb2-a32f-8dc27aa4231f"])
-    value: str = OutputField(
-        cef_types=["url", "domain", "ip", "email", "hash", "md5", "sha256", "md1"],
-        example_values=["email1@email.com"],
-    )
 
 
 class UpdateEventSummary(ActionOutput):
@@ -101,44 +123,55 @@ def add_attributes(
 ) -> list[UpdateEventOutput]:
     event_id = positive_int(params.event_id, "event_id")
     event = request(asset, "GET", f"/events/view/{event_id}")
+    event_data = event.get("Event", event)
+    event_identifier = event_data.get("uuid") or event_id
+    existing_ids = {
+        str(attribute["id"])
+        for attribute in event_data.get("Attribute", [])
+        if attribute.get("id") is not None
+    }
     attributes = []
     try:
-        attributes = add_iocs(asset, event_id, params)
+        attributes = add_iocs(asset, event_id, params, event=event)
     except PartialIOCError as exc:
         attributes = exc.completed_rows
         error = exc
     else:
         error = None
 
+    attributes_added = sum(
+        attribute.get("id") is not None and str(attribute["id"]) not in existing_ids
+        for attribute in attributes
+    )
     if error is None and not attributes and not params.tags:
-        raise ValueError("Please provide at least one attribute")
+        raise ActionFailure("Please provide at least one attribute")
 
     if error is not None:
         if not attributes:
             raise error
-        return _partial_failure(params, event_id, attributes, error)
+        return _partial_failure(params, event_id, attributes, attributes_added, error)
 
     try:
         if params.tags and params.replace_tags:
-            current = event.get("Event", event).get("Tag", [])
+            current = event_data.get("Tag", [])
             for tag in current:
                 name = tag.get("name") if isinstance(tag, dict) else tag
                 if name:
                     request(
                         asset,
                         "POST",
-                        f"/events/removeTag/{event_id}",
-                        payload={"tag": name},
+                        "/tags/removeTagFromObject",
+                        payload={"uuid": str(event_identifier), "tag": name},
                     )
-        add_tags(asset, event_id, params.tags)
+        add_tags(asset, event_identifier, params.tags)
     except Exception as exc:
         if not attributes:
             raise
-        return _partial_failure(params, event_id, attributes, exc)
+        return _partial_failure(params, event_id, attributes, attributes_added, exc)
 
     summary = UpdateEventSummary(
         updated_event_id=event_id,
-        attributes_added=len(attributes),
+        attributes_added=attributes_added,
     )
     soar.set_summary(summary)
     if attributes:
@@ -150,10 +183,10 @@ def add_attributes(
     return [output(UpdateEventOutput, {"event_id": str(event_id)})]
 
 
-def _partial_failure(params, event_id, attributes, error):
+def _partial_failure(params, event_id, attributes, attributes_added, error):
     failed_result = ActionResult(
         status=False,
-        message=str(error),
+        message=error.message if isinstance(error, ActionFailure) else str(error),
         param=params.model_dump(),
     )
     for attribute in attributes:
@@ -161,7 +194,7 @@ def _partial_failure(params, event_id, attributes, error):
     failed_result.set_summary(
         UpdateEventSummary(
             updated_event_id=event_id,
-            attributes_added=len(attributes),
+            attributes_added=attributes_added,
         ).model_dump()
     )
     return failed_result

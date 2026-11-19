@@ -17,13 +17,15 @@ from soar_sdk.params import Param, Params
 from ..app import Asset, app
 from ..helper import output, positive_int, request
 
+
 class GetAttributesParams(Params):
-    event_id: float = Param(
+    event_id: int = Param(
         description="An Event ID", primary=True, cef_types=["misp event id"]
     )
     download_samples: bool | None = Param(
         description="Download malware samples to vault", default=False
     )
+
 
 class EventOutput(ActionOutput):
     distribution: str = OutputField(example_values=["1"])
@@ -38,16 +40,26 @@ class EventOutput(ActionOutput):
         ]
     )
 
+
 class ObjectOutput(ActionOutput):
     distribution: str = OutputField(example_values=["5"])
     id: str = OutputField(example_values=["10"])
     sharing_group_id: str = OutputField(example_values=["0"])
 
+
 class AttributeOutput(ActionOutput):
     Event: EventOutput
     Object: ObjectOutput
-    category: str = OutputField(example_values=["Network activity"])
-    comment: str
+    category: str = OutputField(
+        column_name="Category", example_values=["Network activity"]
+    )
+    type: str = OutputField(column_name="Type", example_values=["ip-src"])
+    value: str = OutputField(
+        column_name="Value",
+        cef_types=["url", "domain", "ip", "email", "hash", "md5", "sha256", "md1"],
+        example_values=["192.162.8.1"],
+    )
+    comment: str = OutputField(column_name="Comment")
     deleted: bool = OutputField(example_values=[False, True])
     disable_correlation: bool = OutputField(example_values=[False, True])
     distribution: str = OutputField(example_values=["5"])
@@ -60,12 +72,8 @@ class AttributeOutput(ActionOutput):
     sharing_group_id: str = OutputField(example_values=["0"])
     timestamp: str = OutputField(example_values=["1498002097"])
     to_ids: bool
-    type: str = OutputField(example_values=["ip-src"])
     uuid: str = OutputField(example_values=["5949b2b1-35b4-4152-a633-7e530a10000d"])
-    value: str = OutputField(
-        cef_types=["url", "domain", "ip", "email", "hash", "md5", "sha256", "md1"],
-        example_values=["192.162.8.1"],
-    )
+
 
 class GetAttributesOutput(ActionOutput):
     Attribute: list[AttributeOutput]
@@ -112,9 +120,9 @@ def get_event(
 
 
 def _download_malware_samples(soar, event):
-    import os  # noqa: PLC0415
+    from pathlib import Path
 
-    from pymisp import MISPAttribute  # noqa: PLC0415
+    from pymisp import MISPAttribute
 
     event_data = event.get("Event", event) if isinstance(event, dict) else {}
     objects = event_data.get("Object", []) or []
@@ -134,7 +142,7 @@ def _download_malware_samples(soar, event):
             malware_binary = attribute.malware_binary
             if malware_binary is None:
                 continue
-            file_name = os.path.basename(attribute.malware_filename or "") or "malware_sample"
+            file_name = Path(attribute.malware_filename or "").name or "malware_sample"
             soar.vault.create_attachment(
                 container_id=soar.get_executing_container_id(),
                 file_content=malware_binary.read(),
