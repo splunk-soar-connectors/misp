@@ -13,19 +13,31 @@
 # limitations under the License.
 import json
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor, wait
 
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
 from soar_sdk.params import Param, Params
-from ..app import Asset, app
+from ..app import Asset, app, logger
 from ..helper import integer_value, output, positive_int, request
 
+_QUERY_PROGRESS_INTERVAL = 30
 
-def _query_limit(value):
-    limit = integer_value(10 if value is None or value == "" else value, "max_results")
-    if limit == 0:
-        raise ValueError("max_results must be a non-zero integer")
-    return limit
+
+def _request_query_page(asset, controller, payload):
+    """Keep IPC progress on the action thread while the HTTP request runs."""
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        pending = executor.submit(
+            request,
+            asset,
+            "POST",
+            f"/{controller}/restSearch",
+            payload=payload,
+            timeout=60,
+        )
+        while not wait((pending,), timeout=_QUERY_PROGRESS_INTERVAL).done:
+            logger.progress("Waiting for MISP %s page %s", controller, payload["page"])
+        return pending.result()
 
 
 class RunQueryParams(Params):
@@ -111,12 +123,20 @@ class RunQuerySummary(ActionOutput):
     action_type="investigate",
     render_as="json",
     summary_type=RunQuerySummary,
-    verbose='The default max results is 10, and this returns the oldest 10 results. Zero is rejected. A negative value, <i>n</i>, returns the last <i>n</i> results within the bounded query window.<br><br>The other field expects a JSON string containing key-value pairs supported by the search API. To continue a time-based query, pass the first returned object\'s timestamp plus one in the <b>other</b> field, for example {\\"timestamp\\": &lt;timestamp + 1&gt;}. Also note that when searching for events, events with no attributes will not be returned.',
+    verbose=(
+        "By default, returns the first 10 matches. Set <b>max_results</b> to 0 for no requested cap "
+        "or to -N for the last N matches. The connector requests up to 1,000 results per page, "
+        "subject to MISP limits, and fails if the search is incomplete after 100 pages. "
+        "Pass additional MISP filters as JSON in <b>other</b>."
+    ),
 )
 def run_query(
     params: RunQueryParams, soar: SOARClient, asset: Asset
 ) -> list[RunQueryOutput]:
-    max_results = _query_limit(params.max_results)
+    limit = params.max_results
+    if limit is None or limit == "":
+        limit = 10
+    max_results = integer_value(limit, "max_results")
     filters = {}
     if params.event_id:
         ids = [item.strip() for item in params.event_id.split(",") if item.strip()]
@@ -132,21 +152,20 @@ def run_query(
         if not isinstance(other, dict):
             raise ValueError("other must be a JSON object")
         filters.update(other)
+    controller = params.controller.lower()
+    if controller not in {"events", "attributes"}:
+        raise ValueError("controller must be events or attributes")
     # The legacy connector let `other` override event IDs and tags, but it
     # always reset limit and page for its own bounded pagination loop.
     filters["returnFormat"] = "json"
     filters["limit"] = min(max_results, 1000) if max_results > 0 else 1000
-    controller = params.controller.lower()
-    if controller not in {"events", "attributes"}:
-        raise ValueError("controller must be events or attributes")
     rows = deque(maxlen=abs(max_results)) if max_results < 0 else []
     for page in range(1, 101):
-        result = request(
+        logger.progress("Fetching MISP %s page %s", controller, page)
+        result = _request_query_page(
             asset,
-            "POST",
-            f"/{controller}/restSearch",
-            payload={**filters, "page": page},
-            timeout=None if max_results < 0 else 60,
+            controller,
+            {**filters, "page": page},
         )
         batch = result.get("response", result) if isinstance(result, dict) else result
         if isinstance(batch, dict):
@@ -157,13 +176,12 @@ def run_query(
             batch = [batch]
         if not isinstance(batch, list):
             raise RuntimeError("MISP returned an unexpected search response shape")
+        logger.progress("Received %s results from MISP page %s", len(batch), page)
         if not batch:
             break
         rows.extend(batch)
         if max_results > 0 and len(rows) >= max_results:
             rows = rows[:max_results]
-            break
-        if len(batch) < filters["limit"]:
             break
     else:
         raise RuntimeError("MISP query exceeded the maximum of 100 pages")

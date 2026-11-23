@@ -49,6 +49,24 @@ def misp_server(monkeypatch):
         if request.url.path == "/events/add":
             return httpx.Response(200, json={"Event": event})
         if request.url.path.startswith("/tags/"):
+            payload = json.loads(request.content)
+            tags = event.setdefault("Tag", [])
+            matching = [
+                tag
+                for tag in tags
+                if payload["tag"] in {tag.get("name"), str(tag.get("id"))}
+            ]
+            if request.url.path == "/tags/removeTagFromObject":
+                event["Tag"] = [tag for tag in tags if tag not in matching]
+            elif payload["tag"] == "forbidden":
+                return httpx.Response(403, json={"errors": "Insufficient privileges"})
+            elif any(tag.get("local", 0) in (False, 0, "0") for tag in matching):
+                return httpx.Response(
+                    403,
+                    json={"errors": "Event already has the requested tag attached"},
+                )
+            else:
+                tags.append({"name": payload["tag"], "local": 0})
             return httpx.Response(200, json={"saved": True})
         assert request.url.path == f"/events/edit/{EVENT_UUID}"
         submitted_event = json.loads(request.content)
@@ -236,6 +254,104 @@ def test_update_replaces_tags_using_legacy_endpoints(misp_server, asset):
     }
 
 
+@pytest.mark.parametrize("tag_input", ["old", "7", "old,7,old"])
+@pytest.mark.parametrize("local", [False, 0, "0"])
+def test_update_skips_existing_global_tags(misp_server, asset, tag_input, local):
+    event, requests = misp_server
+    event["Tag"] = [{"id": "7", "name": "old", "local": local}]
+    module = import_module("src.actions.add_attributes")
+    soar = Mock()
+
+    rows = module.add_attributes.__wrapped__(
+        UpdateEventParams(event_id=42, tags=tag_input), soar, asset
+    )
+
+    assert [request.method for request in requests] == ["GET"]
+    assert rows[0].event_id == "42"
+    assert soar.set_summary.call_args.args[0].attributes_added == 0
+
+
+def test_update_appends_new_tags_once_without_removing_existing(misp_server, asset):
+    event, requests = misp_server
+    event["Tag"] = [{"id": "7", "name": "old"}]
+    module = import_module("src.actions.add_attributes")
+
+    module.add_attributes.__wrapped__(
+        UpdateEventParams(event_id=42, tags="old,new,new,7,another,another"),
+        Mock(),
+        asset,
+    )
+
+    posts = [request for request in requests if request.method == "POST"]
+    assert [request.url.path for request in posts] == ["/tags/attachTagToObject"] * 2
+    assert [json.loads(request.content)["tag"] for request in posts] == [
+        "new",
+        "another",
+    ]
+    assert [tag["name"] for tag in event["Tag"]] == ["old", "new", "another"]
+
+
+@pytest.mark.parametrize("local", [True, 1, "1"])
+def test_update_adds_global_tag_when_only_local_tag_exists(misp_server, asset, local):
+    event, requests = misp_server
+    event["Tag"] = [{"id": "7", "name": "old", "local": local}]
+    module = import_module("src.actions.add_attributes")
+
+    module.add_attributes.__wrapped__(
+        UpdateEventParams(event_id=42, tags="old"), Mock(), asset
+    )
+
+    posts = [request for request in requests if request.method == "POST"]
+    assert len(posts) == 1
+    assert json.loads(posts[0].content) == {
+        "uuid": EVENT_UUID,
+        "tag": "old",
+        "local": False,
+    }
+
+
+def test_update_replacement_reattaches_requested_existing_tag(misp_server, asset):
+    event, requests = misp_server
+    event["Tag"] = [{"id": "7", "name": "old", "local": 0}]
+    module = import_module("src.actions.add_attributes")
+
+    module.add_attributes.__wrapped__(
+        UpdateEventParams(event_id=42, tags="old,old", replace_tags=True),
+        Mock(),
+        asset,
+    )
+
+    posts = [request for request in requests if request.method == "POST"]
+    assert [request.url.path for request in posts] == [
+        "/tags/removeTagFromObject",
+        "/tags/attachTagToObject",
+    ]
+    assert [tag["name"] for tag in event["Tag"]] == ["old"]
+
+
+@pytest.mark.parametrize("with_attributes", [False, True])
+def test_update_does_not_suppress_tag_permission_errors(
+    misp_server, asset, with_attributes
+):
+    event, _requests = misp_server
+    event["Tag"] = [{"id": "7", "name": "old"}]
+    module = import_module("src.actions.add_attributes")
+    params = UpdateEventParams(
+        event_id=42,
+        tags="old,forbidden",
+        json='{"comment":"saved"}' if with_attributes else None,
+    )
+
+    if with_attributes:
+        result = module.add_attributes.__wrapped__(params, Mock(), asset)
+        assert result.get_status() is False
+        assert "Insufficient privileges" in result.get_message()
+        assert result.get_data()[0]["value"] == "saved"
+    else:
+        with pytest.raises(RuntimeError, match="HTTP 403.*Insufficient privileges"):
+            module.add_attributes.__wrapped__(params, Mock(), asset)
+
+
 def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
     _event, requests = misp_server
     module = import_module("src.actions.create_event")
@@ -261,3 +377,38 @@ def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
         "tag": "new",
         "local": False,
     }
+
+
+@pytest.mark.parametrize(
+    ("values", "succeeded"),
+    [(["saved"], True), (["saved", "forbidden"], False)],
+    ids=["success", "partial-failure"],
+)
+def test_create_keeps_event_snapshot_serializable(
+    monkeypatch, misp_server, asset, values, succeeded
+):
+    """PyMISP edits must not insert model objects into the retained event row."""
+    event, _requests = misp_server
+    module = import_module("src.actions.create_event")
+    add_result = Mock()
+    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+
+    success = module.create_event(
+        module.CreateEventParams(
+            info="Example", add_attributes=True, json=json.dumps({"comment": values})
+        ),
+        soar=Mock(),
+        asset=asset,
+    )
+
+    assert success is succeeded
+    result = add_result.call_args.args[0]
+    data = json.loads(json.dumps(result.get_data()))
+    assert data[0]["id"] == "42"
+    assert data[0]["created_event_id"] == "42"
+    assert data[0]["Attribute"] == []
+    assert event["Attribute"][0]["value"] == "saved"
+    if succeeded:
+        assert data[1]["value"] == "saved"
+    else:
+        assert "HTTP 403" in result.get_message()

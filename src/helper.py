@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ipaddress
 import json
+from copy import deepcopy
 
 from soar_sdk.action_results import PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
@@ -154,7 +155,8 @@ def add_iocs(asset, event_id, params, *, event):
         try:
             if current_event is None:
                 current_event = MISPEvent()
-                current_event.load(event)
+                # PyMISP can reuse empty lists; keep SDK output free of model objects.
+                current_event.load(deepcopy(event))
             current_event.add_attribute(**row)
             response = request(
                 asset,
@@ -224,11 +226,23 @@ def _valid_ip(value):
     return True
 
 
-def add_tags(asset, event_identifier, value):
+def add_tags(asset, event_identifier, value, *, existing_tags=()):
+    """Attach each requested global tag once, preserving existing associations."""
+    attached = set()
+    for tag in existing_tags:
+        # A local association does not satisfy this connector's global-tag request.
+        if tag.get("local", 0) in (True, 1, "1"):
+            continue
+        attached.update(
+            str(tag[key]) for key in ("id", "name") if tag.get(key) is not None
+        )
     for tag in split_values(value):
+        if tag in attached:
+            continue
         request(
             asset,
             "POST",
             "/tags/attachTagToObject",
             payload={"uuid": str(event_identifier), "tag": tag, "local": False},
         )
+        attached.add(tag)

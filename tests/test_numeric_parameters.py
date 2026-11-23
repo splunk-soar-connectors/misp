@@ -33,6 +33,8 @@ from src.helper import positive_int
         ("42", 42),
         (9007199254740993, 9007199254740993),
         ("9007199254740993", 9007199254740993),
+        (10**61 + 1, 10**61 + 1),
+        (str(10**61 + 1), 10**61 + 1),
     ],
 )
 def test_numeric_event_ids_preserve_integer_precision(params_class, value, expected):
@@ -106,9 +108,14 @@ def test_missing_query_limit_sends_default_integer(monkeypatch, limit_input):
         (7, 7),
         (7.0, 7),
         ("7", 7),
+        (0, 0),
+        (0.0, 0),
+        ("0", 0),
         (-5, -5),
         ("-5", -5),
         (9007199254740993, 9007199254740993),
+        (10**43 + 1, 10**43 + 1),
+        (str(10**43 + 1), 10**43 + 1),
     ],
 )
 def test_query_limit_preserves_signed_integers(value, expected):
@@ -120,7 +127,7 @@ def test_query_limit_preserves_signed_integers(value, expected):
     )
 
 
-@pytest.mark.parametrize("value", [0, "0", 7.5, "7e1", float("inf"), float("nan")])
+@pytest.mark.parametrize("value", [7.5, "7e1", float("inf"), float("nan")])
 def test_query_limit_rejects_invalid_counts_before_request(monkeypatch, value):
     module = import_module("src.actions.run_query")
     request = Mock()
@@ -136,6 +143,15 @@ def test_query_limit_rejects_invalid_counts_before_request(monkeypatch, value):
         )
 
     request.assert_not_called()
+
+
+def test_integer_parameter_manifest_stays_numeric():
+    for params_class, field in (
+        (GetAttributesParams, "event_id"),
+        (UpdateEventParams, "event_id"),
+        (RunQueryParams, "max_results"),
+    ):
+        assert params_class._to_json_schema()[field]["data_type"] == "numeric"
 
 
 def test_output_manifest_types_match_misp_api():

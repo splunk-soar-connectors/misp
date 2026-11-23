@@ -350,7 +350,7 @@ Run a query to find events or attributes
 Type: **investigate** <br>
 Read only: **False**
 
-The default max results is 10, and this returns the oldest 10 results. Zero is rejected. A negative value, <i>n</i>, returns the last <i>n</i> results within the bounded query window.<br><br>The other field expects a JSON string containing key-value pairs supported by the search API. To continue a time-based query, pass the first returned object's timestamp plus one in the <b>other</b> field, for example {\\"timestamp\\": \<timestamp + 1>}. Also note that when searching for events, events with no attributes will not be returned.
+By default, returns the first 10 matches. Set <b>max_results</b> to 0 for no requested cap or to -N for the last N matches. The connector requests up to 1,000 results per page, subject to MISP limits, and fails if the search is incomplete after 100 pages. Pass additional MISP filters as JSON in <b>other</b>.
 
 #### Action Parameters
 

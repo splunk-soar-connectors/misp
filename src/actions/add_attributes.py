@@ -163,7 +163,12 @@ def add_attributes(
                         "/tags/removeTagFromObject",
                         payload={"uuid": str(event_identifier), "tag": name},
                     )
-        add_tags(asset, event_identifier, params.tags)
+        add_tags(
+            asset,
+            event_identifier,
+            params.tags,
+            existing_tags=() if params.replace_tags else event_data.get("Tag", []),
+        )
     except Exception as exc:
         if not attributes:
             raise
