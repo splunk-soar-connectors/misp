@@ -24,6 +24,7 @@ import pytest
 from pymisp import MISPAttribute
 from soar_sdk.action_results import ActionResult
 from soar_sdk.auth import StaticTokenAuth
+from soar_sdk.exceptions import ActionFailure
 
 from src import helper
 from src.actions.add_attributes import UpdateEventParams
@@ -184,6 +185,11 @@ def test_repeated_inputs_return_complete_server_event(misp_server, asset):
     assert [row.id for row in second] == ["1"]
     assert first_soar.set_summary.call_args.args[0].attributes_added == 1
     assert second_soar.set_summary.call_args.args[0].attributes_added == 0
+    assert (
+        first_soar.set_summary.call_args.args[0].message
+        == "Attributes added to event: 42"
+    )
+    first_soar.set_message.assert_called_once_with("Attributes added to event: 42")
     assert len([request for request in requests if request.method == "POST"]) == 4
 
 
@@ -228,6 +234,23 @@ def test_vendor_rejection_uses_sdk_error_result(monkeypatch, misp_server, asset,
     result = add_result.call_args.args[0]
     assert "HTTP 403" in result.get_message()
     assert "Traceback" not in result.get_message()
+
+
+def test_update_rejects_empty_replacement_before_writing(misp_server, asset):
+    event, requests = misp_server
+    event["Tag"] = [{"name": "old"}]
+    module = import_module("src.actions.add_attributes")
+    params = UpdateEventParams(
+        event_id=42, tags=",,,", replace_tags=True, domains="example.com"
+    )
+
+    with pytest.raises(
+        ActionFailure, match="Please provide at least one replacement tag"
+    ):
+        module.add_attributes.__wrapped__(params, Mock(), asset)
+
+    assert event["Tag"] == [{"name": "old"}]
+    assert requests == []
 
 
 def test_update_replaces_tags_using_legacy_endpoints(misp_server, asset):
@@ -355,15 +378,18 @@ def test_update_does_not_suppress_tag_permission_errors(
 def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
     _event, requests = misp_server
     module = import_module("src.actions.create_event")
+    soar = Mock()
 
     rows = module.create_event.__wrapped__(
         module.CreateEventParams(
             info="Example", add_attributes=True, domains="example.com", tags="new"
         ),
-        Mock(),
+        soar,
         asset,
     )
 
+    assert soar.set_summary.call_args.args[0].message == "Event created with id: 42"
+    soar.set_message.assert_called_once_with("Event created with id: 42")
     assert [request.url.path for request in requests] == [
         "/events/add",
         "/tags/attachTagToObject",

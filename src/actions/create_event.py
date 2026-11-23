@@ -151,6 +151,7 @@ class CreateEventOutput(PermissiveActionOutput):
 class CreateEventSummary(ActionOutput):
     created_event_id: int
     attributes_added: int
+    message: str
 
 
 @app.action(
@@ -218,13 +219,15 @@ def create_event(
             f"Failed to add attributes to MISP event: {exc}",
         )
 
+    message = f"Event created with id: {event_id}"
     soar.set_summary(
         CreateEventSummary(
             created_event_id=int(event_id),
             attributes_added=len(attributes),
+            message=message,
         )
     )
-    soar.set_message(f"Event created with id: {event_id}")
+    soar.set_message(message)
     return [output(CreateEventOutput, event_output)] + [
         output(CreateEventOutput, attribute) for attribute in attributes
     ]
@@ -239,7 +242,9 @@ def _partial_create_failure(params, event, event_id, message):
     failed_result.add_data(event)
     failed_result.set_summary(
         CreateEventSummary(
-            created_event_id=int(event_id), attributes_added=0
+            created_event_id=int(event_id),
+            attributes_added=0,
+            message=f"Event created with id: {event_id}",
         ).model_dump()
     )
     return failed_result

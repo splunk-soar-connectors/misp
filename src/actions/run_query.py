@@ -121,6 +121,7 @@ class RunQuerySummary(ActionOutput):
 @app.action(
     description="Run a query to find events or attributes",
     action_type="investigate",
+    read_only=True,
     render_as="json",
     summary_type=RunQuerySummary,
     verbose=(

@@ -87,6 +87,7 @@ class GetAttributesSummary(ActionOutput):
     name="get attributes",
     description="Get attributes for a specific event",
     action_type="investigate",
+    read_only=True,
     render_as="table",
     summary_type=GetAttributesSummary,
     verbose="<b>download_samples</b> will only download files which are marked as a 'malware-sample'.",

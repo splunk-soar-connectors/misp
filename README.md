@@ -166,6 +166,7 @@ action_result.data.\*.type | string | | port |
 action_result.data.\*.uuid | string | | 68e219ee-5727-4cb2-a32f-8dc27aa4231f |
 action_result.summary.updated_event_id | numeric | | |
 action_result.summary.attributes_added | numeric | | |
+action_result.summary.message | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -255,6 +256,7 @@ action_result.data.\*.uuid | string | | 82c82204-4ebd-42cb-a913-4df726b5d7fe |
 action_result.data.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | 8.8.8.8 |
 action_result.summary.created_event_id | numeric | | |
 action_result.summary.attributes_added | numeric | | |
+action_result.summary.message | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -263,7 +265,7 @@ summary.total_objects_successful | numeric | | 1 |
 Get attributes for a specific event
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 <b>download_samples</b> will only download files which are marked as a 'malware-sample'.
 
@@ -348,7 +350,7 @@ summary.total_objects_successful | numeric | | 1 |
 Run a query to find events or attributes
 
 Type: **investigate** <br>
-Read only: **False**
+Read only: **True**
 
 By default, returns the first 10 matches. Set <b>max_results</b> to 0 for no requested cap or to -N for the last N matches. The connector requests up to 1,000 results per page, subject to MISP limits, and fails if the search is incomplete after 100 pages. Pass additional MISP filters as JSON in <b>other</b>.
 

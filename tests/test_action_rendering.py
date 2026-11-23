@@ -60,6 +60,13 @@ def test_manifest_restores_legacy_table_columns_and_query_json():
             for order, (title, field) in enumerate(columns)
         ]
     assert actions["run query"]["render"]["type"] == "json"
+    for name in ("run query", "get attributes"):
+        assert actions[name]["read_only"] is True
+    for name in ("create event", "update event"):
+        assert any(
+            field["data_path"] == "action_result.summary.message"
+            for field in actions[name]["output"]
+        )
 
 
 @pytest.mark.parametrize("add_attributes", [False, True])
@@ -104,4 +111,5 @@ def test_partial_create_retains_event_id_column(monkeypatch, failure_stage):
     assert result.get_status() is False
     assert result.get_data() == [dict(event, created_event_id="42")]
     assert result.get_summary()["created_event_id"] == 42
+    assert result.get_summary()["message"] == "Event created with id: 42"
     assert "denied" in result.get_message()

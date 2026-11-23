@@ -16,7 +16,15 @@ from soar_sdk.action_results import ActionOutput, ActionResult, OutputField
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
-from ..helper import PartialIOCError, add_iocs, add_tags, output, positive_int, request
+from ..helper import (
+    PartialIOCError,
+    add_iocs,
+    add_tags,
+    output,
+    positive_int,
+    request,
+    split_values,
+)
 
 
 class UpdateEventParams(Params):
@@ -107,6 +115,7 @@ class UpdateEventOutput(ActionOutput):
 class UpdateEventSummary(ActionOutput):
     updated_event_id: int
     attributes_added: int
+    message: str | None = None
 
 
 @app.action(
@@ -122,6 +131,10 @@ def add_attributes(
     params: UpdateEventParams, soar: SOARClient, asset: Asset
 ) -> list[UpdateEventOutput]:
     event_id = positive_int(params.event_id, "event_id")
+    has_tags = bool(split_values(params.tags))
+    if params.replace_tags and params.tags and not has_tags:
+        raise ActionFailure("Please provide at least one replacement tag")
+
     event = request(asset, "GET", f"/events/view/{event_id}")
     event_data = event.get("Event", event)
     event_identifier = event_data.get("uuid") or event_id
@@ -143,7 +156,7 @@ def add_attributes(
         attribute.get("id") is not None and str(attribute["id"]) not in existing_ids
         for attribute in attributes
     )
-    if error is None and not attributes and not params.tags:
+    if error is None and not attributes and not has_tags:
         raise ActionFailure("Please provide at least one attribute")
 
     if error is not None:
@@ -152,7 +165,7 @@ def add_attributes(
         return _partial_failure(params, event_id, attributes, attributes_added, error)
 
     try:
-        if params.tags and params.replace_tags:
+        if has_tags and params.replace_tags:
             current = event_data.get("Tag", [])
             for tag in current:
                 name = tag.get("name") if isinstance(tag, dict) else tag
@@ -174,15 +187,18 @@ def add_attributes(
             raise
         return _partial_failure(params, event_id, attributes, attributes_added, exc)
 
+    message = (
+        f"Attributes added to event: {event_id}"
+        if attributes
+        else f"Tags added to event: {event_id}"
+    )
     summary = UpdateEventSummary(
         updated_event_id=event_id,
         attributes_added=attributes_added,
+        message=message,
     )
     soar.set_summary(summary)
-    if attributes:
-        soar.set_message(f"Attributes added to event: {event_id}")
-    else:
-        soar.set_message(f"Tags added to event: {event_id}")
+    soar.set_message(message)
     if attributes:
         return [output(UpdateEventOutput, row) for row in attributes]
     return [output(UpdateEventOutput, {"event_id": str(event_id)})]
@@ -200,6 +216,6 @@ def _partial_failure(params, event_id, attributes, attributes_added, error):
         UpdateEventSummary(
             updated_event_id=event_id,
             attributes_added=attributes_added,
-        ).model_dump()
+        ).model_dump(exclude_none=True)
     )
     return failed_result
