@@ -21,12 +21,25 @@ from unittest.mock import Mock
 
 import httpx
 import pytest
+from soar_sdk.app import App
 from soar_sdk.auth import StaticTokenAuth
 
 from src import helper
 from src.app import Asset
 
 TEST_API_KEY = "test-key"  # pragma: allowlist secret
+
+
+def _query_rows(result, controller):
+    manager = Mock()
+    assert App._adapt_action_result(result, manager)
+    data = manager.add_result.call_args.args[0].get_data()
+    assert len(data) == 1
+    return (
+        [row["Event"] for row in data[0]]
+        if controller == "events"
+        else data[0]["Attribute"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -136,12 +149,7 @@ def test_negative_query_keeps_last_rows_with_bounded_storage(monkeypatch, contro
         module.RunQueryParams(controller=controller, max_results=-5), soar, asset
     )
 
-    data = [row.model_dump() for row in result]
-    rows = (
-        [row["Event"] for row in data]
-        if controller == "events"
-        else data[0]["Attribute"]
-    )
+    rows = _query_rows(result, controller)
     assert [row["id"] for row in rows] == [str(index) for index in range(1998, 2003)]
     assert soar.set_summary.call_args.args[0].returned_rows == 5
     assert len(requests) == 2003 // page_size + 2
@@ -238,11 +246,7 @@ def test_uncapped_queries_retain_100_page_limit(
 
     if last_page_size == 0:
         result = module.run_query.__wrapped__(params, Mock(), Mock())
-        rows = (
-            [row.model_dump()["Event"] for row in result]
-            if controller == "events"
-            else result[0].model_dump()["Attribute"]
-        )
+        rows = _query_rows(result, controller)
         assert [row["id"] for row in rows] == [
             str(index) for index in range(page_size - 5, page_size)
         ]
@@ -284,11 +288,7 @@ def test_zero_query_limit_collects_all_pages(monkeypatch, controller, first_page
         module.RunQueryParams(controller=controller, max_results=0), soar, Mock()
     )
 
-    rows = (
-        [row.model_dump()["Event"] for row in output]
-        if controller == "events"
-        else output[0].model_dump()["Attribute"]
-    )
+    rows = _query_rows(output, controller)
     assert [row["id"] for row in rows] == [
         str(index) for index in range(first_page_size + 2)
     ]

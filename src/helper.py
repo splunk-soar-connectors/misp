@@ -23,14 +23,6 @@ from soar_sdk.action_results import PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 
 
-class PartialIOCError(ActionFailure):
-    """An IOC write failed after zero or more earlier writes succeeded."""
-
-    def __init__(self, message: str, completed_rows: list[dict]):
-        super().__init__(message)
-        self.completed_rows = completed_rows
-
-
 def misp_client(asset):
     """Build an HTTP client using the SDK's static-token auth handler."""
     import httpx
@@ -145,13 +137,18 @@ def add_iocs(asset, event_id, params, *, event):
         ("source_emails", "email-src", "email"),
     )
     to_ids = bool(getattr(params, "to_ids", False))
-    completed_rows = []
+    saved_rows = None
     current_event = None
+
+    def attribute_failure(message):
+        if saved_rows is not None:
+            message += " MISP accepted an earlier attribute update."
+        return ActionFailure(message)
 
     def submit_row(row):
         from pymisp import MISPEvent
 
-        nonlocal current_event
+        nonlocal current_event, saved_rows
         try:
             if current_event is None:
                 current_event = MISPEvent()
@@ -173,9 +170,9 @@ def add_iocs(asset, event_id, params, *, event):
             current_event = updated_event
             # Event edits return the complete saved event. Retain exactly those
             # attributes; do not infer that a submitted duplicate was changed.
-            completed_rows[:] = json.loads(current_event.to_json()).get("Attribute", [])
+            saved_rows = json.loads(current_event.to_json()).get("Attribute", [])
         except Exception as exc:
-            raise PartialIOCError(str(exc), completed_rows.copy()) from exc
+            raise attribute_failure(str(exc)) from exc
 
     def submit(attribute_type, value):
         submit_row({"type": attribute_type, "value": value, "to_ids": to_ids})
@@ -189,7 +186,7 @@ def add_iocs(asset, event_id, params, *, event):
     for key, attribute_type, validation_type in mapping:
         values = split_values(getattr(params, key, None))
         if values and not all(validators[validation_type](value) for value in values):
-            raise PartialIOCError(f"'{key}'", completed_rows.copy())
+            raise attribute_failure(f"'{key}'")
         for value in values:
             submit(attribute_type, value)
 
@@ -198,9 +195,7 @@ def add_iocs(asset, event_id, params, *, event):
         try:
             parsed = json.loads(extra)
         except (TypeError, ValueError) as exc:
-            raise PartialIOCError(
-                f"Invalid JSON parameter: {exc}", completed_rows.copy()
-            ) from exc
+            raise attribute_failure(f"Invalid JSON parameter: {exc}") from exc
         if isinstance(parsed, list):
             for row in parsed:
                 submit_row(row)
@@ -214,8 +209,8 @@ def add_iocs(asset, event_id, params, *, event):
                 for value in values:
                     submit(attribute_type, value)
         else:
-            raise PartialIOCError("Invalid JSON parameter", completed_rows.copy())
-    return completed_rows
+            raise attribute_failure("Invalid JSON parameter")
+    return saved_rows or []
 
 
 def _valid_ip(value):

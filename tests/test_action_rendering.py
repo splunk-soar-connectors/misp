@@ -72,9 +72,21 @@ def test_manifest_restores_legacy_table_columns_and_query_json():
 @pytest.mark.parametrize("add_attributes", [False, True])
 def test_create_event_column_preserves_ids_and_vendor_rows(monkeypatch, add_attributes):
     module = import_module("src.actions.create_event")
-    event = {"id": "42", "info": "Example", "Tag": [{"name": "test"}]}
+    event = {
+        "id": "42",
+        "info": "Example",
+        "Org": {"id": "7", "name": "Test", "local": True},
+        "Tag": [{"name": "test"}],
+        "Attribute": [],
+    }
     attributes = [
-        {"id": "101", "event_id": "42", "value": "192.0.2.1"},
+        {
+            "id": "101",
+            "event_id": "42",
+            "value": "192.0.2.1",
+            "deleted": 0,
+            "comment": None,
+        },
         {"id": "102", "event_id": "42", "value": "192.0.2.2"},
     ]
     monkeypatch.setattr(module, "request", Mock(return_value={"Event": event}))
@@ -84,6 +96,8 @@ def test_create_event_column_preserves_ids_and_vendor_rows(monkeypatch, add_attr
     rows = module.create_event.__wrapped__(
         module.CreateEventParams(add_attributes=add_attributes), Mock(), Mock()
     )
+    assert isinstance(rows[0], module.CreateEventRow)
+    assert all(isinstance(row, module.CreateAttributeRow) for row in rows[1:])
     manager = Mock()
     assert App._adapt_action_result(rows, manager) is True
     data = manager.add_result.call_args.args[0].get_data()

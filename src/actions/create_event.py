@@ -12,12 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from soar_sdk.abstract import SOARClient
-from soar_sdk.action_results import (
-    ActionOutput,
-    ActionResult,
-    OutputField,
-    PermissiveActionOutput,
-)
+from soar_sdk.action_results import ActionOutput, ActionResult, OutputField
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
 from ..helper import add_iocs, add_tags, output, request
@@ -108,8 +103,29 @@ class OrgcOutput(ActionOutput):
     uuid: str = OutputField(example_values=["2af87aa3-a713-4ca5-83f7-03ae949c8459"])
 
 
-class CreateEventOutput(PermissiveActionOutput):
-    """A create action emits both an event row and attribute rows."""
+class CreateEventRow(ActionOutput, extra="allow"):
+    """Created event row with additional MISP fields preserved."""
+
+    created_event_id: str
+    id: str
+    info: str
+    threat_level_id: str
+    distribution: str
+    attribute_count: str
+
+
+class CreateAttributeRow(ActionOutput, extra="allow"):
+    """Saved attribute row with additional MISP fields preserved."""
+
+    id: str
+    event_id: str
+    category: str
+    type: str
+    value: str
+
+
+class CreateEventOutput(ActionOutput):
+    """Combined SOAR manifest schema for the event and attribute rows."""
 
     created_event_id: str | None = OutputField(
         column_name="MISP Event ID", cef_types=["misp event id"]
@@ -159,12 +175,11 @@ class CreateEventSummary(ActionOutput):
     action_type="generic",
     read_only=False,
     render_as="table",
+    output_class=CreateEventOutput,
     summary_type=CreateEventSummary,
     verbose="This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
 )
-def create_event(
-    params: CreateEventParams, soar: SOARClient, asset: Asset
-) -> list[CreateEventOutput]:
+def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
     distributions = {
         "your org only": 0,
         "this community only": 1,
@@ -228,8 +243,8 @@ def create_event(
         )
     )
     soar.set_message(message)
-    return [output(CreateEventOutput, event_output)] + [
-        output(CreateEventOutput, attribute) for attribute in attributes
+    return [output(CreateEventRow, event_output)] + [
+        output(CreateAttributeRow, attribute) for attribute in attributes
     ]
 
 

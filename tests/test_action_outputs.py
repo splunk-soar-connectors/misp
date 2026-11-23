@@ -14,13 +14,14 @@
 """Regression coverage for SDK serialization of MISP action results."""
 
 import json
+from importlib import import_module
 from unittest.mock import Mock
 
 import pytest
 from soar_sdk.app import App
 
 from src.actions.add_attributes import UpdateEventOutput
-from src.actions.create_event import CreateEventOutput
+from src.actions.create_event import CreateAttributeRow, CreateEventRow
 from src.actions.run_query import RunQueryOutput
 from src.helper import output
 
@@ -30,28 +31,23 @@ from src.helper import output
     [
         (
             RunQueryOutput,
-            {"Event": {"id": "2020", "Object": [{"custom": {"value": "test"}}]}},
-        ),
-        (
-            RunQueryOutput,
             {
                 "Attribute": [{"id": "123", "value": "192.0.2.1"}],
                 "attribute_count": "1",
             },
         ),
         (RunQueryOutput, {"Attribute": [], "attribute_count": "0"}),
-        (CreateEventOutput, {"id": "2020", "info": "test", "Tag": [{"name": "test"}]}),
-        (CreateEventOutput, {"id": "123", "event_id": "2020", "value": "192.0.2.1"}),
+        (CreateEventRow, {"id": "2020", "info": "test", "Tag": [{"name": "test"}]}),
+        (CreateAttributeRow, {"id": "123", "event_id": "2020", "value": "192.0.2.1"}),
     ],
     ids=[
-        "query-events",
         "query-attributes",
         "empty-attributes",
         "created-event",
         "created-attribute",
     ],
 )
-def test_permissive_outputs_serialize_through_sdk(output_model, payload):
+def test_vendor_outputs_serialize_through_sdk(output_model, payload):
     """The SDK must serialize raw vendor rows without recursion or data changes."""
     expected = json.loads(json.dumps(payload))
     manager = Mock()
@@ -61,6 +57,48 @@ def test_permissive_outputs_serialize_through_sdk(output_model, payload):
     assert success is True
     result = manager.add_result.call_args.args[0]
     assert json.loads(json.dumps(result.get_data())) == [expected]
+
+
+@pytest.mark.parametrize(
+    "event_rows",
+    [
+        [{"Event": {"id": "2020", "Object": [{"custom": {"value": "test"}}]}}],
+        [],
+    ],
+    ids=["events", "empty"],
+)
+def test_query_event_list_preserves_legacy_nesting(monkeypatch, event_rows):
+    module = import_module("src.actions.run_query")
+    monkeypatch.setattr(
+        module, "_request_query_page", Mock(side_effect=[{"response": event_rows}, []])
+    )
+    manager = Mock()
+    result = module.run_query.__wrapped__(
+        module.RunQueryParams(controller="events"), Mock(), Mock()
+    )
+
+    assert App._adapt_action_result(result, manager)
+    data = manager.add_result.call_args.args[0].get_data()
+    assert json.loads(json.dumps(data)) == [event_rows]
+
+
+def test_query_manifest_preserves_legacy_event_datapaths():
+    paths = {field["data_path"] for field in RunQueryOutput._to_json_schema()}
+    event_prefix = "action_result.data.*.*.Event."
+    assert sum(path.startswith(event_prefix) for path in paths) == 103
+    assert {
+        f"{event_prefix}{path}"
+        for path in (
+            "id",
+            "Attribute.*.value",
+            "Object.*.Attribute.*.value",
+            "Object.*.meta-category",
+            "Org.local",
+            "RelatedEvent.*.Event.Orgc.uuid",
+            "Tag.*.name",
+        )
+    } <= paths
+    assert "action_result.data.*.Attribute.*.id" in paths
 
 
 def test_fixed_output_preserves_vendor_field_types():

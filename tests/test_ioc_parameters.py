@@ -143,7 +143,7 @@ def test_invalid_ioc_still_fails_before_writing(attribute_requests, field, value
     module = import_module("src.actions.add_attributes")
     params = UpdateEventParams(event_id=42, **{field: value})
 
-    with pytest.raises(helper.PartialIOCError, match=field):
+    with pytest.raises(ActionFailure, match=field):
         module.add_attributes.__wrapped__(params, Mock(), Mock())
 
     assert attribute_requests == []

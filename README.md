@@ -375,12 +375,109 @@ action_result.parameter.max_results | numeric | | |
 action_result.parameter.event_id | string | `misp event id` | |
 action_result.parameter.tags | string | | |
 action_result.parameter.other | string | | |
-action_result.data.\*.Event.distribution | string | | 1 |
-action_result.data.\*.Event.id | string | | 2020 |
-action_result.data.\*.Event.info | string | | Event created by test |
-action_result.data.\*.Event.org_id | string | | 1 |
-action_result.data.\*.Event.orgc_id | string | | 1 |
-action_result.data.\*.Event.uuid | string | | 342c12ab-32ad-41d0-aea2-1c3dccc6ce09 |
+action_result.data.\*.\*.Event.distribution | string | | 1 |
+action_result.data.\*.\*.Event.id | string | | 2020 |
+action_result.data.\*.\*.Event.info | string | | Event created by test |
+action_result.data.\*.\*.Event.org_id | string | | 1 |
+action_result.data.\*.\*.Event.orgc_id | string | | 1 |
+action_result.data.\*.\*.Event.uuid | string | | 342c12ab-32ad-41d0-aea2-1c3dccc6ce09 |
+action_result.data.\*.\*.Event.Org.id | string | | 1 |
+action_result.data.\*.\*.Event.Org.name | string | | ORGNAME |
+action_result.data.\*.\*.Event.Org.uuid | string | | 2af87aa3-a713-4ca5-83f7-03ae949c8459 |
+action_result.data.\*.\*.Event.Org.local | numeric | | True False |
+action_result.data.\*.\*.Event.Orgc.id | string | | 1 |
+action_result.data.\*.\*.Event.Orgc.name | string | | ORGNAME |
+action_result.data.\*.\*.Event.Orgc.uuid | string | | 2af87aa3-a713-4ca5-83f7-03ae949c8459 |
+action_result.data.\*.\*.Event.Orgc.local | numeric | | True False |
+action_result.data.\*.\*.Event.analysis | string | | 0 |
+action_result.data.\*.\*.Event.date | string | | 2021-06-14 |
+action_result.data.\*.\*.Event.published | numeric | | True False |
+action_result.data.\*.\*.Event.threat_level_id | string | | 4 |
+action_result.data.\*.\*.Event.timestamp | string | | 1623645286 |
+action_result.data.\*.\*.Event.Attribute.\*.category | string | | Payload delivery |
+action_result.data.\*.\*.Event.Attribute.\*.comment | string | | |
+action_result.data.\*.\*.Event.Attribute.\*.deleted | numeric | | True False |
+action_result.data.\*.\*.Event.Attribute.\*.disable_correlation | numeric | | True False |
+action_result.data.\*.\*.Event.Attribute.\*.distribution | string | | 5 |
+action_result.data.\*.\*.Event.Attribute.\*.event_id | string | | 2020 |
+action_result.data.\*.\*.Event.Attribute.\*.first_seen | string | | |
+action_result.data.\*.\*.Event.Attribute.\*.id | string | | 4953 |
+action_result.data.\*.\*.Event.Attribute.\*.last_seen | string | | |
+action_result.data.\*.\*.Event.Attribute.\*.object_id | string | | 10 |
+action_result.data.\*.\*.Event.Attribute.\*.object_relation | string | | filename |
+action_result.data.\*.\*.Event.Attribute.\*.sharing_group_id | string | | 0 |
+action_result.data.\*.\*.Event.Attribute.\*.timestamp | string | | 1623078296 |
+action_result.data.\*.\*.Event.Attribute.\*.to_ids | numeric | | True False |
+action_result.data.\*.\*.Event.Attribute.\*.type | string | `url` | email-dst |
+action_result.data.\*.\*.Event.Attribute.\*.uuid | string | | 2fd53a9b-44fd-4ebc-af93-0e1605cf3b64 |
+action_result.data.\*.\*.Event.Attribute.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | 6.43.3.2 |
+action_result.data.\*.\*.Event.Object.\*.distribution | string | | 5 |
+action_result.data.\*.\*.Event.Object.\*.id | string | | 10 |
+action_result.data.\*.\*.Event.Object.\*.sharing_group_id | string | | 0 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.category | string | | Payload delivery |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.comment | string | | |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.deleted | numeric | | True False |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.disable_correlation | numeric | | True False |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.distribution | string | | 5 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.event_id | string | | 2020 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.first_seen | string | | |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.id | string | | 4953 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.last_seen | string | | |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.object_id | string | | 10 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.object_relation | string | | filename |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.sharing_group_id | string | | 0 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.timestamp | string | | 1623078296 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.to_ids | numeric | | True False |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.type | string | | filename |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.uuid | string | | 2fd53a9b-44fd-4ebc-af93-0e1605cf3b64 |
+action_result.data.\*.\*.Event.Object.\*.Attribute.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` `sha256` `md1` | 6.43.3.2 |
+action_result.data.\*.\*.Event.Object.\*.comment | string | | |
+action_result.data.\*.\*.Event.Object.\*.deleted | numeric | | True False |
+action_result.data.\*.\*.Event.Object.\*.description | string | | File object describing a file with meta-information |
+action_result.data.\*.\*.Event.Object.\*.event_id | string | | 2020 |
+action_result.data.\*.\*.Event.Object.\*.first_seen | string | | |
+action_result.data.\*.\*.Event.Object.\*.last_seen | string | | |
+action_result.data.\*.\*.Event.Object.\*.meta-category | string | | file |
+action_result.data.\*.\*.Event.Object.\*.name | string | | file |
+action_result.data.\*.\*.Event.Object.\*.template_uuid | string | | 688c46fb-5edb-40a3-8273-1af7923e2215 |
+action_result.data.\*.\*.Event.Object.\*.template_version | string | | 24 |
+action_result.data.\*.\*.Event.Object.\*.timestamp | string | | 1623078296 |
+action_result.data.\*.\*.Event.Object.\*.uuid | string | | 4b5cb238-9e55-40eb-b60e-b30f71cab6f6 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.distribution | string | | 1 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.id | string | | 2020 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.info | string | | Event created by test |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.org_id | string | | 1 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.orgc_id | string | | 1 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.uuid | string | | 342c12ab-32ad-41d0-aea2-1c3dccc6ce09 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Org.id | string | | 1 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Org.name | string | | ORGNAME |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Org.uuid | string | | 2af87aa3-a713-4ca5-83f7-03ae949c8459 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Orgc.id | string | | 1 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Orgc.name | string | | ORGNAME |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.Orgc.uuid | string | | 2af87aa3-a713-4ca5-83f7-03ae949c8459 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.analysis | string | | 0 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.date | string | | 2021-06-14 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.published | numeric | | True False |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.threat_level_id | string | | 4 |
+action_result.data.\*.\*.Event.RelatedEvent.\*.Event.timestamp | string | | 1623645286 |
+action_result.data.\*.\*.Event.Tag.\*.colour | string | | #7ab870 |
+action_result.data.\*.\*.Event.Tag.\*.exportable | numeric | | True False |
+action_result.data.\*.\*.Event.Tag.\*.hide_tag | numeric | | True False |
+action_result.data.\*.\*.Event.Tag.\*.id | string | | 8 |
+action_result.data.\*.\*.Event.Tag.\*.is_custom_galaxy | numeric | | True False |
+action_result.data.\*.\*.Event.Tag.\*.is_galaxy | numeric | | True False |
+action_result.data.\*.\*.Event.Tag.\*.local | numeric | | 1 |
+action_result.data.\*.\*.Event.Tag.\*.name | string | | test_1 |
+action_result.data.\*.\*.Event.Tag.\*.numerical_value | string | | |
+action_result.data.\*.\*.Event.Tag.\*.user_id | string | | 1 |
+action_result.data.\*.\*.Event.attribute_count | string | | 7 |
+action_result.data.\*.\*.Event.disable_correlation | numeric | | True False |
+action_result.data.\*.\*.Event.event_creator_email | string | `email` | test@test.com |
+action_result.data.\*.\*.Event.extends_uuid | string | | |
+action_result.data.\*.\*.Event.locked | numeric | | True False |
+action_result.data.\*.\*.Event.proposal_email_lock | numeric | | True False |
+action_result.data.\*.\*.Event.publish_timestamp | string | | 0 |
+action_result.data.\*.\*.Event.sharing_group_id | string | | 0 |
 action_result.data.\*.Attribute.\*.Event.distribution | string | | 1 |
 action_result.data.\*.Attribute.\*.Event.id | string | | 2020 |
 action_result.data.\*.Attribute.\*.Event.info | string | | Event created by test |

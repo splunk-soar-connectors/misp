@@ -198,24 +198,29 @@ def test_event_edit_preserves_genuine_failures(misp_server, asset, value):
     module = import_module("src.actions.add_attributes")
     params = UpdateEventParams(event_id=42, json=json.dumps({"comment": value}))
 
-    with pytest.raises(helper.PartialIOCError, match="HTTP 403"):
+    with pytest.raises(ActionFailure, match=r"MISP event 42:.*HTTP 403") as error:
         module.add_attributes.__wrapped__(params, Mock(), asset)
+    assert "earlier attribute update" not in error.value.message
 
 
-def test_later_failure_retains_last_saved_event_attributes(misp_server, asset):
+def test_later_write_failure_reports_earlier_save(monkeypatch, misp_server, asset):
+    event, _requests = misp_server
     module = import_module("src.actions.add_attributes")
+    add_result = Mock()
+    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
     params = UpdateEventParams(
         event_id=42, json=json.dumps({"comment": ["saved", "forbidden"]})
     )
 
-    result = module.add_attributes.__wrapped__(params, Mock(), asset)
+    success = module.add_attributes(params, soar=Mock(), asset=asset)
 
-    assert isinstance(result, ActionResult)
-    assert result.get_status() is False
+    assert success is False
+    result = add_result.call_args.args[0]
+    assert "MISP event 42" in result.get_message()
     assert "HTTP 403" in result.get_message()
-    assert len(result.get_data()) == 1
-    assert result.get_data()[0]["id"] == "1"
-    assert result.get_data()[0]["value"] == "saved"
+    assert "MISP accepted an earlier attribute update" in result.get_message()
+    assert result.get_data() == []
+    assert [attribute["value"] for attribute in event["Attribute"]] == ["saved"]
 
 
 @pytest.mark.parametrize("value", ["forbidden", "invalid"])
@@ -367,6 +372,7 @@ def test_update_does_not_suppress_tag_permission_errors(
 
     if with_attributes:
         result = module.add_attributes.__wrapped__(params, Mock(), asset)
+        assert isinstance(result, ActionResult)
         assert result.get_status() is False
         assert "Insufficient privileges" in result.get_message()
         assert result.get_data()[0]["value"] == "saved"
@@ -438,3 +444,4 @@ def test_create_keeps_event_snapshot_serializable(
         assert data[1]["value"] == "saved"
     else:
         assert "HTTP 403" in result.get_message()
+        assert "MISP accepted an earlier attribute update" in result.get_message()

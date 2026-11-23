@@ -17,7 +17,6 @@ from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
 from ..helper import (
-    PartialIOCError,
     add_iocs,
     add_tags,
     output,
@@ -143,26 +142,19 @@ def add_attributes(
         for attribute in event_data.get("Attribute", [])
         if attribute.get("id") is not None
     }
-    attributes = []
     try:
         attributes = add_iocs(asset, event_id, params, event=event)
-    except PartialIOCError as exc:
-        attributes = exc.completed_rows
-        error = exc
-    else:
-        error = None
+    except ActionFailure as exc:
+        raise ActionFailure(
+            f"Failed to add attributes to MISP event {event_id}: {exc.message}"
+        ) from exc
 
     attributes_added = sum(
         attribute.get("id") is not None and str(attribute["id"]) not in existing_ids
         for attribute in attributes
     )
-    if error is None and not attributes and not has_tags:
+    if not attributes and not has_tags:
         raise ActionFailure("Please provide at least one attribute")
-
-    if error is not None:
-        if not attributes:
-            raise error
-        return _partial_failure(params, event_id, attributes, attributes_added, error)
 
     try:
         if has_tags and params.replace_tags:
