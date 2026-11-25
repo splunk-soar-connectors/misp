@@ -15,7 +15,7 @@ from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField
 from soar_sdk.params import Param, Params
 from ..app import Asset, app
-from ..helper import output, positive_int, request
+from ..helper import positive_int, request
 
 
 class GetAttributesParams(Params):
@@ -75,7 +75,7 @@ class AttributeOutput(ActionOutput):
     uuid: str = OutputField(example_values=["5949b2b1-35b4-4152-a633-7e530a10000d"])
 
 
-class GetAttributesOutput(ActionOutput):
+class GetAttributesOutput(ActionOutput, extra="allow"):
     Attribute: list[AttributeOutput]
 
 
@@ -106,18 +106,17 @@ def get_event(
         "/attributes/restSearch",
         payload={"eventid": event_id, "returnFormat": "json"},
     )
-    attributes = result.get("response", result) if isinstance(result, dict) else result
-    if isinstance(attributes, dict):
-        attributes = attributes.get("Attribute", [])
-    if isinstance(attributes, dict):
-        attributes = [attributes]
-    if not isinstance(attributes, list):
+    body = result.get("response", result) if isinstance(result, dict) else result
+    attributes = body.get("Attribute") if isinstance(body, dict) else None
+    if not isinstance(attributes, list) or any(
+        not isinstance(row, dict) for row in attributes
+    ):
         raise RuntimeError("MISP returned an unexpected attribute response shape")
     if params.download_samples:
         _download_malware_samples(soar, event)
     soar.set_summary(GetAttributesSummary(returned_attributes=len(attributes)))
     soar.set_message("Successfully retrieved attributes")
-    return output(GetAttributesOutput, {"Attribute": attributes})
+    return GetAttributesOutput.model_construct(**body)
 
 
 def _download_malware_samples(soar, event):

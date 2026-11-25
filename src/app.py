@@ -14,6 +14,7 @@
 from soar_sdk.abstract import SOARClient
 from soar_sdk.app import App
 from soar_sdk.asset import BaseAsset, AssetField, FieldCategory
+from soar_sdk.exceptions import ActionFailure
 from soar_sdk.logging import getLogger
 from .helper import request
 
@@ -57,7 +58,10 @@ app = App(
 
 @app.test_connectivity()
 def test_connectivity(soar: SOARClient, asset: Asset) -> None:
-    request(asset, "GET", "/servers/getPyMISPVersion.json")
+    body = request(asset, "GET", "/servers/getPyMISPVersion.json", require_success=True)
+    version = body.get("version") if isinstance(body, dict) else None
+    if not isinstance(version, str) or not version.strip():
+        raise ActionFailure("MISP did not return a usable PyMISP version")
     soar.set_message("Test connectivity passed")
 
 

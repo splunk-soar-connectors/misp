@@ -168,6 +168,7 @@ class CreateEventSummary(ActionOutput):
     created_event_id: int
     attributes_added: int
     message: str
+    errors: str | None = None
 
 
 @app.action(
@@ -212,17 +213,46 @@ def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
         raise RuntimeError("MISP created the event but returned no event ID")
     event = dict(event)
     # The legacy table selects data.0.id for the event and data.*.id for attributes.
-    # Keep id unchanged and expose the first row's event ID as an SDK-native column.
     event_output = {**event, "created_event_id": str(event_id)}
+    # MISP defines these event fields as strings even when their values are numeric.
+    for field in (
+        "id",
+        "analysis",
+        "attribute_count",
+        "distribution",
+        "org_id",
+        "orgc_id",
+        "publish_timestamp",
+        "sharing_group_id",
+        "threat_level_id",
+        "timestamp",
+    ):
+        value = event_output.get(field)
+        if type(value) is int:
+            event_output[field] = str(value)
     try:
-        add_tags(asset, event.get("uuid") or event_id, params.tags)
+        add_tags(
+            asset,
+            event.get("uuid") or event_id,
+            params.tags,
+            event_id=event_id,
+        )
     except Exception as exc:
         return _partial_create_failure(
             params, event_output, event_id, f"Failed to add tags to MISP event: {exc}"
         )
+    confirmed_attributes = []
+    attribute_errors = []
     try:
         attributes = (
-            add_iocs(asset, event_id, params, event=event)
+            add_iocs(
+                asset,
+                event_id,
+                params,
+                event=event,
+                confirmed_rows=confirmed_attributes,
+                errors=attribute_errors,
+            )
             if params.add_attributes
             else []
         )
@@ -232,6 +262,8 @@ def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
             event_output,
             event_id,
             f"Failed to add attributes to MISP event: {exc}",
+            attributes=confirmed_attributes,
+            errors=attribute_errors,
         )
 
     message = f"Event created with id: {event_id}"
@@ -240,6 +272,7 @@ def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
             created_event_id=int(event_id),
             attributes_added=len(attributes),
             message=message,
+            errors="; ".join(attribute_errors) or None,
         )
     )
     soar.set_message(message)
@@ -248,18 +281,23 @@ def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
     ]
 
 
-def _partial_create_failure(params, event, event_id, message):
+def _partial_create_failure(
+    params, event, event_id, message, *, attributes=(), errors=()
+):
     failed_result = ActionResult(
         status=False,
         message=message,
         param=params.model_dump(),
     )
     failed_result.add_data(event)
+    for attribute in attributes:
+        failed_result.add_data(attribute)
     failed_result.set_summary(
         CreateEventSummary(
             created_event_id=int(event_id),
-            attributes_added=0,
+            attributes_added=len(attributes),
             message=f"Event created with id: {event_id}",
-        ).model_dump()
+            errors="; ".join(errors) or None,
+        ).model_dump(exclude_none=True)
     )
     return failed_result

@@ -294,3 +294,44 @@ def test_zero_query_limit_collects_all_pages(monkeypatch, controller, first_page
     ]
     assert soar.set_summary.call_args.args[0].returned_rows == len(rows)
     assert mocked.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("controller", "first_page"),
+    [
+        ("events", [{"Event": {"id": "42"}}]),
+        ("attributes", {"Attribute": [{"id": "123"}]}),
+    ],
+    ids=["events", "attributes"],
+)
+@pytest.mark.parametrize(
+    "bad_page",
+    [{"message": "unexpected page"}, [42]],
+    ids=["missing-collection", "invalid-row"],
+)
+def test_query_fails_on_malformed_second_page(
+    monkeypatch, controller, first_page, bad_page
+):
+    module = import_module("src.actions.run_query")
+    request_page = Mock(side_effect=[{"response": first_page}, {"response": bad_page}])
+    monkeypatch.setattr(module, "_request_query_page", request_page)
+    add_result = Mock()
+    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    soar = Mock()
+
+    success = module.run_query(
+        module.RunQueryParams(controller=controller, max_results=0),
+        soar=soar,
+        asset=Mock(),
+    )
+
+    assert success is False
+    result = add_result.call_args.args[0]
+    assert result.get_status() is False
+    assert (
+        f"unexpected search response shape for {controller} page 2"
+        in result.get_message()
+    )
+    assert result.get_data() == []
+    soar.set_summary.assert_not_called()
+    soar.set_message.assert_not_called()

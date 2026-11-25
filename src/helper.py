@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import re
 from copy import deepcopy
 
 from soar_sdk.action_results import PermissiveActionOutput
@@ -43,6 +44,7 @@ def request(
     payload=None,
     params=None,
     timeout: float | None = 60,
+    require_success: bool = False,
 ):
     """Call the MISP REST API and return decoded JSON."""
     base_url = asset.base_url.rstrip("/")
@@ -61,9 +63,9 @@ def request(
         raise RuntimeError(
             f"MISP returned HTTP {response.status_code}: {response.text[:1000]}"
         ) from exc
-    # Match requests.Response.ok semantics used by the legacy connector while
-    # avoiding that requests-only property on an httpx.Response.
-    if response.status_code >= 400:
+    if response.status_code >= 400 or (
+        require_success and not 200 <= response.status_code < 300
+    ):
         raise RuntimeError(f"MISP returned HTTP {response.status_code}: {body}")
     response_body = body.get("response") if isinstance(body, dict) else None
     response_body = response_body if isinstance(response_body, dict) else body
@@ -80,7 +82,9 @@ def request(
         message = (
             response_body.get("message") if isinstance(response_body, dict) else None
         )
-        raise RuntimeError(f"MISP did not save the requested change: {message or body}")
+        raise RuntimeError(
+            f"MISP did not save the requested change: {message or body}"
+        )
     return body
 
 
@@ -100,8 +104,11 @@ def split_values(value):
     """Split IOC inputs using the connector's comma/semicolon conventions."""
     if not value:
         return []
-    separator = ";" if ";" in value else ","
-    return [item.strip() for item in value.split(separator) if item.strip()]
+    return [
+        item
+        for raw_item in re.split(r"[,;]", value)
+        if (item := raw_item.strip())
+    ]
 
 
 def integer_value(value, field_name):
@@ -124,8 +131,8 @@ def positive_int(value, field_name):
     return numeric
 
 
-def add_iocs(asset, event_id, params, *, event):
-    """Append attributes and submit the complete event as in the legacy connector."""
+def add_iocs(asset, event_id, params, *, event, confirmed_rows=None, errors=None):
+    """Append attributes, collecting definite JSON row rejections when requested."""
     from soar_sdk.shims.phantom import utils as phantom_utils
 
     mapping = (
@@ -145,22 +152,45 @@ def add_iocs(asset, event_id, params, *, event):
             message += " MISP accepted an earlier attribute update."
         return ActionFailure(message)
 
-    def submit_row(row):
+    def submit_row(row, *, collect_rejection=False):
         from pymisp import MISPEvent
 
         nonlocal current_event, saved_rows
         try:
+            candidate = MISPEvent()
             if current_event is None:
-                current_event = MISPEvent()
                 # PyMISP can reuse empty lists; keep SDK output free of model objects.
-                current_event.load(deepcopy(event))
-            current_event.add_attribute(**row)
-            response = request(
-                asset,
-                "POST",
-                f"/events/edit/{current_event.uuid}",
-                payload=json.loads(current_event.to_json()),
-            )
+                candidate.load(deepcopy(event))
+            else:
+                candidate.load(json.loads(current_event.to_json()))
+            try:
+                candidate.add_attribute(**row)
+            except Exception as exc:
+                if collect_rejection and errors is not None:
+                    errors.append(str(exc))
+                    return
+                raise attribute_failure(str(exc)) from exc
+            try:
+                response = request(
+                    asset,
+                    "POST",
+                    f"/events/edit/{candidate.uuid}",
+                    payload=json.loads(candidate.to_json()),
+                )
+            except RuntimeError as exc:
+                message = str(exc)
+                rejected = message.startswith(
+                    (
+                        "MISP error:",
+                        "MISP did not save the requested change:",
+                        "MISP returned HTTP 400:",
+                        "MISP returned HTTP 422:",
+                    )
+                )
+                if collect_rejection and errors is not None and rejected:
+                    errors.append(message)
+                    return
+                raise
             updated_event = MISPEvent()
             updated_event.load(response)
             if str(updated_event.id) != str(event_id):
@@ -171,7 +201,11 @@ def add_iocs(asset, event_id, params, *, event):
             # Event edits return the complete saved event. Retain exactly those
             # attributes; do not infer that a submitted duplicate was changed.
             saved_rows = json.loads(current_event.to_json()).get("Attribute", [])
+            if confirmed_rows is not None:
+                confirmed_rows[:] = saved_rows
         except Exception as exc:
+            if isinstance(exc, ActionFailure):
+                raise
             raise attribute_failure(str(exc)) from exc
 
     def submit(attribute_type, value):
@@ -198,7 +232,7 @@ def add_iocs(asset, event_id, params, *, event):
             raise attribute_failure(f"Invalid JSON parameter: {exc}") from exc
         if isinstance(parsed, list):
             for row in parsed:
-                submit_row(row)
+                submit_row(row, collect_rejection=True)
         elif isinstance(parsed, dict):
             for attribute_type, raw_values in parsed.items():
                 values = (
@@ -207,7 +241,14 @@ def add_iocs(asset, event_id, params, *, event):
                     else split_values(str(raw_values))
                 )
                 for value in values:
-                    submit(attribute_type, value)
+                    submit_row(
+                        {
+                            "type": attribute_type,
+                            "value": value,
+                            "to_ids": to_ids,
+                        },
+                        collect_rejection=True,
+                    )
         else:
             raise attribute_failure("Invalid JSON parameter")
     return saved_rows or []
@@ -221,7 +262,7 @@ def _valid_ip(value):
     return True
 
 
-def add_tags(asset, event_identifier, value, *, existing_tags=()):
+def add_tags(asset, event_identifier, value, *, existing_tags=(), event_id=None):
     """Attach each requested global tag once, preserving existing associations."""
     attached = set()
     for tag in existing_tags:
@@ -231,7 +272,24 @@ def add_tags(asset, event_identifier, value, *, existing_tags=()):
         attached.update(
             str(tag[key]) for key in ("id", "name") if tag.get(key) is not None
         )
-    for tag in split_values(value):
+    requested_tags = split_values(value)
+    if not requested_tags:
+        return
+    local_conflicts = [
+        requested_tag
+        for requested_tag in requested_tags
+        if any(
+            tag.get("local", 0) in (True, 1, "1")
+            and (
+                str(tag.get("id", "")) == requested_tag
+                if requested_tag.isdecimal()
+                else str(tag.get("name", "")).casefold()
+                == requested_tag.casefold()
+            )
+            for tag in existing_tags
+        )
+    ]
+    for tag in requested_tags:
         if tag in attached:
             continue
         request(
@@ -241,3 +299,39 @@ def add_tags(asset, event_identifier, value, *, existing_tags=()):
             payload={"uuid": str(event_identifier), "tag": tag, "local": False},
         )
         attached.add(tag)
+
+    if local_conflicts:
+        event_response = request(
+            asset, "GET", f"/events/view/{event_id or event_identifier}"
+        )
+        event_data = event_response.get("Event", event_response)
+        current_tags = (
+            event_data.get("Tag", []) if isinstance(event_data, dict) else []
+        )
+        failures = []
+        for requested_tag in local_conflicts:
+            if requested_tag.isdecimal():
+                matches = [
+                    tag
+                    for tag in current_tags
+                    if str(tag.get("id", "")) == requested_tag
+                ]
+            else:
+                matches = [
+                    tag
+                    for tag in current_tags
+                    if str(tag.get("name", "")).casefold()
+                    == requested_tag.casefold()
+                ]
+            if any(tag.get("local") in (False, 0, "0") for tag in matches):
+                continue
+            if any(tag.get("local") in (True, 1, "1") for tag in matches):
+                failures.append(f"{requested_tag} remains local")
+            elif matches:
+                failures.append(f"{requested_tag} scope could not be verified")
+            else:
+                failures.append(f"{requested_tag} is not attached")
+        if failures:
+            raise RuntimeError(
+                "Global tag request made no change: " + "; ".join(failures)
+            )

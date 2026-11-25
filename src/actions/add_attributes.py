@@ -80,7 +80,7 @@ class UpdateEventParams(Params):
     json: str | None = Param(description="JSON key value list of attributes")
 
 
-class UpdateEventOutput(ActionOutput):
+class UpdateEventOutput(ActionOutput, extra="allow"):
     id: str = OutputField(
         column_name="MISP Attribute ID",
         cef_types=["misp attribute id"],
@@ -115,6 +115,7 @@ class UpdateEventSummary(ActionOutput):
     updated_event_id: int
     attributes_added: int
     message: str | None = None
+    errors: str | None = None
 
 
 @app.action(
@@ -142,8 +143,11 @@ def add_attributes(
         for attribute in event_data.get("Attribute", [])
         if attribute.get("id") is not None
     }
+    attribute_errors = []
     try:
-        attributes = add_iocs(asset, event_id, params, event=event)
+        attributes = add_iocs(
+            asset, event_id, params, event=event, errors=attribute_errors
+        )
     except ActionFailure as exc:
         raise ActionFailure(
             f"Failed to add attributes to MISP event {event_id}: {exc.message}"
@@ -173,11 +177,19 @@ def add_attributes(
             event_identifier,
             params.tags,
             existing_tags=() if params.replace_tags else event_data.get("Tag", []),
+            event_id=event_id,
         )
     except Exception as exc:
         if not attributes:
             raise
-        return _partial_failure(params, event_id, attributes, attributes_added, exc)
+        return _partial_failure(
+            params,
+            event_id,
+            attributes,
+            attributes_added,
+            exc,
+            errors=attribute_errors,
+        )
 
     message = (
         f"Attributes added to event: {event_id}"
@@ -188,6 +200,7 @@ def add_attributes(
         updated_event_id=event_id,
         attributes_added=attributes_added,
         message=message,
+        errors="; ".join(attribute_errors) or None,
     )
     soar.set_summary(summary)
     soar.set_message(message)
@@ -196,7 +209,9 @@ def add_attributes(
     return [output(UpdateEventOutput, {"event_id": str(event_id)})]
 
 
-def _partial_failure(params, event_id, attributes, attributes_added, error):
+def _partial_failure(
+    params, event_id, attributes, attributes_added, error, *, errors=()
+):
     failed_result = ActionResult(
         status=False,
         message=error.message if isinstance(error, ActionFailure) else str(error),
@@ -208,6 +223,7 @@ def _partial_failure(params, event_id, attributes, attributes_added, error):
         UpdateEventSummary(
             updated_event_id=event_id,
             attributes_added=attributes_added,
+            errors="; ".join(errors) or None,
         ).model_dump(exclude_none=True)
     )
     return failed_result

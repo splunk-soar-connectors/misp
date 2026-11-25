@@ -321,6 +321,8 @@ Send a custom REST request to the configured MISP server
 Type: **generic** <br>
 Read only: **False**
 
+A received HTTP response is returned as a successful SOAR action result, even when MISP returns an HTTP error. In playbooks, branch on <code>action_result.data.*.status_code</code> and treat HTTP 200 through 299 as success. The <code>response</code> field contains the response body.
+
 #### Action Parameters
 
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS

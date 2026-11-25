@@ -24,6 +24,73 @@ from ..helper import integer_value, output, positive_int, request
 
 _QUERY_PROGRESS_INTERVAL = 30
 
+_PYMISP_SEARCH_ALIASES = {
+    "type_attribute": "type",
+    "quick_filter": "quickFilter",
+    "date_from": "from",
+    "date_to": "to",
+    "with_attachments": "withAttachments",
+    "last": "publish_timestamp",
+    "enforce_warninglist": "enforceWarninglist",
+    "include_event_uuid": "includeEventUuid",
+    "include_event_tags": "includeEventTags",
+    "sg_reference_only": "sgReferenceOnly",
+    "include_context": "includeContext",
+    "include_sightings": "includeSightings",
+    "include_decay_score": "includeDecayScore",
+    "include_correlations": "includeCorrelations",
+    "exclude_decayed": "excludeDecayed",
+}
+_PYMISP_DEPRECATED_REST_KEYS = {
+    "quickFilter",
+    "withAttachments",
+    "enforceWarninglist",
+    "includeEventUuid",
+    "includeEventTags",
+    "includeContext",
+    "includeSightings",
+    "includeDecayScore",
+    "includeCorrelations",
+}
+_PYMISP_INTEGER_FLAGS = (
+    "withAttachments",
+    "metadata",
+    "enforceWarninglist",
+    "includeEventUuid",
+    "includeEventTags",
+    "sgReferenceOnly",
+    "includeContext",
+    "headerless",
+    "includeSightings",
+    "includeDecayScore",
+    "includeCorrelations",
+    "excludeDecayed",
+)
+
+
+def _normalize_search_filters(filters):
+    """Translate legacy PyMISP search options to the REST payload."""
+    for alias, key in _PYMISP_SEARCH_ALIASES.items():
+        value = filters.pop(alias, None)
+        # PyMISP lets its deprecated REST-spelled arguments override newer ones.
+        if value is not None and (
+            key not in _PYMISP_DEPRECATED_REST_KEYS or filters.get(key) is None
+        ):
+            filters[key] = value
+
+    for key in _PYMISP_INTEGER_FLAGS:
+        value = filters.get(key)
+        if value is not None:
+            try:
+                flag = int(value)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError(f"Invalid MISP search flag: {key}") from exc
+            filters[key] = 1 if flag else 0
+
+    for key in ("controller", "return_format", "pythonify"):
+        filters.pop(key, None)
+    return filters
+
 
 def _request_query_page(asset, controller, payload):
     """Keep IPC progress on the action thread while the HTTP request runs."""
@@ -260,7 +327,7 @@ def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
         other = json.loads(params.other)
         if not isinstance(other, dict):
             raise ValueError("other must be a JSON object")
-        filters.update(other)
+        filters.update(_normalize_search_filters(other))
     controller = params.controller.lower()
     if controller not in {"events", "attributes"}:
         raise ValueError("controller must be events or attributes")
@@ -278,13 +345,15 @@ def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
         )
         batch = result.get("response", result) if isinstance(result, dict) else result
         if isinstance(batch, dict):
-            batch = batch.get(
-                "Attribute" if controller == "attributes" else "Event", []
-            )
+            batch = batch.get("Attribute" if controller == "attributes" else "Event")
         if isinstance(batch, dict):
             batch = [batch]
-        if not isinstance(batch, list):
-            raise RuntimeError("MISP returned an unexpected search response shape")
+        if not isinstance(batch, list) or any(
+            not isinstance(row, dict) for row in batch
+        ):
+            raise RuntimeError(
+                f"MISP returned an unexpected search response shape for {controller} page {page}"
+            )
         logger.progress("Received %s results from MISP page %s", len(batch), page)
         if not batch:
             break

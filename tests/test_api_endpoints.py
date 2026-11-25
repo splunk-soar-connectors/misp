@@ -13,11 +13,16 @@
 # limitations under the License.
 """Record legacy PyMISP routes and guard the SDK read-action endpoints."""
 
+import json
 from importlib import import_module
+from io import BytesIO
 from unittest.mock import Mock
 from urllib.parse import urlparse
 
+import httpx
+import pytest
 from pymisp import MISPEvent, PyMISP
+from soar_sdk.exceptions import ActionFailure
 
 
 def test_pinned_legacy_pymisp_endpoints():
@@ -71,7 +76,9 @@ def test_sdk_read_actions_preserve_legacy_endpoints(monkeypatch):
 
     module = import_module("src.app")
     monkeypatch.setattr(module, "request", request)
-    module.test_connectivity.__wrapped__(Mock(), Mock())
+    soar = Mock()
+    module.test_connectivity.__wrapped__(soar, Mock())
+    soar.set_message.assert_called_once_with("Test connectivity passed")
     module = import_module("src.actions.get_attributes")
     monkeypatch.setattr(module, "request", request)
     module.get_event.__wrapped__(
@@ -91,3 +98,255 @@ def test_sdk_read_actions_preserve_legacy_endpoints(monkeypatch):
         ("POST", "/events/restSearch"),
         ("POST", "/attributes/restSearch"),
     ]
+
+
+@pytest.mark.parametrize("wrapped", [True, False], ids=["wrapped", "unwrapped"])
+def test_get_attributes_preserves_metadata_for_empty_results(monkeypatch, wrapped):
+    module = import_module("src.actions.get_attributes")
+    body = {"Attribute": [], "metadata": {"total": 0}}
+    response = {"response": body, "outer_metadata": True} if wrapped else body
+    request = Mock(side_effect=[{"Event": {"id": "42"}}, response])
+    monkeypatch.setattr(module, "request", request)
+    soar = Mock()
+
+    result = module.get_event.__wrapped__(
+        module.GetAttributesParams(event_id=42), soar, Mock()
+    )
+
+    assert result.model_dump() == body
+    assert soar.set_summary.call_args.args[0].returned_attributes == 0
+
+
+def test_get_attributes_reports_failure_when_second_sample_attachment_fails(
+    monkeypatch,
+):
+    module = import_module("src.actions.get_attributes")
+    event = {
+        "Event": {
+            "id": "42",
+            "Object": [
+                {
+                    "Attribute": [
+                        {
+                            "type": "malware-sample",
+                            "value": "samples/first.bin|first-hash",
+                            "contents": b"first sample",
+                        },
+                        {
+                            "type": "malware-sample",
+                            "value": "samples/second.bin|second-hash",
+                            "contents": b"second sample",
+                        },
+                    ]
+                }
+            ],
+        }
+    }
+    monkeypatch.setattr(
+        module,
+        "request",
+        Mock(side_effect=[event, {"response": {"Attribute": []}}]),
+    )
+
+    class FakeMISPAttribute:
+        def from_dict(self, **attribute_data):
+            self.malware_filename = attribute_data["value"].split("|", 1)[0]
+            self.malware_binary = BytesIO(attribute_data["contents"])
+
+    import pymisp
+
+    monkeypatch.setattr(pymisp, "MISPAttribute", FakeMISPAttribute)
+    saved_attachments = []
+    soar = Mock()
+    soar.get_executing_container_id.return_value = 42
+
+    def create_attachment(**attachment):
+        if attachment["file_name"] == "second.bin":
+            raise RuntimeError("second attachment failed")
+        saved_attachments.append(attachment)
+
+    soar.vault.create_attachment.side_effect = create_attachment
+
+    with pytest.raises(RuntimeError, match="second attachment failed"):
+        module.get_event.__wrapped__(
+            module.GetAttributesParams(event_id=42, download_samples=True),
+            soar,
+            Mock(),
+        )
+
+    assert [item["file_name"] for item in saved_attachments] == ["first.bin"]
+    assert [
+        call.kwargs["file_name"]
+        for call in soar.vault.create_attachment.call_args_list
+    ] == ["first.bin", "second.bin"]
+    soar.set_summary.assert_not_called()
+    soar.set_message.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"response": {"message": "unexpected"}},
+        {"response": {"Attribute": [42]}},
+        {"Attribute": {"id": "123"}},
+        {"response": []},
+    ],
+    ids=["missing-list", "invalid-row", "invalid-list", "invalid-envelope"],
+)
+def test_get_attributes_rejects_malformed_search_response(monkeypatch, response):
+    module = import_module("src.actions.get_attributes")
+    request = Mock(side_effect=[{"Event": {"id": "42"}}, response])
+    monkeypatch.setattr(module, "request", request)
+    soar = Mock()
+
+    with pytest.raises(RuntimeError, match="unexpected attribute response shape"):
+        module.get_event.__wrapped__(
+            module.GetAttributesParams(event_id=42), soar, Mock()
+        )
+
+    soar.set_message.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("status", "body", "error_type", "message"),
+    [
+        (302, {"version": "2.4.140"}, RuntimeError, "MISP returned HTTP 302"),
+        (200, {}, ActionFailure, "MISP did not return a usable PyMISP version"),
+        (
+            200,
+            {"version": " "},
+            ActionFailure,
+            "MISP did not return a usable PyMISP version",
+        ),
+    ],
+)
+def test_connectivity_rejects_invalid_responses(
+    monkeypatch, status, body, error_type, message
+):
+    module = import_module("src.app")
+    helper = import_module("src.helper")
+    transport = httpx.MockTransport(lambda _request: httpx.Response(status, json=body))
+    monkeypatch.setattr(
+        helper, "misp_client", lambda _asset: httpx.Client(transport=transport)
+    )
+    asset = module.Asset(base_url="https://misp.example.test", api_key="test-key")
+    soar = Mock()
+
+    with pytest.raises(error_type, match=message):
+        module.test_connectivity.__wrapped__(soar, asset)
+
+    soar.set_message.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("other", "expected_filters"),
+    [
+        (
+            {
+                "type_attribute": ["domain", "hostname"],
+                "quick_filter": "sample",
+                "date_from": "2024-01-01",
+                "date_to": 1706745600,
+                "with_attachments": False,
+                "last": "7d",
+                "enforce_warninglist": "0",
+                "include_event_uuid": True,
+                "include_event_tags": 1,
+                "sg_reference_only": "1",
+                "include_context": 0,
+                "include_sightings": True,
+                "include_decay_score": False,
+                "include_correlations": True,
+                "exclude_decayed": "0",
+                "metadata": False,
+                "headerless": True,
+                "to_ids": 0,
+            },
+            {
+                "type": ["domain", "hostname"],
+                "quickFilter": "sample",
+                "from": "2024-01-01",
+                "to": 1706745600,
+                "withAttachments": 0,
+                "publish_timestamp": "7d",
+                "enforceWarninglist": 0,
+                "includeEventUuid": 1,
+                "includeEventTags": 1,
+                "sgReferenceOnly": 1,
+                "includeContext": 0,
+                "includeSightings": 1,
+                "includeDecayScore": 0,
+                "includeCorrelations": 1,
+                "excludeDecayed": 0,
+                "metadata": 0,
+                "headerless": 1,
+                "to_ids": 0,
+            },
+        ),
+        (
+            {
+                "type_attribute": "hostname",
+                "type": "domain",
+                "date_from": "2024-01-01",
+                "from": "2d",
+                "last": "7d",
+                "publish_timestamp": "2d",
+                "include_event_tags": True,
+                "includeEventTags": 0,
+                "include_event_uuid": True,
+                "includeEventUuid": None,
+                "eventid": 42,
+                "tags": ["example"],
+                "order": "Event.id ASC",
+                "controller": "events",
+                "pythonify": True,
+                "return_format": "csv",
+                "returnFormat": "csv",
+                "page": 9,
+                "limit": 99,
+            },
+            {
+                "type": "hostname",
+                "from": "2024-01-01",
+                "publish_timestamp": "7d",
+                "includeEventTags": 0,
+                "includeEventUuid": 1,
+                "eventid": 42,
+                "tags": ["example"],
+                "order": "Event.id ASC",
+            },
+        ),
+        (
+            {"type": "domain", "from": "2d", "includeEventTags": False},
+            {"type": "domain", "from": "2d", "includeEventTags": 0},
+        ),
+    ],
+    ids=["pymisp-aliases", "conflicting-keys-and-pagination", "native-keys"],
+)
+def test_run_query_translates_legacy_pymisp_filters(
+    monkeypatch, other, expected_filters
+):
+    module = import_module("src.actions.run_query")
+    request = Mock(return_value={"response": {"Attribute": []}})
+    monkeypatch.setattr(module, "request", request)
+    asset = Mock()
+
+    module.run_query.__wrapped__(
+        module.RunQueryParams(
+            controller="attributes", max_results=2, other=json.dumps(other)
+        ),
+        Mock(),
+        asset,
+    )
+
+    request.assert_called_once_with(
+        asset,
+        "POST",
+        "/attributes/restSearch",
+        payload={**expected_filters, "returnFormat": "json", "page": 1, "limit": 2},
+        timeout=60,
+    )
+    flag_fields = {"includeEventTags", "includeEventUuid"} & expected_filters.keys()
+    assert all(
+        type(request.call_args.kwargs["payload"][key]) is int for key in flag_fields
+    )

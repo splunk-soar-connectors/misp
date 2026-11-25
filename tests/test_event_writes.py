@@ -416,32 +416,55 @@ def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
     [(["saved"], True), (["saved", "forbidden"], False)],
     ids=["success", "partial-failure"],
 )
+@pytest.mark.parametrize(
+    "response_type", [str, int], ids=["string-fields", "int-fields"]
+)
 def test_create_keeps_event_snapshot_serializable(
-    monkeypatch, misp_server, asset, values, succeeded
+    monkeypatch, misp_server, asset, values, succeeded, response_type
 ):
-    """PyMISP edits must not insert model objects into the retained event row."""
+    """Keep a JSON event snapshot with the same field types on either outcome."""
     event, _requests = misp_server
+    string_fields = {
+        "id": 42,
+        "analysis": 0,
+        "attribute_count": 0,
+        "distribution": 0,
+        "org_id": 1,
+        "orgc_id": 1,
+        "publish_timestamp": 0,
+        "sharing_group_id": 0,
+        "threat_level_id": 1,
+        "timestamp": 1700000000,
+    }
+    event.update({key: response_type(value) for key, value in string_fields.items()})
+    event["published"] = False
     module = import_module("src.actions.create_event")
     add_result = Mock()
+    soar = Mock()
     monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
 
     success = module.create_event(
         module.CreateEventParams(
             info="Example", add_attributes=True, json=json.dumps({"comment": values})
         ),
-        soar=Mock(),
+        soar=soar,
         asset=asset,
     )
 
     assert success is succeeded
     result = add_result.call_args.args[0]
     data = json.loads(json.dumps(result.get_data()))
-    assert data[0]["id"] == "42"
+    assert {key: data[0][key] for key in string_fields} == {
+        key: str(value) for key, value in string_fields.items()
+    }
+    assert data[0]["published"] is False
     assert data[0]["created_event_id"] == "42"
     assert data[0]["Attribute"] == []
     assert event["Attribute"][0]["value"] == "saved"
     if succeeded:
         assert data[1]["value"] == "saved"
+        assert soar.set_summary.call_args.args[0].created_event_id == 42
     else:
+        assert result.get_summary()["created_event_id"] == 42
         assert "HTTP 403" in result.get_message()
         assert "MISP accepted an earlier attribute update" in result.get_message()
