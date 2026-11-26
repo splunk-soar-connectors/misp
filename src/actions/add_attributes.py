@@ -158,6 +158,10 @@ def add_attributes(
         for attribute in attributes
     )
     if not attributes and not has_tags:
+        if attribute_errors:
+            raise ActionFailure(
+                f"Failed to add attributes to MISP event {event_id}: {'; '.join(attribute_errors)}"
+            )
         raise ActionFailure("Please provide at least one attribute")
 
     try:

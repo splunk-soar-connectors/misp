@@ -76,6 +76,8 @@ def misp_server(monkeypatch):
         assert submitted_event["uuid"] == EVENT_UUID
         assert "created_event_id" not in submitted_event
         for row in submitted_event.get("Attribute", []):
+            if row["value"].startswith("reject-"):
+                return httpx2.Response(422, json={"errors": row["value"]})
             if row["value"] in {"forbidden", "invalid"}:
                 return httpx2.Response(403, json={"errors": "Rejected event update"})
             existing = next(
@@ -221,6 +223,40 @@ def test_later_write_failure_reports_earlier_save(monkeypatch, misp_server, asse
     assert "MISP accepted an earlier attribute update" in result.get_message()
     assert result.get_data() == []
     assert [attribute["value"] for attribute in event["Attribute"]] == ["saved"]
+
+
+def test_update_reports_all_json_row_rejections(monkeypatch, misp_server, asset):
+    event, _requests = misp_server
+    module = import_module("src.actions.add_attributes")
+    add_result = Mock()
+    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    params = UpdateEventParams(
+        event_id=42, json=json.dumps({"comment": ["reject-first", "reject-second"]})
+    )
+
+    assert module.add_attributes(params, soar=Mock(), asset=asset) is False
+
+    message = add_result.call_args.args[0].get_message()
+    assert "Failed to add attributes to MISP event 42:" in message
+    assert "HTTP 422" in message
+    assert "reject-first" in message
+    assert "reject-second" in message
+    assert event["Attribute"] == []
+
+
+def test_update_keeps_valid_json_rows_and_summarizes_rejections(misp_server, asset):
+    module = import_module("src.actions.add_attributes")
+    params = UpdateEventParams(
+        event_id=42, json=json.dumps({"comment": ["reject-first", "saved"]})
+    )
+    soar = Mock()
+
+    rows = module.add_attributes.__wrapped__(params, soar, asset)
+
+    assert [row.value for row in rows] == ["saved"]
+    summary = soar.set_summary.call_args.args[0]
+    assert summary.attributes_added == 1
+    assert "reject-first" in summary.errors
 
 
 @pytest.mark.parametrize("value", ["forbidden", "invalid"])
