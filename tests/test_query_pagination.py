@@ -19,7 +19,7 @@ from importlib import import_module
 from threading import Event, get_ident
 from unittest.mock import Mock
 
-import httpx
+import httpx2
 import pytest
 from soar_sdk.app import App
 from soar_sdk.auth import StaticTokenAuth
@@ -44,7 +44,11 @@ def _query_rows(result, controller):
 
 @pytest.mark.parametrize(
     "error",
-    [None, RuntimeError("MISP returned HTTP 403"), httpx.ReadTimeout("Read timed out")],
+    [
+        None,
+        RuntimeError("MISP returned HTTP 403"),
+        httpx2.ReadTimeout("Read timed out"),
+    ],
     ids=["success", "vendor-error", "http-timeout"],
 )
 def test_waiting_query_reports_progress_on_action_thread(monkeypatch, error):
@@ -126,7 +130,7 @@ def test_negative_query_keeps_last_rows_with_bounded_storage(monkeypatch, contro
             if controller == "events"
             else {"Attribute": rows}
         )
-        return httpx.Response(200, json={"response": response})
+        return httpx2.Response(200, json={"response": response})
 
     asset = Asset(
         base_url="https://misp.example.test",
@@ -137,8 +141,8 @@ def test_negative_query_keeps_last_rows_with_bounded_storage(monkeypatch, contro
     monkeypatch.setattr(
         helper,
         "misp_client",
-        lambda _asset: httpx.Client(
-            transport=httpx.MockTransport(handle),
+        lambda _asset: httpx2.Client(
+            transport=httpx2.MockTransport(handle),
             auth=StaticTokenAuth(_asset.api_key, token_type=""),
             timeout=60,
         ),
@@ -174,12 +178,14 @@ def test_query_timeout_reaches_http_client(monkeypatch, max_results, controller)
 
     def handle(request):
         requests.append(request)
-        return httpx.Response(200, json={"response": []})
+        return httpx2.Response(200, json={"response": []})
 
     monkeypatch.setattr(
         helper,
         "misp_client",
-        lambda _asset: httpx.Client(transport=httpx.MockTransport(handle), timeout=60),
+        lambda _asset: httpx2.Client(
+            transport=httpx2.MockTransport(handle), timeout=60
+        ),
     )
     module.run_query.__wrapped__(
         module.RunQueryParams(controller=controller, max_results=max_results),
@@ -201,12 +207,14 @@ def test_other_requests_keep_existing_timeout(monkeypatch):
 
     def handle(request):
         requests.append(request)
-        return httpx.Response(200, json={"version": "2.4.140"})
+        return httpx2.Response(200, json={"version": "2.4.140"})
 
     monkeypatch.setattr(
         helper,
         "misp_client",
-        lambda _asset: httpx.Client(transport=httpx.MockTransport(handle), timeout=60),
+        lambda _asset: httpx2.Client(
+            transport=httpx2.MockTransport(handle), timeout=60
+        ),
     )
     helper.request(
         Asset(base_url="https://misp.example.test", api_key=TEST_API_KEY),

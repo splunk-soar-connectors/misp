@@ -167,6 +167,7 @@ action_result.data.\*.uuid | string | | 68e219ee-5727-4cb2-a32f-8dc27aa4231f |
 action_result.summary.updated_event_id | numeric | | |
 action_result.summary.attributes_added | numeric | | |
 action_result.summary.message | string | | |
+action_result.summary.errors | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -257,6 +258,7 @@ action_result.data.\*.value | string | `url` `domain` `ip` `email` `hash` `md5` 
 action_result.summary.created_event_id | numeric | | |
 action_result.summary.attributes_added | numeric | | |
 action_result.summary.message | string | | |
+action_result.summary.errors | string | | |
 summary.total_objects | numeric | | 1 |
 summary.total_objects_successful | numeric | | 1 |
 
@@ -321,7 +323,7 @@ Send a custom REST request to the configured MISP server
 Type: **generic** <br>
 Read only: **False**
 
-A received HTTP response is returned as a successful SOAR action result, even when MISP returns an HTTP error. In playbooks, branch on <code>action_result.data.*.status_code</code> and treat HTTP 200 through 299 as success. The <code>response</code> field contains the response body.
+A received HTTP response is returned as a successful SOAR action result, even when MISP returns an HTTP error. In playbooks, branch on <code>action_result.data.\*.status_code</code> and treat HTTP 200 through 299 as success. The <code>response</code> field contains the response body.
 
 #### Action Parameters
 

@@ -64,7 +64,7 @@ def make_request(
     params: MakeRequestParams, soar: SOARClient, asset: Asset
 ) -> MakeRequestOutput:
     """Make an authenticated request to a relative MISP API endpoint."""
-    import httpx
+    import httpx2
     from urllib.parse import urlsplit
 
     endpoint = params.endpoint.strip()
@@ -83,11 +83,11 @@ def make_request(
     if query_params is not None and not isinstance(query_params, dict):
         raise ValueError("query_params must be a JSON object")
 
-    url = httpx.URL(f"{asset.base_url.rstrip('/')}{endpoint}")
+    url = httpx2.URL(f"{asset.base_url.rstrip('/')}{endpoint}")
     query_pairs = list(url.params.multi_items())
     if query_params:
-        query_pairs.extend(httpx.QueryParams(query_params).multi_items())
-    url = url.copy_with(params=httpx.QueryParams(query_pairs))
+        query_pairs.extend(httpx2.QueryParams(query_params).multi_items())
+    url = url.copy_with(params=httpx2.QueryParams(query_pairs))
 
     with misp_client(asset) as client:
         response = client.request(

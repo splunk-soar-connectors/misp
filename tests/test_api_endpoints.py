@@ -19,7 +19,7 @@ from io import BytesIO
 from unittest.mock import Mock
 from urllib.parse import urlparse
 
-import httpx
+import httpx2
 import pytest
 from pymisp import MISPEvent, PyMISP
 from soar_sdk.exceptions import ActionFailure
@@ -176,8 +176,7 @@ def test_get_attributes_reports_failure_when_second_sample_attachment_fails(
 
     assert [item["file_name"] for item in saved_attachments] == ["first.bin"]
     assert [
-        call.kwargs["file_name"]
-        for call in soar.vault.create_attachment.call_args_list
+        call.kwargs["file_name"] for call in soar.vault.create_attachment.call_args_list
     ] == ["first.bin", "second.bin"]
     soar.set_summary.assert_not_called()
     soar.set_message.assert_not_called()
@@ -225,9 +224,11 @@ def test_connectivity_rejects_invalid_responses(
 ):
     module = import_module("src.app")
     helper = import_module("src.helper")
-    transport = httpx.MockTransport(lambda _request: httpx.Response(status, json=body))
+    transport = httpx2.MockTransport(
+        lambda _request: httpx2.Response(status, json=body)
+    )
     monkeypatch.setattr(
-        helper, "misp_client", lambda _asset: httpx.Client(transport=transport)
+        helper, "misp_client", lambda _asset: httpx2.Client(transport=transport)
     )
     asset = module.Asset(base_url="https://misp.example.test", api_key="test-key")
     soar = Mock()

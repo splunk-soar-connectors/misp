@@ -19,7 +19,7 @@ from importlib import import_module
 from types import SimpleNamespace
 from unittest.mock import Mock
 
-import httpx
+import httpx2
 import pytest
 from pymisp import MISPAttribute
 from soar_sdk.action_results import ActionResult
@@ -44,11 +44,11 @@ def misp_server(monkeypatch):
         assert request.headers["Authorization"] == "test-key"
         if request.method == "GET":
             assert request.url.path == "/events/view/42"
-            return httpx.Response(200, json={"Event": event})
+            return httpx2.Response(200, json={"Event": event})
         assert request.method == "POST"
         assert "breakOnDuplicate" not in str(request.url)
         if request.url.path == "/events/add":
-            return httpx.Response(200, json={"Event": event})
+            return httpx2.Response(200, json={"Event": event})
         if request.url.path.startswith("/tags/"):
             payload = json.loads(request.content)
             tags = event.setdefault("Tag", [])
@@ -60,15 +60,15 @@ def misp_server(monkeypatch):
             if request.url.path == "/tags/removeTagFromObject":
                 event["Tag"] = [tag for tag in tags if tag not in matching]
             elif payload["tag"] == "forbidden":
-                return httpx.Response(403, json={"errors": "Insufficient privileges"})
+                return httpx2.Response(403, json={"errors": "Insufficient privileges"})
             elif any(tag.get("local", 0) in (False, 0, "0") for tag in matching):
-                return httpx.Response(
+                return httpx2.Response(
                     403,
                     json={"errors": "Event already has the requested tag attached"},
                 )
             else:
                 tags.append({"name": payload["tag"], "local": 0})
-            return httpx.Response(200, json={"saved": True})
+            return httpx2.Response(200, json={"saved": True})
         assert request.url.path == f"/events/edit/{EVENT_UUID}"
         submitted_event = json.loads(request.content)
         assert submitted_event["id"] == "42"
@@ -77,7 +77,7 @@ def misp_server(monkeypatch):
         assert "created_event_id" not in submitted_event
         for row in submitted_event.get("Attribute", []):
             if row["value"] in {"forbidden", "invalid"}:
-                return httpx.Response(403, json={"errors": "Rejected event update"})
+                return httpx2.Response(403, json={"errors": "Rejected event update"})
             existing = next(
                 (
                     attribute
@@ -97,13 +97,13 @@ def misp_server(monkeypatch):
             event["Attribute"].append(
                 {**row, "id": str(len(event["Attribute"]) + 1), "event_id": "42"}
             )
-        return httpx.Response(200, json={"Event": event})
+        return httpx2.Response(200, json={"Event": event})
 
-    transport = httpx.MockTransport(handle)
+    transport = httpx2.MockTransport(handle)
     monkeypatch.setattr(
         helper,
         "misp_client",
-        lambda _asset: httpx.Client(
+        lambda _asset: httpx2.Client(
             transport=transport, auth=StaticTokenAuth(_asset.api_key, token_type="")
         ),
     )

@@ -18,7 +18,7 @@ from contextlib import nullcontext
 from importlib import import_module
 from unittest.mock import Mock
 
-import httpx
+import httpx2
 import pytest
 from soar_sdk.app import App
 
@@ -41,7 +41,7 @@ def test_make_request_preserves_endpoint_and_input_query_params(monkeypatch):
         request_url = None
 
         def request(self, method, url, **kwargs):
-            self.request_url = httpx.URL(url)
+            self.request_url = httpx2.URL(url)
             self.request_kwargs = {"method": method, **kwargs}
             return FakeResponse()
 
@@ -82,10 +82,10 @@ def test_make_request_preserves_endpoint_and_input_query_params(monkeypatch):
 )
 def test_make_request_treats_json_null_as_omitted(monkeypatch, inputs):
     action_module = import_module("src.actions.make_request")
-    handle = Mock(return_value=httpx.Response(200, json={}))
-    transport = httpx.MockTransport(handle)
+    handle = Mock(return_value=httpx2.Response(200, json={}))
+    transport = httpx2.MockTransport(handle)
     monkeypatch.setattr(
-        action_module, "misp_client", lambda _asset: httpx.Client(transport=transport)
+        action_module, "misp_client", lambda _asset: httpx2.Client(transport=transport)
     )
     params = action_module.MakeRequestParams(
         endpoint="/events/restSearch?existing=1", method="POST", **inputs
@@ -106,7 +106,7 @@ def test_make_request_returns_http_403_as_successful_soar_output(monkeypatch):
     action_module = import_module("src.actions.make_request")
     body = {"message": "Forbidden"}
     client = Mock()
-    client.request.return_value = httpx.Response(403, json=body)
+    client.request.return_value = httpx2.Response(403, json=body)
     monkeypatch.setattr(
         action_module, "misp_client", lambda _asset: nullcontext(client)
     )

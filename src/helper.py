@@ -26,10 +26,10 @@ from soar_sdk.exceptions import ActionFailure
 
 def misp_client(asset):
     """Build an HTTP client using the SDK's static-token auth handler."""
-    import httpx
+    import httpx2
     from soar_sdk.auth import StaticTokenAuth
 
-    return httpx.Client(
+    return httpx2.Client(
         auth=StaticTokenAuth(asset.api_key, token_type=""),
         verify=asset.verify_server_cert,
         timeout=60,
@@ -82,9 +82,7 @@ def request(
         message = (
             response_body.get("message") if isinstance(response_body, dict) else None
         )
-        raise RuntimeError(
-            f"MISP did not save the requested change: {message or body}"
-        )
+        raise RuntimeError(f"MISP did not save the requested change: {message or body}")
     return body
 
 
@@ -104,11 +102,7 @@ def split_values(value):
     """Split IOC inputs using the connector's comma/semicolon conventions."""
     if not value:
         return []
-    return [
-        item
-        for raw_item in re.split(r"[,;]", value)
-        if (item := raw_item.strip())
-    ]
+    return [item for raw_item in re.split(r"[,;]", value) if (item := raw_item.strip())]
 
 
 def integer_value(value, field_name):
@@ -283,8 +277,7 @@ def add_tags(asset, event_identifier, value, *, existing_tags=(), event_id=None)
             and (
                 str(tag.get("id", "")) == requested_tag
                 if requested_tag.isdecimal()
-                else str(tag.get("name", "")).casefold()
-                == requested_tag.casefold()
+                else str(tag.get("name", "")).casefold() == requested_tag.casefold()
             )
             for tag in existing_tags
         )
@@ -305,9 +298,7 @@ def add_tags(asset, event_identifier, value, *, existing_tags=(), event_id=None)
             asset, "GET", f"/events/view/{event_id or event_identifier}"
         )
         event_data = event_response.get("Event", event_response)
-        current_tags = (
-            event_data.get("Tag", []) if isinstance(event_data, dict) else []
-        )
+        current_tags = event_data.get("Tag", []) if isinstance(event_data, dict) else []
         failures = []
         for requested_tag in local_conflicts:
             if requested_tag.isdecimal():
@@ -320,8 +311,7 @@ def add_tags(asset, event_identifier, value, *, existing_tags=(), event_id=None)
                 matches = [
                     tag
                     for tag in current_tags
-                    if str(tag.get("name", "")).casefold()
-                    == requested_tag.casefold()
+                    if str(tag.get("name", "")).casefold() == requested_tag.casefold()
                 ]
             if any(tag.get("local") in (False, 0, "0") for tag in matches):
                 continue
