@@ -65,7 +65,7 @@ def test_invalid_event_ids_fail_before_request(monkeypatch, params_class, value)
     request = Mock()
     monkeypatch.setattr(module, "request", request)
     with pytest.raises(ValueError, match="event_id"):
-        getattr(module, handler_name).__wrapped__(
+        getattr(module, handler_name)(
             params_class.model_validate({"event_id": value}), Mock(), Mock()
         )
     request.assert_not_called()
@@ -78,7 +78,7 @@ def test_query_rejects_invalid_id_before_misp_request(monkeypatch, value):
     monkeypatch.setattr(module, "request", request)
 
     with pytest.raises(ValueError, match="event_id must be"):
-        module.run_query.__wrapped__(
+        module.run_query(
             RunQueryParams(controller="events", event_id=value), Mock(), Mock()
         )
 
@@ -96,7 +96,7 @@ def test_missing_query_limit_sends_default_integer(monkeypatch, limit_input):
     monkeypatch.setattr(module, "request", request)
     params = RunQueryParams.model_validate({"controller": "events", **limit_input})
 
-    module.run_query.__wrapped__(params, Mock(), Mock())
+    module.run_query(params, Mock(), Mock())
 
     assert request.call_args.kwargs["payload"]["limit"] == 10
     assert type(request.call_args.kwargs["payload"]["limit"]) is int
@@ -134,7 +134,7 @@ def test_query_limit_rejects_invalid_counts_before_request(monkeypatch, value):
     monkeypatch.setattr(module, "request", request)
 
     with pytest.raises(ValueError, match="max_results"):
-        module.run_query.__wrapped__(
+        module.run_query(
             RunQueryParams.model_validate(
                 {"controller": "events", "max_results": value}
             ),

@@ -15,7 +15,7 @@ from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, ActionResult, OutputField
 from soar_sdk.exceptions import ActionFailure
 from soar_sdk.params import Param, Params
-from ..app import Asset, app
+from ..asset import Asset
 from ..helper import (
     add_iocs,
     add_tags,
@@ -118,15 +118,6 @@ class UpdateEventSummary(ActionOutput):
     errors: str | None = None
 
 
-@app.action(
-    name="update event",
-    description="Add attributes / IOCs to an event in MISP",
-    action_type="generic",
-    read_only=False,
-    render_as="table",
-    summary_type=UpdateEventSummary,
-    verbose="Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
-)
 def add_attributes(
     params: UpdateEventParams, soar: SOARClient, asset: Asset
 ) -> list[UpdateEventOutput]:

@@ -73,7 +73,7 @@ def test_query_event_list_preserves_legacy_nesting(monkeypatch, event_rows):
         module, "_request_query_page", Mock(side_effect=[{"response": event_rows}, []])
     )
     manager = Mock()
-    result = module.run_query.__wrapped__(
+    result = module.run_query(
         module.RunQueryParams(controller="events"), Mock(), Mock()
     )
 

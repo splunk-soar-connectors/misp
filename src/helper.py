@@ -24,15 +24,15 @@ from soar_sdk.action_results import PermissiveActionOutput
 from soar_sdk.exceptions import ActionFailure
 
 
-def misp_client(asset):
+def misp_client(asset, *, verify_ssl: bool | None = None, timeout: float | None = None):
     """Build an HTTP client using the SDK's static-token auth handler."""
     import httpx2
     from soar_sdk.auth import StaticTokenAuth
 
     return httpx2.Client(
         auth=StaticTokenAuth(asset.api_key, token_type=""),
-        verify=asset.verify_server_cert,
-        timeout=60,
+        verify=asset.verify_server_cert if verify_ssl is None else verify_ssl,
+        timeout=60 if timeout is None else timeout,
     )
 
 

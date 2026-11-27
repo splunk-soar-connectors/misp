@@ -57,10 +57,13 @@ In **run query**, use a list in the `other` JSON object to keep a comma-containi
 {"tags": ["tag1, tag11", "tag_2"]}
 ```
 
-### Endpoint Query Parameters
+### Custom Requests
 
-For custom MISP API requests, query parameters already present in the endpoint URL are combined
-with the `query_params` JSON object. Repeated keys and values from both sources are retained.
+For custom MISP API requests, `query_parameters` accepts a JSON object or a query string.
+Repeated keys and values are retained when combined with the endpoint query.
+
+Any received HTTP response yields a successful SOAR action result. Use
+`action_result.data.*.status_code` to check the HTTP status and `response` to read the body.
 
 ### Malware Sample Downloads
 
@@ -83,7 +86,7 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [update event](#action-update-event) - Add attributes / IOCs to an event in MISP <br>
 [create event](#action-create-event) - Create a new event in MISP <br>
 [get attributes](#action-get-attributes) - Get attributes for a specific event <br>
-[make request](#action-make-request) - Send a custom REST request to the configured MISP server <br>
+[make request](#action-make-request) - Send a custom REST request to the configured MISP server. <br>
 [run query](#action-run-query) - Run a query to find events or attributes
 
 ## action: 'test connectivity'
@@ -318,21 +321,24 @@ summary.total_objects_successful | numeric | | 1 |
 
 ## action: 'make request'
 
-Send a custom REST request to the configured MISP server
+Send a custom REST request to the configured MISP server.
 
 Type: **generic** <br>
 Read only: **False**
 
-A received HTTP response is returned as a successful SOAR action result, even when MISP returns an HTTP error. In playbooks, branch on <code>action_result.data.\*.status_code</code> and treat HTTP 200 through 299 as success. The <code>response</code> field contains the response body.
+'make request' action for the app. Used to handle arbitrary HTTP requests with the app's asset
 
 #### Action Parameters
 
 PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
 --------- | -------- | ----------- | ---- | --------
-**endpoint** | required | Relative MISP API endpoint, for example /servers/getPyMISPVersion.json | string | |
-**method** | required | HTTP method | string | |
-**payload** | optional | Optional JSON request body | string | |
-**query_params** | optional | Optional JSON object of URL query parameters | string | |
+**http_method** | required | The HTTP method to use for the request. | string | |
+**endpoint** | required | The endpoint to send the request to. | string | |
+**headers** | optional | The headers to send with the request (JSON object). An example is {'Content-Type': 'application/json'} | string | |
+**query_parameters** | optional | Parameters to append to the URL (JSON object or query string). An example is ?key=value&key2=value2 | string | |
+**body** | optional | The body to send with the request (JSON object). An example is {'key': 'value', 'key2': 'value2'} | string | |
+**timeout** | optional | The timeout for the request in seconds. | numeric | |
+**verify_ssl** | optional | Whether to verify the SSL certificate. Default is True. | boolean | |
 
 #### Action Output
 
@@ -340,10 +346,13 @@ DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
 --------- | ---- | -------- | --------------
 action_result.status | string | | success failure |
 action_result.message | string | | |
+action_result.parameter.http_method | string | | |
 action_result.parameter.endpoint | string | | |
-action_result.parameter.method | string | | |
-action_result.parameter.payload | string | | |
-action_result.parameter.query_params | string | | |
+action_result.parameter.headers | string | | |
+action_result.parameter.query_parameters | string | | |
+action_result.parameter.body | string | | |
+action_result.parameter.timeout | numeric | | |
+action_result.parameter.verify_ssl | boolean | | |
 action_result.data.\*.status_code | numeric | | |
 action_result.data.\*.response | string | | |
 summary.total_objects | numeric | | 1 |

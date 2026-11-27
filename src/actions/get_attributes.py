@@ -14,7 +14,7 @@
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField
 from soar_sdk.params import Param, Params
-from ..app import Asset, app
+from ..asset import Asset
 from ..helper import positive_int, request
 
 
@@ -83,15 +83,6 @@ class GetAttributesSummary(ActionOutput):
     returned_attributes: int
 
 
-@app.action(
-    name="get attributes",
-    description="Get attributes for a specific event",
-    action_type="investigate",
-    read_only=True,
-    render_as="table",
-    summary_type=GetAttributesSummary,
-    verbose="<b>download_samples</b> will only download files which are marked as a 'malware-sample'.",
-)
 def get_event(
     params: GetAttributesParams, soar: SOARClient, asset: Asset
 ) -> GetAttributesOutput:

@@ -14,31 +14,14 @@
 """Send a custom REST request to the configured MISP server."""
 
 import json
+from urllib.parse import urlsplit
 
-from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField
-from soar_sdk.params import Param, Params
+from soar_sdk.exceptions import ActionFailure
+from soar_sdk.params import MakeRequestParams
 
-from ..app import Asset, app
+from ..asset import Asset
 from ..helper import misp_client
-
-
-class MakeRequestParams(Params):
-    endpoint: str = Param(
-        description="Relative MISP API endpoint, for example /servers/getPyMISPVersion.json",
-        required=True,
-    )
-    method: str = Param(
-        description="HTTP method",
-        default="GET",
-        value_list=["GET", "POST", "PUT", "PATCH", "DELETE"],
-    )
-    payload: str | None = Param(
-        description="Optional JSON request body",
-    )
-    query_params: str | None = Param(
-        description="Optional JSON object of URL query parameters",
-    )
 
 
 class MakeRequestOutput(ActionOutput):
@@ -46,58 +29,72 @@ class MakeRequestOutput(ActionOutput):
     response: str = OutputField()
 
 
-@app.action(
-    name="make request",
-    description="Send a custom REST request to the configured MISP server",
-    verbose=(
-        "A received HTTP response is returned as a successful SOAR action result, "
-        "even when MISP returns an HTTP error. In playbooks, branch on "
-        "<code>action_result.data.*.status_code</code> and treat HTTP 200 through 299 "
-        "as success. The <code>response</code> field contains the response body."
-    ),
-    action_type="generic",
-    read_only=False,
-    params_class=MakeRequestParams,
-    output_class=MakeRequestOutput,
-)
-def make_request(
-    params: MakeRequestParams, soar: SOARClient, asset: Asset
-) -> MakeRequestOutput:
-    """Make an authenticated request to a relative MISP API endpoint."""
+def make_request(params: MakeRequestParams, asset: Asset) -> MakeRequestOutput:
+    """Send a custom REST request to the configured MISP server."""
     import httpx2
-    from urllib.parse import urlsplit
 
     endpoint = params.endpoint.strip()
-    parsed_endpoint = urlsplit(endpoint)
-    if not endpoint.startswith("/") or parsed_endpoint.scheme or parsed_endpoint.netloc:
-        raise ValueError("endpoint must be a relative MISP path starting with '/'")
-    if ".." in parsed_endpoint.path.split("/"):
-        raise ValueError("endpoint cannot contain parent-directory path segments")
+    if not endpoint.startswith("/") or endpoint.startswith("//"):
+        raise ActionFailure("endpoint must be a relative MISP path starting with '/'")
+    if ".." in urlsplit(endpoint).path.split("/"):
+        raise ActionFailure("endpoint cannot contain parent-directory path segments")
 
-    method = params.method.upper()
-    if method not in {"GET", "POST", "PUT", "PATCH", "DELETE"}:
-        raise ValueError("Unsupported HTTP method")
+    method = params.http_method.upper()
+    if method not in {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}:
+        raise ActionFailure("Unsupported HTTP method")
+    if params.timeout is not None and params.timeout <= 0:
+        raise ActionFailure("timeout must be positive")
 
-    payload = json.loads(params.payload) if params.payload else None
-    query_params = json.loads(params.query_params) if params.query_params else None
-    if query_params is not None and not isinstance(query_params, dict):
-        raise ValueError("query_params must be a JSON object")
+    try:
+        payload = json.loads(params.body) if params.body else None
+        headers = json.loads(params.headers) if params.headers else {}
+    except ValueError as exc:
+        raise ActionFailure("headers and body must contain valid JSON") from exc
+    if not isinstance(headers, dict) or any(
+        not isinstance(value, str) for value in headers.values()
+    ):
+        raise ActionFailure("headers must be a JSON object with string values")
+    if any(name.lower() in {"authorization", "host"} for name in headers):
+        raise ActionFailure("Authorization and Host are set by the MISP asset")
 
+    query_params = _parse_query_parameters(params.query_parameters)
     url = httpx2.URL(f"{asset.base_url.rstrip('/')}{endpoint}")
     query_pairs = list(url.params.multi_items())
-    if query_params:
-        query_pairs.extend(httpx2.QueryParams(query_params).multi_items())
+    query_pairs.extend(httpx2.QueryParams(query_params).multi_items())
     url = url.copy_with(params=httpx2.QueryParams(query_pairs))
 
-    with misp_client(asset) as client:
-        response = client.request(
-            method,
-            url,
-            headers={"Accept": "application/json"},
-            json=payload,
-        )
+    request_headers = httpx2.Headers({"Accept": "application/json"})
+    request_headers.update(headers)
+    verify_ssl = params.verify_ssl if "verify_ssl" in params.model_fields_set else None
+    try:
+        with misp_client(
+            asset, verify_ssl=verify_ssl, timeout=params.timeout
+        ) as client:
+            response = client.request(
+                method, url, headers=request_headers, json=payload
+            )
+    except httpx2.RequestError as exc:
+        raise ActionFailure(f"Unable to connect to MISP: {exc}") from exc
     try:
         body = json.dumps(response.json())
     except ValueError:
         body = response.text
     return MakeRequestOutput(status_code=response.status_code, response=body)
+
+
+def _parse_query_parameters(value: str | None) -> dict | str | None:
+    if not value:
+        return None
+    value = value.strip()
+    if value.startswith("?") or (
+        "=" in value and not value.startswith(("{", "[", '"'))
+    ):
+        return value.removeprefix("?")
+    error = "query_parameters must be a JSON object or a query string"
+    try:
+        query = json.loads(value)
+    except ValueError as exc:
+        raise ActionFailure(error) from exc
+    if query is not None and not isinstance(query, dict):
+        raise ActionFailure(error)
+    return query

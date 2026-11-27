@@ -28,7 +28,8 @@ from soar_sdk.exceptions import ActionFailure
 
 from src import helper
 from src.actions.add_attributes import UpdateEventParams
-from src.app import Asset
+from src.app import app
+from src.asset import Asset
 
 EVENT_UUID = "11111111-1111-4111-8111-111111111111"
 
@@ -179,8 +180,8 @@ def test_repeated_inputs_return_complete_server_event(misp_server, asset):
 
     first_soar = Mock()
     second_soar = Mock()
-    first = module.add_attributes.__wrapped__(params, first_soar, asset)
-    second = module.add_attributes.__wrapped__(params, second_soar, asset)
+    first = module.add_attributes(params, first_soar, asset)
+    second = module.add_attributes(params, second_soar, asset)
 
     assert len(event["Attribute"]) == 1
     assert [row.id for row in first] == ["1"]
@@ -201,20 +202,19 @@ def test_event_edit_preserves_genuine_failures(misp_server, asset, value):
     params = UpdateEventParams(event_id=42, json=json.dumps({"comment": value}))
 
     with pytest.raises(ActionFailure, match=r"MISP event 42:.*HTTP 403") as error:
-        module.add_attributes.__wrapped__(params, Mock(), asset)
+        module.add_attributes(params, Mock(), asset)
     assert "earlier attribute update" not in error.value.message
 
 
 def test_later_write_failure_reports_earlier_save(monkeypatch, misp_server, asset):
     event, _requests = misp_server
-    module = import_module("src.actions.add_attributes")
     add_result = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
     params = UpdateEventParams(
         event_id=42, json=json.dumps({"comment": ["saved", "forbidden"]})
     )
 
-    success = module.add_attributes(params, soar=Mock(), asset=asset)
+    success = app.get_actions()["add_attributes"](params, soar=Mock(), asset=asset)
 
     assert success is False
     result = add_result.call_args.args[0]
@@ -227,14 +227,15 @@ def test_later_write_failure_reports_earlier_save(monkeypatch, misp_server, asse
 
 def test_update_reports_all_json_row_rejections(monkeypatch, misp_server, asset):
     event, _requests = misp_server
-    module = import_module("src.actions.add_attributes")
     add_result = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
     params = UpdateEventParams(
         event_id=42, json=json.dumps({"comment": ["reject-first", "reject-second"]})
     )
 
-    assert module.add_attributes(params, soar=Mock(), asset=asset) is False
+    assert (
+        app.get_actions()["add_attributes"](params, soar=Mock(), asset=asset) is False
+    )
 
     message = add_result.call_args.args[0].get_message()
     assert "Failed to add attributes to MISP event 42:" in message
@@ -251,7 +252,7 @@ def test_update_keeps_valid_json_rows_and_summarizes_rejections(misp_server, ass
     )
     soar = Mock()
 
-    rows = module.add_attributes.__wrapped__(params, soar, asset)
+    rows = module.add_attributes(params, soar, asset)
 
     assert [row.value for row in rows] == ["saved"]
     summary = soar.set_summary.call_args.args[0]
@@ -261,11 +262,10 @@ def test_update_keeps_valid_json_rows_and_summarizes_rejections(misp_server, ass
 
 @pytest.mark.parametrize("value", ["forbidden", "invalid"])
 def test_vendor_rejection_uses_sdk_error_result(monkeypatch, misp_server, asset, value):
-    module = import_module("src.actions.add_attributes")
     add_result = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
 
-    success = module.add_attributes(
+    success = app.get_actions()["add_attributes"](
         UpdateEventParams(event_id=42, json=json.dumps({"comment": value})),
         soar=Mock(),
         asset=asset,
@@ -288,7 +288,7 @@ def test_update_rejects_empty_replacement_before_writing(misp_server, asset):
     with pytest.raises(
         ActionFailure, match="Please provide at least one replacement tag"
     ):
-        module.add_attributes.__wrapped__(params, Mock(), asset)
+        module.add_attributes(params, Mock(), asset)
 
     assert event["Tag"] == [{"name": "old"}]
     assert requests == []
@@ -299,7 +299,7 @@ def test_update_replaces_tags_using_legacy_endpoints(misp_server, asset):
     event["Tag"] = [{"name": "old"}]
     module = import_module("src.actions.add_attributes")
 
-    module.add_attributes.__wrapped__(
+    module.add_attributes(
         UpdateEventParams(event_id=42, tags="new", replace_tags=True),
         Mock(),
         asset,
@@ -326,7 +326,7 @@ def test_update_skips_existing_global_tags(misp_server, asset, tag_input, local)
     module = import_module("src.actions.add_attributes")
     soar = Mock()
 
-    rows = module.add_attributes.__wrapped__(
+    rows = module.add_attributes(
         UpdateEventParams(event_id=42, tags=tag_input), soar, asset
     )
 
@@ -340,7 +340,7 @@ def test_update_appends_new_tags_once_without_removing_existing(misp_server, ass
     event["Tag"] = [{"id": "7", "name": "old"}]
     module = import_module("src.actions.add_attributes")
 
-    module.add_attributes.__wrapped__(
+    module.add_attributes(
         UpdateEventParams(event_id=42, tags="old,new,new,7,another,another"),
         Mock(),
         asset,
@@ -361,9 +361,7 @@ def test_update_adds_global_tag_when_only_local_tag_exists(misp_server, asset, l
     event["Tag"] = [{"id": "7", "name": "old", "local": local}]
     module = import_module("src.actions.add_attributes")
 
-    module.add_attributes.__wrapped__(
-        UpdateEventParams(event_id=42, tags="old"), Mock(), asset
-    )
+    module.add_attributes(UpdateEventParams(event_id=42, tags="old"), Mock(), asset)
 
     posts = [request for request in requests if request.method == "POST"]
     assert len(posts) == 1
@@ -379,7 +377,7 @@ def test_update_replacement_reattaches_requested_existing_tag(misp_server, asset
     event["Tag"] = [{"id": "7", "name": "old", "local": 0}]
     module = import_module("src.actions.add_attributes")
 
-    module.add_attributes.__wrapped__(
+    module.add_attributes(
         UpdateEventParams(event_id=42, tags="old,old", replace_tags=True),
         Mock(),
         asset,
@@ -407,14 +405,14 @@ def test_update_does_not_suppress_tag_permission_errors(
     )
 
     if with_attributes:
-        result = module.add_attributes.__wrapped__(params, Mock(), asset)
+        result = module.add_attributes(params, Mock(), asset)
         assert isinstance(result, ActionResult)
         assert result.get_status() is False
         assert "Insufficient privileges" in result.get_message()
         assert result.get_data()[0]["value"] == "saved"
     else:
         with pytest.raises(RuntimeError, match="HTTP 403.*Insufficient privileges"):
-            module.add_attributes.__wrapped__(params, Mock(), asset)
+            module.add_attributes(params, Mock(), asset)
 
 
 def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
@@ -422,7 +420,7 @@ def test_create_uses_legacy_event_and_tag_endpoints(misp_server, asset):
     module = import_module("src.actions.create_event")
     soar = Mock()
 
-    rows = module.create_event.__wrapped__(
+    rows = module.create_event(
         module.CreateEventParams(
             info="Example", add_attributes=True, domains="example.com", tags="new"
         ),
@@ -477,9 +475,9 @@ def test_create_keeps_event_snapshot_serializable(
     module = import_module("src.actions.create_event")
     add_result = Mock()
     soar = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
 
-    success = module.create_event(
+    success = app.get_actions()["create_event"](
         module.CreateEventParams(
             info="Example", add_attributes=True, json=json.dumps({"comment": values})
         ),

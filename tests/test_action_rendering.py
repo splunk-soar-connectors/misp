@@ -93,7 +93,7 @@ def test_create_event_column_preserves_ids_and_vendor_rows(monkeypatch, add_attr
     monkeypatch.setattr(module, "add_tags", Mock())
     monkeypatch.setattr(module, "add_iocs", Mock(return_value=attributes))
 
-    rows = module.create_event.__wrapped__(
+    rows = module.create_event(
         module.CreateEventParams(add_attributes=add_attributes), Mock(), Mock()
     )
     assert isinstance(rows[0], module.CreateEventRow)
@@ -118,7 +118,7 @@ def test_partial_create_retains_event_id_column(monkeypatch, failure_stage):
     monkeypatch.setattr(module, "add_iocs", Mock())
     monkeypatch.setattr(module, failure_stage, Mock(side_effect=RuntimeError("denied")))
 
-    result = module.create_event.__wrapped__(
+    result = module.create_event(
         module.CreateEventParams(add_attributes=True), Mock(), Mock()
     )
 

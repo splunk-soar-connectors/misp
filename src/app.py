@@ -13,31 +13,11 @@
 # limitations under the License.
 from soar_sdk.abstract import SOARClient
 from soar_sdk.app import App
-from soar_sdk.asset import BaseAsset, AssetField, FieldCategory
 from soar_sdk.exceptions import ActionFailure
-from soar_sdk.logging import getLogger
+
+from .actions import register_actions
+from .asset import Asset
 from .helper import request
-
-logger = getLogger()
-
-
-class Asset(BaseAsset):
-    base_url: str = AssetField(
-        required=True,
-        category=FieldCategory.CONNECTIVITY,
-        description="MISP instance URL (http://misp_instance.company.com/)",
-    )
-    verify_server_cert: bool | None = AssetField(
-        category=FieldCategory.CONNECTIVITY,
-        description="Verify server certificate",
-        default=True,
-    )
-    api_key: str = AssetField(
-        required=True,
-        category=FieldCategory.CONNECTIVITY,
-        sensitive=True,
-        description="API Key found under Event Actions: Automation",
-    )
 
 
 app = App(
@@ -65,14 +45,7 @@ def test_connectivity(soar: SOARClient, asset: Asset) -> None:
     soar.set_message("Test connectivity passed")
 
 
-# Importing action modules registers their handlers with the SDK app.
-from .actions import (
-    add_attributes,
-    create_event,
-    get_attributes,
-    make_request,
-    run_query,
-)
+register_actions(app)
 
 if __name__ == "__main__":
     app.cli()

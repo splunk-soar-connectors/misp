@@ -14,7 +14,7 @@
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, ActionResult, OutputField
 from soar_sdk.params import Param, Params
-from ..app import Asset, app
+from ..asset import Asset
 from ..helper import add_iocs, add_tags, output, request
 
 
@@ -171,15 +171,6 @@ class CreateEventSummary(ActionOutput):
     errors: str | None = None
 
 
-@app.action(
-    description="Create a new event in MISP",
-    action_type="generic",
-    read_only=False,
-    render_as="table",
-    output_class=CreateEventOutput,
-    summary_type=CreateEventSummary,
-    verbose="This action first creates an event, then adds attributes to that event. Parameters urls, domains, source_ips, dest_ips, source_emails, dest_emails accept comma-separated values.",
-)
 def create_event(params: CreateEventParams, soar: SOARClient, asset: Asset):
     distributions = {
         "your org only": 0,

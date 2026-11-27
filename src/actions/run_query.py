@@ -14,13 +14,19 @@
 import json
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor, wait
+from csv import DictReader, Error as CSVError
+from io import StringIO
 
 from pydantic import model_serializer
 from soar_sdk.abstract import SOARClient
 from soar_sdk.action_results import ActionOutput, OutputField, PermissiveActionOutput
+from soar_sdk.exceptions import ActionFailure
+from soar_sdk.logging import getLogger
 from soar_sdk.params import Param, Params
-from ..app import Asset, app, logger
-from ..helper import integer_value, output, positive_int, request
+from ..asset import Asset
+from ..helper import integer_value, misp_client, output, positive_int, request
+
+logger = getLogger()
 
 _QUERY_PROGRESS_INTERVAL = 30
 
@@ -68,8 +74,30 @@ _PYMISP_INTEGER_FLAGS = (
 )
 
 
-def _normalize_search_filters(filters):
+def _normalize_search_filters(filters, *, allow_csv: bool):
     """Translate legacy PyMISP search options to the REST payload."""
+    explicit_return_format = "return_format" in filters
+    return_format = filters.pop("return_format", "json")
+    pythonify = filters.pop("pythonify", None)
+    if return_format != "json" and not (
+        return_format == "csv" and allow_csv and pythonify is True
+    ):
+        raise ActionFailure(
+            "other.return_format must be 'json' unless CSV is requested with pythonify "
+            "set to true and events selected in controller or other.controller. "
+            "Object searches require JSON. Use Make Request for other formats."
+        )
+    # PyMISP gives the explicit return_format argument precedence over the REST key.
+    rest_format = filters.pop("returnFormat", "json")
+    if not explicit_return_format and rest_format != "json":
+        raise ActionFailure(
+            "other.returnFormat must be 'json'. Use Make Request for other formats."
+        )
+    if return_format == "json" and pythonify is not None and pythonify is not False:
+        raise ActionFailure(
+            "other.pythonify must be false or null. Run Query returns JSON data."
+        )
+
     for alias, key in _PYMISP_SEARCH_ALIASES.items():
         value = filters.pop(alias, None)
         # PyMISP lets its deprecated REST-spelled arguments override newer ones.
@@ -87,16 +115,55 @@ def _normalize_search_filters(filters):
                 raise ValueError(f"Invalid MISP search flag: {key}") from exc
             filters[key] = 1 if flag else 0
 
-    for key in ("controller", "return_format", "pythonify"):
-        filters.pop(key, None)
+    if return_format == "csv":
+        if filters.get("headerless"):
+            raise ActionFailure(
+                "Run Query requires CSV headers. Set other.headerless to false."
+            )
+        filters["headerless"] = 0
+    filters["returnFormat"] = return_format
     return filters
+
+
+def _request_csv_page(asset, method, endpoint, *, payload, timeout):
+    with misp_client(asset) as client:
+        response = client.request(
+            method,
+            f"{asset.base_url.rstrip('/')}{endpoint}",
+            # MISP uses returnFormat to select the export, as in the PyMISP request.
+            headers={"Accept": "application/json"},
+            json=payload,
+            timeout=timeout,
+        )
+    if not response.is_success:
+        raise ActionFailure(
+            f"MISP returned HTTP {response.status_code}: {response.text[:1000]}"
+        )
+
+    body = response.text.removeprefix("\ufeff")
+    error = f"MISP returned an invalid CSV response for page {payload['page']}"
+    if body.lstrip().startswith(("<", "{", "[")):
+        raise ActionFailure(error)
+    reader = DictReader(StringIO(body, newline=""), strict=True)
+    try:
+        rows = list(reader)
+    except CSVError as exc:
+        raise ActionFailure(error) from exc
+    if not reader.fieldnames or any(not field.strip() for field in reader.fieldnames):
+        raise ActionFailure(error)
+    if any(None in row or None in row.values() for row in rows):
+        raise ActionFailure(error)
+    return rows
 
 
 def _request_query_page(asset, controller, payload):
     """Keep IPC progress on the action thread while the HTTP request runs."""
+    request_page = (
+        _request_csv_page if payload.get("returnFormat") == "csv" else request
+    )
     with ThreadPoolExecutor(max_workers=1) as executor:
         pending = executor.submit(
-            request,
+            request_page,
             asset,
             "POST",
             f"/{controller}/restSearch",
@@ -294,26 +361,12 @@ class RunQuerySummary(ActionOutput):
     returned_rows: int
 
 
-@app.action(
-    description="Run a query to find events or attributes",
-    action_type="investigate",
-    read_only=True,
-    render_as="json",
-    output_class=RunQueryOutput,
-    summary_type=RunQuerySummary,
-    verbose=(
-        "By default, returns the first 10 matches. Set <b>max_results</b> to 0 for no requested cap "
-        "or to -N for the last N matches. The connector requests up to 1,000 results per page, "
-        "subject to MISP limits, and fails if the search is incomplete after 100 pages. "
-        "Pass additional MISP filters as JSON in <b>other</b>."
-    ),
-)
 def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
     limit = params.max_results
     if limit is None or limit == "":
         limit = 10
     max_results = integer_value(limit, "max_results")
-    filters = {}
+    filters = {"returnFormat": "json"}
     if params.event_id:
         ids = [item.strip() for item in params.event_id.split(",") if item.strip()]
         ids = [positive_int(event_id, "event_id") for event_id in ids]
@@ -323,17 +376,28 @@ def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
         filters["tags"] = [
             item.strip() for item in params.tags.split(",") if item.strip()
         ]
+    requested_controller = params.controller.lower()
+    controller = requested_controller
+    if controller not in {"events", "attributes"}:
+        raise ValueError("controller must be events or attributes")
     if params.other:
         other = json.loads(params.other)
         if not isinstance(other, dict):
             raise ValueError("other must be a JSON object")
-        filters.update(_normalize_search_filters(other))
-    controller = params.controller.lower()
-    if controller not in {"events", "attributes"}:
-        raise ValueError("controller must be events or attributes")
+        controller = other.pop("controller", controller)
+        if controller not in ("events", "attributes", "objects"):
+            raise ActionFailure(
+                "other.controller must be events, attributes, or objects"
+            )
+        filters.update(
+            _normalize_search_filters(
+                other,
+                allow_csv=controller != "objects"
+                and "events" in (requested_controller, controller),
+            )
+        )
     # The legacy connector let `other` override event IDs and tags, but it
     # always reset limit and page for its own bounded pagination loop.
-    filters["returnFormat"] = "json"
     filters["limit"] = min(max_results, 1000) if max_results > 0 else 1000
     rows = deque(maxlen=abs(max_results)) if max_results < 0 else []
     for page in range(1, 101):
@@ -344,10 +408,10 @@ def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
             {**filters, "page": page},
         )
         batch = result.get("response", result) if isinstance(result, dict) else result
-        if isinstance(batch, dict):
+        if isinstance(batch, dict) and controller != "objects":
             batch = batch.get("Attribute" if controller == "attributes" else "Event")
-        if isinstance(batch, dict):
-            batch = [batch]
+            if isinstance(batch, dict):
+                batch = [batch]
         if not isinstance(batch, list) or any(
             not isinstance(row, dict) for row in batch
         ):
@@ -367,6 +431,8 @@ def run_query(params: RunQueryParams, soar: SOARClient, asset: Asset):
         rows = list(rows)
     soar.set_summary(RunQuerySummary(returned_rows=len(rows)))
     soar.set_message("Successfully ran query")
+    if controller == "objects" or filters["returnFormat"] == "csv":
+        return QueryEventRows(rows=rows)
     if controller == "events":
         event_rows = [
             row if isinstance(row, dict) and "Event" in row else {"Event": row}

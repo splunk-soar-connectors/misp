@@ -47,10 +47,13 @@ In **run query**, use a list in the `other` JSON object to keep a comma-containi
 {"tags": ["tag1, tag11", "tag_2"]}
 ```
 
-### Endpoint Query Parameters
+### Custom Requests
 
-For custom MISP API requests, query parameters already present in the endpoint URL are combined
-with the `query_params` JSON object. Repeated keys and values from both sources are retained.
+For custom MISP API requests, `query_parameters` accepts a JSON object or a query string.
+Repeated keys and values are retained when combined with the endpoint query.
+
+Any received HTTP response yields a successful SOAR action result. Use
+`action_result.data.*.status_code` to check the HTTP status and `response` to read the body.
 
 ### Malware Sample Downloads
 

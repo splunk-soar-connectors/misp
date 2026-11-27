@@ -24,6 +24,8 @@ import pytest
 from pymisp import MISPEvent, PyMISP
 from soar_sdk.exceptions import ActionFailure
 
+from src.app import app
+
 
 def test_pinned_legacy_pymisp_endpoints():
     # Skip transport initialization; record the actual API methods used by legacy.
@@ -81,13 +83,11 @@ def test_sdk_read_actions_preserve_legacy_endpoints(monkeypatch):
     soar.set_message.assert_called_once_with("Test connectivity passed")
     module = import_module("src.actions.get_attributes")
     monkeypatch.setattr(module, "request", request)
-    module.get_event.__wrapped__(
-        module.GetAttributesParams(event_id=42), Mock(), Mock()
-    )
+    module.get_event(module.GetAttributesParams(event_id=42), Mock(), Mock())
     module = import_module("src.actions.run_query")
     monkeypatch.setattr(module, "request", request)
     for controller in ("events", "attributes"):
-        module.run_query.__wrapped__(
+        module.run_query(
             module.RunQueryParams(controller=controller, max_results=1), Mock(), Mock()
         )
 
@@ -109,9 +109,7 @@ def test_get_attributes_preserves_metadata_for_empty_results(monkeypatch, wrappe
     monkeypatch.setattr(module, "request", request)
     soar = Mock()
 
-    result = module.get_event.__wrapped__(
-        module.GetAttributesParams(event_id=42), soar, Mock()
-    )
+    result = module.get_event(module.GetAttributesParams(event_id=42), soar, Mock())
 
     assert result.model_dump() == body
     assert soar.set_summary.call_args.args[0].returned_attributes == 0
@@ -168,7 +166,7 @@ def test_get_attributes_reports_failure_when_second_sample_attachment_fails(
     soar.vault.create_attachment.side_effect = create_attachment
 
     with pytest.raises(RuntimeError, match="second attachment failed"):
-        module.get_event.__wrapped__(
+        module.get_event(
             module.GetAttributesParams(event_id=42, download_samples=True),
             soar,
             Mock(),
@@ -199,9 +197,7 @@ def test_get_attributes_rejects_malformed_search_response(monkeypatch, response)
     soar = Mock()
 
     with pytest.raises(RuntimeError, match="unexpected attribute response shape"):
-        module.get_event.__wrapped__(
-            module.GetAttributesParams(event_id=42), soar, Mock()
-        )
+        module.get_event(module.GetAttributesParams(event_id=42), soar, Mock())
 
     soar.set_message.assert_not_called()
 
@@ -299,9 +295,9 @@ def test_connectivity_rejects_invalid_responses(
                 "eventid": 42,
                 "tags": ["example"],
                 "order": "Event.id ASC",
-                "controller": "events",
-                "pythonify": True,
-                "return_format": "csv",
+                "controller": "attributes",
+                "pythonify": False,
+                "return_format": "json",
                 "returnFormat": "csv",
                 "page": 9,
                 "limit": 99,
@@ -318,7 +314,12 @@ def test_connectivity_rejects_invalid_responses(
             },
         ),
         (
-            {"type": "domain", "from": "2d", "includeEventTags": False},
+            {
+                "type": "domain",
+                "from": "2d",
+                "includeEventTags": False,
+                "pythonify": None,
+            },
             {"type": "domain", "from": "2d", "includeEventTags": 0},
         ),
     ],
@@ -332,7 +333,7 @@ def test_run_query_translates_legacy_pymisp_filters(
     monkeypatch.setattr(module, "request", request)
     asset = Mock()
 
-    module.run_query.__wrapped__(
+    module.run_query(
         module.RunQueryParams(
             controller="attributes", max_results=2, other=json.dumps(other)
         ),
@@ -351,3 +352,95 @@ def test_run_query_translates_legacy_pymisp_filters(
     assert all(
         type(request.call_args.kwargs["payload"][key]) is int for key in flag_fields
     )
+
+
+@pytest.mark.parametrize(
+    ("controller", "override", "response", "expected_data"),
+    [
+        (
+            "events",
+            "attributes",
+            {"Attribute": [{"id": "23", "value": "example.test"}]},
+            [
+                {
+                    "Attribute": [{"id": "23", "value": "example.test"}],
+                    "attribute_count": "1",
+                }
+            ],
+        ),
+        (
+            "attributes",
+            "events",
+            [{"Event": {"id": "42"}}],
+            [[{"Event": {"id": "42"}}]],
+        ),
+        (
+            "events",
+            "objects",
+            [{"Object": {"id": "12", "name": "file", "Attribute": [{"id": "23"}]}}],
+            [[{"Object": {"id": "12", "name": "file", "Attribute": [{"id": "23"}]}}]],
+        ),
+    ],
+    ids=["events-to-attributes", "attributes-to-events", "objects-override"],
+)
+def test_run_query_uses_controller_override_for_request_and_output(
+    monkeypatch, controller, override, response, expected_data
+):
+    module = import_module("src.actions.run_query")
+    request = Mock(return_value={"response": response})
+    monkeypatch.setattr(module, "request", request)
+    add_result = Mock()
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
+    asset = Mock()
+    params = module.RunQueryParams(
+        controller=controller, max_results=1, other=json.dumps({"controller": override})
+    )
+
+    assert app.get_actions()["run_query"](params, soar=Mock(), asset=asset) is True
+
+    request.assert_called_once_with(
+        asset,
+        "POST",
+        f"/{override}/restSearch",
+        payload={"returnFormat": "json", "page": 1, "limit": 1},
+        timeout=60,
+    )
+    assert add_result.call_args.args[0].get_data() == expected_data
+
+
+@pytest.mark.parametrize(
+    ("other", "error_message"),
+    [
+        (
+            {"controller": "sightings"},
+            r"other\.controller must be events, attributes, or objects",
+        ),
+        (
+            {"return_format": "csv"},
+            r"other\.return_format must be 'json'.*Make Request",
+        ),
+        (
+            {"return_format": "csv", "pythonify": True},
+            r"other\.return_format must be 'json'.*Make Request",
+        ),
+        ({"returnFormat": "xml"}, r"other\.returnFormat must be 'json'.*Make Request"),
+        ({"pythonify": True}, r"other\.pythonify must be false or null"),
+    ],
+    ids=[
+        "unsupported-controller",
+        "pymisp-return-format",
+        "attributes-csv",
+        "rest-return-format",
+        "pythonify",
+    ],
+)
+def test_run_query_rejects_unsupported_overrides(monkeypatch, other, error_message):
+    module = import_module("src.actions.run_query")
+    request_page = Mock()
+    monkeypatch.setattr(module, "_request_query_page", request_page)
+    params = module.RunQueryParams(controller="attributes", other=json.dumps(other))
+
+    with pytest.raises(ActionFailure, match=error_message):
+        module.run_query(params, Mock(), Mock())
+
+    request_page.assert_not_called()

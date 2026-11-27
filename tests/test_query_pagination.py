@@ -23,9 +23,11 @@ import httpx2
 import pytest
 from soar_sdk.app import App
 from soar_sdk.auth import StaticTokenAuth
+from soar_sdk.exceptions import ActionFailure
 
 from src import helper
-from src.app import Asset
+from src.app import app
+from src.asset import Asset
 
 TEST_API_KEY = "test-key"  # pragma: allowlist secret
 
@@ -149,7 +151,7 @@ def test_negative_query_keeps_last_rows_with_bounded_storage(monkeypatch, contro
     )
     soar = Mock()
 
-    result = module.run_query.__wrapped__(
+    result = module.run_query(
         module.RunQueryParams(controller=controller, max_results=-5), soar, asset
     )
 
@@ -187,7 +189,7 @@ def test_query_timeout_reaches_http_client(monkeypatch, max_results, controller)
             transport=httpx2.MockTransport(handle), timeout=60
         ),
     )
-    module.run_query.__wrapped__(
+    module.run_query(
         module.RunQueryParams(controller=controller, max_results=max_results),
         Mock(),
         Asset(base_url="https://misp.example.test", api_key=TEST_API_KEY),
@@ -253,14 +255,14 @@ def test_uncapped_queries_retain_100_page_limit(
     params = module.RunQueryParams(controller=controller, max_results=max_results)
 
     if last_page_size == 0:
-        result = module.run_query.__wrapped__(params, Mock(), Mock())
+        result = module.run_query(params, Mock(), Mock())
         rows = _query_rows(result, controller)
         assert [row["id"] for row in rows] == [
             str(index) for index in range(page_size - 5, page_size)
         ]
     else:
         with pytest.raises(RuntimeError, match=f"maximum of {max_pages} pages"):
-            module.run_query.__wrapped__(params, Mock(), Mock())
+            module.run_query(params, Mock(), Mock())
 
     assert mocked.call_count == max_pages
     assert [call.kwargs["payload"]["page"] for call in mocked.call_args_list] == list(
@@ -292,7 +294,7 @@ def test_zero_query_limit_collects_all_pages(monkeypatch, controller, first_page
     monkeypatch.setattr(module, "request", mocked)
     soar = Mock()
 
-    output = module.run_query.__wrapped__(
+    output = module.run_query(
         module.RunQueryParams(controller=controller, max_results=0), soar, Mock()
     )
 
@@ -302,6 +304,144 @@ def test_zero_query_limit_collects_all_pages(monkeypatch, controller, first_page
     ]
     assert soar.set_summary.call_args.args[0].returned_rows == len(rows)
     assert mocked.call_count == 3
+
+
+@pytest.mark.parametrize(
+    ("other_overrides", "expected_controller"),
+    [
+        ({}, "events"),
+        ({"controller": "attributes"}, "attributes"),
+        ({"returnFormat": "json"}, "events"),
+    ],
+    ids=["events-csv", "attributes-override", "return-format-precedence"],
+)
+def test_query_csv_preserves_legacy_rows_and_pagination(
+    monkeypatch, other_overrides, expected_controller
+):
+    module = import_module("src.actions.run_query")
+    pages = [
+        'id,value\r\n1,"example,one"\r\n',
+        'id,value\r\n2,"line one\r\nline two"\r\n',
+        "id,value\r\n",
+    ]
+    handle = Mock(
+        side_effect=[
+            httpx2.Response(200, headers={"Content-Type": "text/csv"}, text=page)
+            for page in pages
+        ]
+    )
+    transport = httpx2.MockTransport(handle)
+    monkeypatch.setattr(
+        module,
+        "misp_client",
+        lambda asset: httpx2.Client(
+            transport=transport, auth=StaticTokenAuth(asset.api_key, token_type="")
+        ),
+    )
+    add_result = Mock()
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
+    params = module.RunQueryParams(
+        controller="events",
+        max_results=0,
+        other=json.dumps(
+            {
+                "return_format": "csv",
+                "pythonify": True,
+                "type_attribute": "domain",
+                **other_overrides,
+            }
+        ),
+    )
+    asset = Asset(base_url="https://misp.example.test", api_key=TEST_API_KEY)
+    soar = Mock()
+
+    assert app.get_actions()["run_query"](params, soar=soar, asset=asset) is True
+
+    assert add_result.call_args.args[0].get_data() == [
+        [
+            {"id": "1", "value": "example,one"},
+            {"id": "2", "value": "line one\r\nline two"},
+        ]
+    ]
+    assert soar.set_summary.call_args.args[0].returned_rows == 2
+    assert handle.call_count == 3
+    for page, call in enumerate(handle.call_args_list, 1):
+        request = call.args[0]
+        assert request.method == "POST"
+        assert request.url.path == f"/{expected_controller}/restSearch"
+        assert request.headers["Accept"] == "application/json"
+        assert request.headers["Authorization"] == TEST_API_KEY
+        assert request.extensions["timeout"]["read"] == 60
+        assert json.loads(request.content) == {
+            "type": "domain",
+            "headerless": 0,
+            "returnFormat": "csv",
+            "limit": 1000,
+            "page": page,
+        }
+
+
+@pytest.mark.parametrize(
+    ("response", "message"),
+    [
+        (httpx2.Response(403, json={"errors": "Forbidden"}), "MISP returned HTTP 403"),
+        (
+            httpx2.Response(200, json={"errors": "Invalid search"}),
+            "invalid CSV response for page 2",
+        ),
+        (
+            httpx2.Response(200, text="id,value\n2,extra,column\n"),
+            "invalid CSV response for page 2",
+        ),
+    ],
+    ids=["http-error", "json-error", "malformed-row"],
+)
+def test_query_csv_rejects_invalid_later_pages(monkeypatch, response, message):
+    module = import_module("src.actions.run_query")
+    handle = Mock(
+        side_effect=[httpx2.Response(200, text="id,value\n1,example.test\n"), response]
+    )
+    transport = httpx2.MockTransport(handle)
+    monkeypatch.setattr(
+        module, "misp_client", lambda _asset: httpx2.Client(transport=transport)
+    )
+    add_result = Mock()
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
+    params = module.RunQueryParams(
+        controller="events",
+        max_results=0,
+        other='{"return_format":"csv","pythonify":true}',
+    )
+    asset = Asset(base_url="https://misp.example.test", api_key=TEST_API_KEY)
+
+    assert app.get_actions()["run_query"](params, soar=Mock(), asset=asset) is False
+
+    result = add_result.call_args.args[0]
+    assert message in result.get_message()
+    assert result.get_data() == []
+
+
+@pytest.mark.parametrize(
+    ("other", "message"),
+    [
+        ({"headerless": True}, "Run Query requires CSV headers"),
+        ({"controller": "objects"}, "Object searches require JSON"),
+    ],
+    ids=["headerless", "objects"],
+)
+def test_query_rejects_unsupported_csv_options(monkeypatch, other, message):
+    module = import_module("src.actions.run_query")
+    request_page = Mock()
+    monkeypatch.setattr(module, "_request_query_page", request_page)
+    params = module.RunQueryParams(
+        controller="events",
+        other=json.dumps({"return_format": "csv", "pythonify": True, **other}),
+    )
+
+    with pytest.raises(ActionFailure, match=message):
+        module.run_query(params, Mock(), Mock())
+
+    request_page.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -324,10 +464,10 @@ def test_query_fails_on_malformed_second_page(
     request_page = Mock(side_effect=[{"response": first_page}, {"response": bad_page}])
     monkeypatch.setattr(module, "_request_query_page", request_page)
     add_result = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
     soar = Mock()
 
-    success = module.run_query(
+    success = app.get_actions()["run_query"](
         module.RunQueryParams(controller=controller, max_results=0),
         soar=soar,
         asset=Mock(),

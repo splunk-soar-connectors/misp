@@ -22,6 +22,7 @@ from soar_sdk.exceptions import ActionFailure
 from src import helper
 from src.actions.add_attributes import UpdateEventParams
 from src.actions.create_event import CreateEventParams
+from src.app import app
 
 IOC_FIELDS = (
     "source_ips",
@@ -111,7 +112,7 @@ def test_ioc_lists_reach_misp_as_individual_attributes(
         params = CreateEventParams(add_attributes=True, to_ids=False, **{field: value})
         action = module.create_event
 
-    action.__wrapped__(params, Mock(), Mock())
+    action(params, Mock(), Mock())
 
     assert [row["value"] for row in attribute_requests] == expected
     assert all(row["to_ids"] is False for row in attribute_requests)
@@ -123,7 +124,7 @@ def test_separator_only_update_has_no_attributes(attribute_requests, field):
     params = UpdateEventParams(event_id=42, **{field: ",,,,,"})
 
     with pytest.raises(ActionFailure, match="Please provide at least one attribute"):
-        module.add_attributes.__wrapped__(params, Mock(), Mock())
+        module.add_attributes(params, Mock(), Mock())
 
     assert attribute_requests == []
 
@@ -144,7 +145,7 @@ def test_invalid_ioc_still_fails_before_writing(attribute_requests, field, value
     params = UpdateEventParams(event_id=42, **{field: value})
 
     with pytest.raises(ActionFailure, match=field):
-        module.add_attributes.__wrapped__(params, Mock(), Mock())
+        module.add_attributes(params, Mock(), Mock())
 
     assert attribute_requests == []
 
@@ -159,11 +160,10 @@ def test_invalid_ioc_still_fails_before_writing(attribute_requests, field, value
 def test_expected_validation_failure_uses_sdk_error_result(
     monkeypatch, attribute_requests, inputs, expected
 ):
-    module = import_module("src.actions.add_attributes")
     add_result = Mock()
-    monkeypatch.setattr(module.app.actions_manager, "add_result", add_result)
+    monkeypatch.setattr(app.actions_manager, "add_result", add_result)
 
-    success = module.add_attributes(
+    success = app.get_actions()["add_attributes"](
         UpdateEventParams(event_id=42, **inputs), soar=Mock(), asset=Mock()
     )
 
